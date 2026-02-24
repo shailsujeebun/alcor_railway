@@ -414,3 +414,44 @@ Additional repo hygiene:
 - Listing detail displays grouped mapped attributes with readable labels.
 - Media upload validates mime/size and succeeds end-to-end.
 
+## 7. Patch Update - 2026-02-24
+
+### 7.1 Backend: Upload response and listing validation hardening
+Files:
+- `api/src/upload/upload.controller.ts`
+- `api/src/listings/listings.service.ts`
+
+What changed:
+- Upload endpoint response normalized to API-relative file paths for better frontend compatibility.
+- Listing service now safely parses category IDs and fails with controlled validation errors instead of internal conversion exceptions.
+- Draft/template validation now tolerates missing block lookup data and falls back to built-in engine block behavior when required.
+
+Why:
+- Fixes user-facing image display failures during ad posting and prevents 500-level errors in listing creation flow.
+
+### 7.2 Frontend: Media URL normalization, CSP, moderation actions, boolean labels
+Files:
+- `web/src/lib/api.ts`
+- `web/next.config.ts`
+- `web/src/components/admin/moderation-queue.tsx`
+- `web/src/components/listings/listing-detail.tsx`
+
+What changed:
+- API client now normalizes upload URLs robustly (relative + absolute variants).
+- CSP `img-src` expanded to include `http:` for local development image rendering.
+- Moderation queue now exposes approve/reject controls in both `SUBMITTED` and `PENDING_MODERATION`.
+- Listing detail renders boolean-like values as `Yes`/`No` for cleaner UX.
+
+Why:
+- Restores visible uploaded images, unblocks moderation operations, and improves listing detail readability.
+
+### 7.3 Repo operations and verification notes
+
+What changed:
+- Fixed malformed Git remote URL containing newline characters that prevented `fetch/push`.
+- Aligned branch synchronization flow across target repositories/accounts used for migration.
+
+Verification:
+- `api`: build passing
+- `api`: security tests passing (`test:security`)
+- local smoke checks passing for auth, category/template options, upload, and listing create/read flows.

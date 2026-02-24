@@ -10,7 +10,7 @@ const contentSecurityPolicy = [
   "form-action 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
+  "img-src 'self' data: blob: https: http:",
   "font-src 'self' data: https:",
   "connect-src 'self' http: https: ws: wss:",
   ...(isProduction ? ['upgrade-insecure-requests'] : []),

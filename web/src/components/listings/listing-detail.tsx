@@ -94,6 +94,10 @@ export function ListingDetail({ id }: { id: string }) {
       .replace(/^./, (s) => s.toUpperCase());
 
   const resolveValueLabel = (field: any, rawValue: string) => {
+    const normalizedRaw = String(rawValue).trim().toLowerCase();
+    if (normalizedRaw === 'true') return 'Yes';
+    if (normalizedRaw === 'false') return 'No';
+
     const options = [...(field?.options ?? []), ...(field?.staticOptions ?? [])];
     if (options.length === 0) return rawValue;
 

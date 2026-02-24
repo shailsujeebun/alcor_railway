@@ -40,6 +40,7 @@ import type {
 } from './schemaTypes';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_NORMALIZED = API_BASE.replace(/\/+$/, '');
 type GuestUploadTokenResponse = { token: string; expiresIn: number };
 let guestUploadTokenCache: { token: string; expiresAt: number } | null = null;
 
@@ -142,12 +143,40 @@ function normalizeListingAttributes(rawListing: any) {
     }));
 }
 
+function toApiAbsoluteUrl(path: string): string {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE_NORMALIZED}${normalizedPath}`;
+}
+
 function normalizeMediaUrl(input: unknown): string {
   const raw = typeof input === 'string' ? input.trim() : '';
   if (!raw) return '';
 
+  if (raw.startsWith('/upload/files/')) {
+    return toApiAbsoluteUrl(raw);
+  }
+
   if (raw.includes('/upload/files/')) {
-    return raw;
+    try {
+      const parsed = new URL(raw);
+      const routeMatch = parsed.pathname.match(
+        /\/upload\/files\/(images|listings|companies)\/([A-Za-z0-9._-]+)$/,
+      );
+      if (routeMatch) {
+        return toApiAbsoluteUrl(
+          `/upload/files/${routeMatch[1]}/${routeMatch[2]}`,
+        );
+      }
+    } catch {
+      const routeMatch = raw.match(
+        /\/upload\/files\/(images|listings|companies)\/([A-Za-z0-9._-]+)$/,
+      );
+      if (routeMatch) {
+        return toApiAbsoluteUrl(
+          `/upload/files/${routeMatch[1]}/${routeMatch[2]}`,
+        );
+      }
+    }
   }
 
   try {
@@ -328,7 +357,18 @@ export async function uploadImages(files: File[]): Promise<{ urls: string[] }> {
     } catch { /* empty */ }
     throw new Error(detail || `Upload error: ${res.status}`);
   }
-  return res.json();
+  const payload = await res.json().catch(() => ({}));
+  const urls = Array.isArray(payload?.urls)
+    ? payload.urls
+        .map((url: unknown) => normalizeMediaUrl(url))
+        .filter((url: string) => Boolean(url))
+    : [];
+
+  if (urls.length === 0) {
+    throw new Error('Upload succeeded but no usable image URLs were returned.');
+  }
+
+  return { urls };
 }
 
 // Profile

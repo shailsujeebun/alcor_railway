@@ -20,6 +20,26 @@
   - added frontend URL normalization for previously uploaded MinIO URLs
   - added upload pre-validation (mime + max size).
 
+## Execution Update - 2026-02-24
+
+- Completed production bug-fix pass focused on posting flow reliability and moderation operations.
+- Closed image upload display regression end-to-end:
+  - backend now returns API-relative media paths in upload response
+  - frontend normalizes all known upload URL shapes (legacy/current, relative/absolute)
+  - CSP expanded for local development image loading (`img-src` includes `http:`).
+- Closed internal server error in ad posting flow:
+  - added safe category-id parsing in listing service
+  - added robust fallback when template block data is missing
+  - preserved motorized-category fallback behavior through built-in `engine_block`.
+- Closed admin moderation UX blocker:
+  - moderation queue now supports action buttons in `PENDING_MODERATION` state.
+- Applied detail-page output normalization:
+  - boolean-like attributes now render `Yes`/`No` instead of `true`/`false`.
+- Ran verification:
+  - API build passes
+  - API security suite passes
+  - local smoke checks pass for auth, options, categories, upload, and listing create/read endpoints.
+
 ## 1. Product Scope and UX Flow
 
 ### A. Entry

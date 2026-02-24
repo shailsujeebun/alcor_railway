@@ -182,3 +182,28 @@ The API is failing to start due to two critical issues identified from the termi
 - Verification completed:
   - `api`: `pnpm build` passing
   - `web`: eslint passing for changed files (`listing-detail.tsx`, `price-display.tsx`, `media-uploader.tsx`, `lib/api.ts`).
+
+## 6. Update - 2026-02-24 (Stability, Upload Rendering, Moderation UX, Repo Sync)
+
+- Fixed Git remote configuration issue that blocked `fetch/push`:
+  - removed malformed origin URL containing a newline
+  - set clean remote targets and synchronized `main`/`fix_download` updates across required repos.
+- Resolved listing image preview/render failures after upload:
+  - backend upload response now returns API-relative file paths from `POST /upload/images`
+  - frontend upload URL normalization was hardened for relative and absolute media paths
+  - Next.js image/content security policy updated to allow local `http:` image sources used during dev.
+- Hardened listing creation validation to prevent internal server errors:
+  - safe numeric parsing for category IDs in listing service
+  - graceful fallback when template `formBlock` lookup is missing
+  - built-in `engine_block` fallback applied for motorized categories when DB block data is absent.
+- Moderation workflow unblocked in admin UI:
+  - added explicit `PENDING_MODERATION` tab
+  - approve/reject controls now available in both `SUBMITTED` and `PENDING_MODERATION` views.
+- Listing detail presentation polish:
+  - boolean-like values now render as `Yes`/`No` instead of raw `true`/`false`.
+- Access-control clarification verified:
+  - creating brand/model/category options requires authenticated permissions; guest users receive `401 Unauthorized` by design.
+- Validation and runtime checks completed:
+  - `api`: `pnpm build` passing
+  - `api`: `pnpm test:security` passing (4 suites, 16 tests)
+  - API smoke checks for auth, categories, options, upload, listing create/read flows all passing against local runtime.

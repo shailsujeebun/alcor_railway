@@ -108,8 +108,8 @@ export class UploadController {
       ),
     );
 
-    const origin = `${req.protocol}://${req.get('host')}`;
-    const urls = uploaded.map(({ key }) => `${origin}/upload/files/${key}`);
+    // Return API-relative paths so clients can resolve against their API base URL.
+    const urls = uploaded.map(({ key }) => `/upload/files/${key}`);
 
     return { urls };
   }

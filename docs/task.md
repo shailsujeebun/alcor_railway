@@ -81,3 +81,21 @@
 ## Test Status (Latest)
 - 2026-02-23: `api` build passing (`pnpm build`)
 - 2026-02-23: `web` eslint passing for changed listing/media files
+
+## Update - 2026-02-24 (Operational + Reliability Fixes)
+- Fixed malformed Git remote URL (newline in origin path) that prevented `fetch/push`, then aligned repository remotes for sync with target accounts/repos.
+- Fixed upload image rendering regressions:
+  - backend upload response standardized to API-served media paths
+  - frontend media URL normalization made robust for mixed URL formats
+  - frontend CSP updated to allow local HTTP image sources during development.
+- Fixed ad creation internal server error path:
+  - safe category ID parsing and validation in listing creation flow
+  - resilient template block fallback to avoid runtime failure when `formBlock` data is missing.
+- Fixed admin moderation action availability:
+  - add/reject controls now enabled for `PENDING_MODERATION` as well as `SUBMITTED`.
+- Updated listing details boolean rendering from raw `true/false` to user-friendly `Yes/No`.
+
+## Test Status (Latest)
+- 2026-02-24: `api` build passing (`pnpm build`)
+- 2026-02-24: `api` security tests passing (`pnpm test:security`)
+- 2026-02-24: local API smoke checks passing for auth, categories, options, upload, and listing create/read flows
