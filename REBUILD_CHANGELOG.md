@@ -455,3 +455,62 @@ Verification:
 - `api`: build passing
 - `api`: security tests passing (`test:security`)
 - local smoke checks passing for auth, category/template options, upload, and listing create/read flows.
+
+## 8. Patch Update - 2026-02-24 (Marketplace Taxonomy + Category UX + Responsive Layout)
+
+### 8.1 Backend seed and cleanup hardening
+Files:
+- `api/prisma/seed-all/core.ts`
+- `api/prisma/seed-all/cleanup.ts`
+
+What changed:
+- Replaced marketplace/category seed data with full Agroline/Autoline/Machineryline taxonomy.
+- Added subcategory trees and generated templates for all leaf categories (seed verification reports 105 templates).
+- Added inactive legacy marketplaces to preserve backward compatibility for older references.
+- Added resilient cleanup behavior for `TicketMessage` and related delete operations via guarded `deleteMany` handling.
+
+Why:
+- Aligns taxonomy with real marketplace structure and prevents seed cleanup failures from blocking `seed:all`.
+
+### 8.2 Posting flow and category browsing UX
+Files:
+- `web/src/components/listings/wizard/description-step.tsx`
+- `web/src/components/categories/categories-page.tsx`
+- `web/src/app/categories/page.tsx`
+- `web/src/components/landing/categories-grid.tsx`
+
+What changed:
+- Wizard category step now uses marketplace-first tabs and card-based category/subcategory drill-down with improved icon mapping.
+- Categories page now defaults to marketplace-first browsing with search, ordered tabs, and `?marketplace=` deep-link support.
+- Home categories section now shows 3 marketplace entry cards instead of a mixed cross-market category wall.
+- Added `Suspense` boundary on categories route to satisfy `useSearchParams` requirements in Next.js App Router.
+
+Why:
+- Reduces user confusion, keeps navigation focused per marketplace, and matches requested Autoline/Agroline/Machineryline flow.
+
+### 8.3 Responsive layout and frontend stability fixes
+Files:
+- `web/src/components/layout/footer.tsx`
+- `web/src/app/layout.tsx`
+- `web/src/app/admin/templates/builder/page.tsx`
+- `web/src/components/companies/company-detail.tsx`
+- `web/src/components/landing/featured-listings.tsx`
+- `web/src/components/listings/listing-detail.tsx`
+
+What changed:
+- Refined footer layout/grid behavior for half-width and smaller viewports.
+- Removed extra global bottom padding in app layout that introduced a visible black spacer above footer.
+- Fixed TypeScript issues in template builder and typed map callbacks in affected listing/company components.
+
+Why:
+- Restores professional responsive layout and keeps `web` build green after UI and taxonomy updates.
+
+### 8.4 Verification snapshot
+
+Verification:
+- `pnpm --dir api run seed:all` passing
+- `pnpm --dir api run seed:verify` passing
+- `pnpm --dir api run test` passing
+- `pnpm --dir api run test:security` passing
+- `pnpm --dir api run build` passing
+- `pnpm --dir web run build` passing

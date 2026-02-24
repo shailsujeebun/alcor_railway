@@ -42,7 +42,7 @@ export default function RootLayout({
                   <AOSProvider>
                     <TopBar />
                     <Navbar />
-                    <main className="min-h-screen pb-24 md:pb-32">{children}</main>
+                    <main className="min-h-screen">{children}</main>
                     <Footer />
                   </AOSProvider>
                 </TranslationProvider>

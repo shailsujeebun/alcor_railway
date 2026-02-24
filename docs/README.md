@@ -205,3 +205,23 @@ For more information, please refer to the detailed documentation files listed ab
   - API build passing
   - API security suite passing
   - local smoke tests passing across auth/category/options/upload/listing flows.
+
+## Update - 2026-02-24 (Taxonomy Rollout + Category UX + Responsive Footer)
+- Seeded complete marketplace taxonomy across `agroline`, `autoline`, and `machineryline`:
+  - full top-level categories
+  - structured subcategories
+  - leaf-category templates generated in seed pipeline.
+- Added resilient cleanup handling in seed flow to avoid cleanup-stage permission/blocker failures from halting `seed:all`.
+- Reworked listing-posting category selection UI:
+  - marketplace tabs + category/subcategory cards
+  - improved category icon matching.
+- Reworked category discovery/navigation:
+  - home now shows 3 top-level marketplace cards
+  - category catalog is marketplace-scoped with tab switching and search
+  - direct links supported through `/categories?marketplace=<key>`.
+- Fixed layout issues found in QA screenshots:
+  - removed unwanted dark spacer above footer
+  - made footer alignment/responsiveness more professional at reduced widths.
+- Reliability/build follow-up:
+  - fixed TS issues in template builder and listing/company UI code paths
+  - confirmed green build and verification commands (`api`: seed/test/build, `web`: build).

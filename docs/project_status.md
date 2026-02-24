@@ -207,3 +207,25 @@ The API is failing to start due to two critical issues identified from the termi
   - `api`: `pnpm build` passing
   - `api`: `pnpm test:security` passing (4 suites, 16 tests)
   - API smoke checks for auth, categories, options, upload, listing create/read flows all passing against local runtime.
+
+## 7. Update - 2026-02-24 (Marketplace Taxonomy, Category Navigation, Responsive Footer)
+
+- Completed taxonomy rollout for production marketplace structure:
+  - seeded complete top-level categories for `agroline`, `autoline`, `machineryline`
+  - populated subcategory trees and generated templates for leaf categories
+  - retained legacy marketplaces as inactive for compatibility.
+- Fixed seed cleanup blocker:
+  - added resilient guarded deletion for cleanup-stage `deleteMany` calls (including ticket-message cleanup paths).
+- Upgraded posting/category UX:
+  - listing wizard description step now uses marketplace tabs with category/subcategory cards
+  - category icon/emoji assignment improved to better match category meaning
+  - categories page switched to marketplace-first navigation with search + `?marketplace=` deep links.
+- Simplified home categories section:
+  - homepage now shows 3 marketplace entry cards only (Autoline/Machineryline/Agroline)
+  - each card opens scoped category browsing instead of mixing all categories together.
+- Fixed layout polish issues from QA screenshots:
+  - removed unwanted black spacer above footer by removing extra global main bottom padding
+  - refactored footer to behave correctly at half-width and mobile breakpoints.
+- Build/test status confirmed green after changes:
+  - `api`: `pnpm test`, `pnpm test:security`, `pnpm build`, `pnpm run seed:all`, `pnpm run seed:verify`
+  - `web`: `pnpm build`.

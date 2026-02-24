@@ -99,3 +99,26 @@
 - 2026-02-24: `api` build passing (`pnpm build`)
 - 2026-02-24: `api` security tests passing (`pnpm test:security`)
 - 2026-02-24: local API smoke checks passing for auth, categories, options, upload, and listing create/read flows
+
+## Update - 2026-02-24 (Taxonomy + Categories UX + Footer/Layout)
+- Seeded full marketplace taxonomy for `agroline`, `autoline`, `machineryline` (including subcategory trees and leaf templates).
+- Added resilient cleanup guards to prevent seed cleanup failures in delete-many paths.
+- Upgraded listing wizard category selection:
+  - marketplace tabs + category/subcategory cards
+  - improved category icon/emoji matching by type.
+- Updated categories browsing UX:
+  - marketplace-first tabs and scoped discovery
+  - query-param support (`/categories?marketplace=...`) and Next.js `Suspense` wrapper for search params.
+- Updated home page categories section:
+  - replaced mixed category wall with 3 marketplace cards leading to scoped category pages.
+- Fixed layout polish from QA feedback:
+  - removed unwanted black spacer above footer
+  - made footer grid/responsiveness more stable on narrow/half-width viewports.
+- Applied web TypeScript fixes that were blocking clean build after updates.
+
+## Test Status (Latest)
+- 2026-02-24: `api` seed pipeline green (`pnpm run seed:all`, `pnpm run seed:verify`)
+- 2026-02-24: `api` unit tests green (`pnpm test`)
+- 2026-02-24: `api` security tests green (`pnpm test:security`)
+- 2026-02-24: `api` build green (`pnpm build`)
+- 2026-02-24: `web` production build green (`pnpm build`)
