@@ -347,8 +347,9 @@ export class ListingsService {
   }
 
   async findById(id: string) {
+    const parsedId = this.parseBigIntId(id, 'id');
     const listing = await this.prisma.listing.findUnique({
-      where: { id },
+      where: { id: parsedId },
       include: listingIncludes,
     });
 
