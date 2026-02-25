@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   getBuiltInEngineBlock,
@@ -503,6 +504,7 @@ export class AdminService {
     }
     const created = await this.prisma.formBlock.create({
       data: {
+        id: randomUUID(),
         name: data.name.trim(),
         fields: data.fields ?? [],
         isSystem: Boolean(data.isSystem),
