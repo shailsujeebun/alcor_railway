@@ -908,3 +908,22 @@ cd api && npx nest build
 - Added persistent "create new option" flows and APIs for `brand`, `model`, `subcategory`, `country`, and `city`, so new values are saved once and reused by all users.
 - Added options/cascade runtime behavior: parent-change child reset, dependency-based option loading, and dependency-state caching.
 - Completed validation checks and build/test verification; local infrastructure (Postgres/Redis/MinIO) confirmed working for this flow.
+
+## Update - 2026-02-24 (Operational Fixes)
+
+- Resolved Git remote sync blocker caused by malformed origin URL (newline in remote path) and completed branch/repo sync alignment for target remotes.
+- Fixed image upload display issues in posting flow:
+  - backend upload response now returns API-relative file paths
+  - frontend API layer normalizes media URLs consistently
+  - Next.js CSP allows local HTTP image loading for development.
+- Fixed ad posting internal server error path in listings service:
+  - safe category ID parsing
+  - resilient fallback for missing template block lookup data.
+- Fixed admin moderation queue interaction:
+  - approve/reject actions are now available in `PENDING_MODERATION` and `SUBMITTED` tabs.
+- Updated listing detail display semantics:
+  - boolean values render as `Yes`/`No`.
+- Validation performed:
+  - `api` build passing
+  - `api` security tests passing
+  - local smoke API checks passing for auth, categories/options, upload, and listing create/read.

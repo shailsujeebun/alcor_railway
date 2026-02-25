@@ -145,3 +145,20 @@ This is the best approach because it catches issues early, then validates real-w
 - Added persistent "create new option" flows and APIs for `brand`, `model`, `subcategory`, `country`, and `city`, so new values are saved once and reused by all users.
 - Added options/cascade runtime behavior: parent-change child reset, dependency-based option loading, and dependency-state caching.
 - Completed validation checks and build/test verification; local infrastructure (Postgres/Redis/MinIO) confirmed working for this flow.
+
+## Update - 2026-02-24 (Current Verification Snapshot)
+
+- Seed stability and taxonomy validation:
+  - `pnpm --dir api run seed:all` passing after cleanup guard updates
+  - `pnpm --dir api run seed:verify` passing with full marketplace taxonomy and generated leaf templates.
+- API quality gates (local):
+  - `pnpm --dir api run test` passing
+  - `pnpm --dir api run test:security` passing
+  - `pnpm --dir api run build` passing.
+- Web quality gate (local):
+  - `pnpm --dir web run build` passing after category UX/layout updates.
+- Scope covered by this verification cycle:
+  - marketplace-first category navigation
+  - ad-posting category/subcategory flow
+  - responsive footer/layout rendering fixes
+  - TypeScript/build stability for updated UI paths.

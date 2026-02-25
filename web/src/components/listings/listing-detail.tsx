@@ -94,6 +94,10 @@ export function ListingDetail({ id }: { id: string }) {
       .replace(/^./, (s) => s.toUpperCase());
 
   const resolveValueLabel = (field: any, rawValue: string) => {
+    const normalizedRaw = String(rawValue).trim().toLowerCase();
+    if (normalizedRaw === 'true') return 'Yes';
+    if (normalizedRaw === 'false') return 'No';
+
     const options = [...(field?.options ?? []), ...(field?.staticOptions ?? [])];
     if (options.length === 0) return rawValue;
 
@@ -116,7 +120,7 @@ export function ListingDetail({ id }: { id: string }) {
   };
 
   const displayAttributes = useMemo(() => {
-    return (listing?.attributes ?? []).map((attr) => {
+    return (listing?.attributes ?? []).map((attr: any) => {
       const field = templateFieldMap.get(attr.key);
       return {
         ...attr,
@@ -130,7 +134,7 @@ export function ListingDetail({ id }: { id: string }) {
   const attributeSections = useMemo(() => {
     if (displayAttributes.length === 0) return [];
 
-    const byKey = new Map(displayAttributes.map((attr) => [attr.key, attr]));
+    const byKey = new Map(displayAttributes.map((attr: any) => [attr.key, attr]));
     const grouped = new Map<string, typeof displayAttributes>();
     const matchedKeys = new Set<string>();
 
@@ -146,7 +150,7 @@ export function ListingDetail({ id }: { id: string }) {
       matchedKeys.add(String(field.key));
     }
 
-    const unmatched = displayAttributes.filter((attr) => !matchedKeys.has(attr.key));
+    const unmatched = displayAttributes.filter((attr: any) => !matchedKeys.has(attr.key));
     if (unmatched.length > 0) {
       const fallbackSection = grouped.get('Додаткові деталі') ?? [];
       grouped.set('Додаткові деталі', [...fallbackSection, ...unmatched]);
@@ -171,7 +175,7 @@ export function ListingDetail({ id }: { id: string }) {
   const mainImage = listing?.media?.[activeImageIndex]?.url || listing?.media?.[0]?.url;
   const cleanedDescription = normalizeDescription(listing?.description);
   const locationLabel = [listing?.city?.name, listing?.country?.name].filter(Boolean).join(', ');
-  const sellerPhone = listing?.sellerPhones?.[0] ?? listing?.company?.phones?.find((phone) => phone.isPrimary)?.phoneE164;
+  const sellerPhone = listing?.sellerPhones?.[0] ?? listing?.company?.phones?.find((phone: any) => phone.isPrimary)?.phoneE164;
 
   const summaryRows = useMemo(() => {
     const baseRows = [
@@ -188,13 +192,13 @@ export function ListingDetail({ id }: { id: string }) {
 
     const takenLabels = new Set(baseRows.map((row) => row.label.toLowerCase()));
     const topAttributes = displayAttributes
-      .filter((attr) => {
+      .filter((attr: any) => {
         const value = String(attr.displayValue ?? '').trim();
         if (!value || value === '-' || value === '—') return false;
         return !takenLabels.has(String(attr.displayKey).toLowerCase());
       })
       .slice(0, 4)
-      .map((attr) => ({
+      .map((attr: any) => ({
         label: attr.displayKey,
         value: attr.displayValue,
       }));
@@ -321,7 +325,7 @@ export function ListingDetail({ id }: { id: string }) {
 
               {listing.media && listing.media.length > 1 && (
                 <div className="mt-3 grid grid-cols-5 gap-2">
-                  {listing.media.slice(0, 10).map((m, index) => (
+                  {listing.media.slice(0, 10).map((m: any, index: number) => (
                     <button
                       key={m.id}
                       type="button"
@@ -499,7 +503,7 @@ export function ListingDetail({ id }: { id: string }) {
                           >
                             <div className="overflow-hidden">
                               <div className="grid gap-2 border-t border-white/10 p-3 sm:grid-cols-2">
-                                {items.map((attr) => (
+                                {items.map((attr: any) => (
                                   <div
                                     key={attr.id}
                                     className="group flex items-center justify-between gap-2 rounded-lg border border-white/6 bg-black/15 px-3 py-2 text-sm transition-all hover:border-orange-300/40 hover:bg-black/25"

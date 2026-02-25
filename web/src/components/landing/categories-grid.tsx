@@ -1,12 +1,33 @@
 'use client';
 
 import Link from 'next/link';
-import { Layers, ArrowRight } from 'lucide-react';
-import { useCategories } from '@/lib/queries';
+import { ArrowRight } from 'lucide-react';
+import { useMarketplaces } from '@/lib/queries';
+
+const MARKETPLACE_ORDER = ['autoline', 'machineryline', 'agroline'] as const;
+
+function marketplaceIcon(key: string): string {
+  if (key === 'autoline') return '🚛';
+  if (key === 'machineryline') return '🏗';
+  if (key === 'agroline') return '🚜';
+  return '📦';
+}
+
+function marketplaceSubtitle(key: string): string {
+  if (key === 'autoline') return 'Trucks, trailers, buses and transport';
+  if (key === 'machineryline') return 'Construction and industrial machinery';
+  if (key === 'agroline') return 'Agricultural machinery and equipment';
+  return 'Browse marketplace categories';
+}
 
 export function CategoriesGrid() {
-  const { data: categories } = useCategories();
-  const topLevel = categories?.filter((c) => !c.parentId) ?? [];
+  const { data: marketplaces = [] } = useMarketplaces();
+
+  const ordered = MARKETPLACE_ORDER
+    .map((key) => marketplaces.find((marketplace) => marketplace.key === key))
+    .filter((marketplace): marketplace is NonNullable<typeof marketplace> =>
+      Boolean(marketplace),
+    );
 
   return (
     <section className="section-padding" style={{ background: 'var(--bg-secondary)' }}>
@@ -18,31 +39,31 @@ export function CategoriesGrid() {
           <h2 className="font-heading font-extrabold text-2xl sm:text-3xl md:text-4xl text-[var(--text-primary)]">
             Перегляд за <span className="gradient-text">категоріями</span>
           </h2>
+          <p className="mt-3 text-[var(--text-secondary)]">
+            Оберіть маркетплейс, щоб відкрити повний список категорій.
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6" data-aos="fade-up" data-aos-delay="100">
-          {topLevel.map((cat) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8" data-aos="fade-up" data-aos-delay="100">
+          {ordered.map((marketplace) => (
             <Link
-              key={cat.id}
-              href={`/listings?categoryId=${cat.id}`}
-              className="glass-card card-hover p-3 sm:p-4 md:p-6 text-center group"
+              key={marketplace.id}
+              href={`/categories?marketplace=${marketplace.key}`}
+              className="glass-card card-hover p-6 sm:p-7 text-center group"
             >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mx-auto mb-2 sm:mb-3 md:mb-4 rounded-xl sm:rounded-2xl bg-blue-bright/10 flex items-center justify-center group-hover:bg-blue-bright/20 transition-colors">
-                <Layers className="text-blue-bright w-5 h-5 sm:w-6 sm:h-6" />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 rounded-2xl bg-blue-bright/10 flex items-center justify-center group-hover:bg-blue-bright/20 transition-colors">
+                <span className="text-2xl sm:text-3xl">{marketplaceIcon(marketplace.key)}</span>
               </div>
-              <h3 className="font-heading font-bold text-xs sm:text-sm text-[var(--text-primary)] leading-tight line-clamp-2">
-                {cat.name}
+              <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] leading-tight">
+                {marketplace.name}
               </h3>
-              {cat.children && cat.children.length > 0 && (
-                <p className="text-[10px] sm:text-xs text-[var(--text-secondary)] mt-1">
-                  {cat.children.length} підкатегорій
-                </p>
-              )}
+              <p className="text-sm text-[var(--text-secondary)] mt-2">{marketplaceSubtitle(marketplace.key)}</p>
+              <p className="text-xs text-blue-bright mt-4">Open all categories</p>
             </Link>
           ))}
-          {topLevel.length === 0 && (
+          {ordered.length === 0 && (
             <div className="col-span-full text-center py-8 text-[var(--text-secondary)]">
-              Категорії з'являться незабаром.
+              Маркетплейси з'являться незабаром.
             </div>
           )}
         </div>

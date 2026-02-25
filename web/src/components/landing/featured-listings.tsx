@@ -5,6 +5,7 @@ import { ArrowRight } from 'lucide-react';
 import { useListings } from '@/lib/queries';
 import { ListingCard } from '@/components/cards/listing-card';
 import { ListingCardSkeleton } from '@/components/ui/skeleton';
+import type { Listing } from '@/types/api';
 
 export function FeaturedListings() {
   const { data, isLoading } = useListings({ page: '1', limit: '6' });
@@ -27,7 +28,7 @@ export function FeaturedListings() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8" data-aos="fade-up" data-aos-delay="100">
           {isLoading
             ? Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
-            : data?.data.map((listing) => (
+            : data?.data.map((listing: Listing) => (
                 <ListingCard key={listing.id} listing={listing} />
               ))}
           {!isLoading && (!data?.data || data.data.length === 0) && (
