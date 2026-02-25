@@ -514,3 +514,58 @@ Verification:
 - `pnpm --dir api run test:security` passing
 - `pnpm --dir api run build` passing
 - `pnpm --dir web run build` passing
+
+## 9. Patch Update - 2026-02-25 (Seed Consistency + Dev UX + Bilingual Translation Coverage)
+
+### 9.1 Seed pipeline and verification alignment
+Files:
+- `api/prisma.config.ts`
+
+What changed:
+- Updated Prisma default seed command to `npx ts-node prisma/seed-all.ts` (was `seed.ts`).
+- Verified full seed + integrity flow against local DB:
+  - `pnpm run seed:all`
+  - `pnpm run seed:verify`
+
+Why:
+- Prevents mismatch where legacy seed data fails current verification thresholds/integrity checks.
+
+### 9.2 API developer workflow and FormBlock creation fix
+Files:
+- `api/package.json`
+- `api/src/admin/admin.service.ts`
+
+What changed:
+- Added `dev` script alias for API (`nest start --watch`) so `pnpm dev` works in `api/`.
+- Fixed `FormBlock` creation compile/runtime issue by generating `id` with `randomUUID()` when creating custom blocks.
+
+Why:
+- Removes recurring local dev startup error and resolves Prisma create typing/runtime requirement for `FormBlock.id`.
+
+### 9.3 Frontend i18n hardening for template builder and global fallback
+Files:
+- `web/src/app/admin/templates/builder/page.tsx`
+- `web/src/i18n/messages/en.ts`
+- `web/src/i18n/messages/uk.ts`
+- `web/src/components/providers/translation-provider.tsx`
+- `web/src/app/api/translate/route.ts`
+
+What changed:
+- Migrated template builder UI text/prompts/alerts/buttons/labels to dictionary keys (`t(...)`).
+- Added full EN/UK message sets for template builder scope (`admin.templateBuilder.*`).
+- Upgraded fallback translation pipeline to support both directions:
+  - `uk -> en` and `en -> uk`.
+- Translation API now accepts target locale and applies source-language filtering accordingly.
+- Client translation cache is now locale-scoped to prevent cross-locale cache pollution.
+
+Why:
+- Ensures language switch is consistent on the form builder page and improves project-wide bilingual fallback behavior for remaining hardcoded strings.
+
+### 9.4 Frontend runtime cache corruption recovery
+Operational note:
+- Cleared frontend runtime caches to resolve Turbopack task DB corruption:
+  - removed `web/.next`
+  - removed `web/node_modules/.cache/turbo`
+
+Why:
+- Recovers from `Failed to restore task data ... corrupted database` startup crash in `next dev`.

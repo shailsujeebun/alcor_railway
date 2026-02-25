@@ -228,4 +228,27 @@ The API is failing to start due to two critical issues identified from the termi
   - refactored footer to behave correctly at half-width and mobile breakpoints.
 - Build/test status confirmed green after changes:
   - `api`: `pnpm test`, `pnpm test:security`, `pnpm build`, `pnpm run seed:all`, `pnpm run seed:verify`
-  - `web`: `pnpm build`.
+- `web`: `pnpm build`.
+
+## 8. Update - 2026-02-25 (Seed Verification Recovery + Dev Script + Full EN/UA Builder Localization)
+
+- Fixed seed verification failures caused by mismatched/partial dataset state:
+  - re-ran full seed (`pnpm run seed:all`) and verification (`pnpm run seed:verify`) successfully.
+  - updated Prisma config default seed target to `seed-all.ts` to keep future `prisma db seed` runs consistent with verifier expectations.
+- Fixed API local dev command mismatch:
+  - added `dev` script alias in `api/package.json` so `pnpm dev` works.
+- Fixed API compile issue in admin block creation:
+  - `FormBlock` create now sets `id` via `randomUUID()` in `admin.service.ts`.
+- Delivered localization fixes for form template builder:
+  - migrated hardcoded builder labels/actions/prompts/alerts to dictionary keys.
+  - added complete `admin.templateBuilder.*` entries in both EN and UK message dictionaries.
+- Upgraded translation fallback architecture to work in both directions:
+  - EN mode translates residual Ukrainian hardcoded text.
+  - UK mode translates residual English hardcoded text.
+  - translation API now accepts `targetLocale` and uses locale-aware filtering/caching.
+- Cleared `web` runtime caches (`.next`, `node_modules/.cache/turbo`) to recover from Turbopack corrupted task DB startup panic.
+
+### Test/Verification Snapshot (2026-02-25)
+- `api`: `pnpm run seed:verify` passing.
+- `api`: `pnpm run build` passing.
+- `web`: TypeScript check passing (`pnpm exec tsc --noEmit`).

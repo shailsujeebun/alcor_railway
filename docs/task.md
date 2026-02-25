@@ -122,3 +122,14 @@
 - 2026-02-24: `api` security tests green (`pnpm test:security`)
 - 2026-02-24: `api` build green (`pnpm build`)
 - 2026-02-24: `web` production build green (`pnpm build`)
+- 2026-02-25: `api` seed verification recovered and passing (`pnpm run seed:all`, `pnpm run seed:verify`)
+- 2026-02-25: `api` build green after `FormBlock` ID fix (`pnpm run build`)
+- 2026-02-25: `web` TypeScript check green after i18n refactor (`pnpm exec tsc --noEmit`)
+
+## Update - 2026-02-25 (Operational Fixes + Localization Completion)
+- Added API `dev` script alias so `pnpm dev` works in `api/`.
+- Updated Prisma seed config to use `seed-all.ts` by default (prevents legacy seed/verifier mismatch).
+- Fixed admin block creation by setting `FormBlock.id` with `randomUUID()`.
+- Localized Form Template Builder page to dictionary keys and added corresponding EN/UK translations.
+- Upgraded translation fallback to support both language directions (EN↔UK) and locale-aware translation API routing.
+- Cleared frontend caches (`web/.next`, `web/node_modules/.cache/turbo`) during recovery from Turbopack cache corruption.

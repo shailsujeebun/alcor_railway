@@ -225,3 +225,20 @@ For more information, please refer to the detailed documentation files listed ab
 - Reliability/build follow-up:
   - fixed TS issues in template builder and listing/company UI code paths
   - confirmed green build and verification commands (`api`: seed/test/build, `web`: build).
+
+## Update - 2026-02-25 (Seed Alignment + Dev Ergonomics + Translation Coverage)
+
+- Seed reliability and consistency:
+  - switched Prisma default seed command to `seed-all.ts` in `api/prisma.config.ts`
+  - verified end-to-end seed health (`pnpm run seed:all` + `pnpm run seed:verify`).
+- API local DX:
+  - added `dev` alias in `api/package.json` so `pnpm dev` works in backend package.
+  - fixed `FormBlock` creation path by generating block IDs (`randomUUID()`), removing compile/create failures.
+- Template builder localization:
+  - migrated builder UI strings/prompts/alerts to i18n dictionary keys.
+  - expanded both `web/src/i18n/messages/en.ts` and `web/src/i18n/messages/uk.ts` with `admin.templateBuilder.*`.
+- Translation fallback upgrade:
+  - fallback translation now supports both directions (`uk -> en` and `en -> uk`).
+  - translation API updated with `targetLocale` handling and locale-aware filtering/caching.
+- Frontend runtime recovery note:
+  - resolved Turbopack corrupted-cache startup failure by clearing `.next` and Turbo cache in `web/`.
