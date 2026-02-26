@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ReviewList } from './review-list';
 import { ReviewForm } from './review-form';
 import { Modal } from '@/components/ui/modal';
-import type { CompanyMedia } from '@/types/api';
+import type { CompanyMedia, Listing } from '@/types/api';
 
 type Tab = 'listings' | 'reviews' | 'gallery';
 
@@ -183,7 +183,7 @@ export function CompanyDetail({ slug }: { slug: string }) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {listingsLoading
               ? Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
-              : listingsData?.data.map((listing) => (
+              : listingsData?.data.map((listing: Listing) => (
                   <ListingCard key={listing.id} listing={listing} />
                 ))}
           </div>

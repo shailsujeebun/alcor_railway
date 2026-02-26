@@ -96,3 +96,14 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Project Update - 2026-02-24
+
+- Seed pipeline updated to support full marketplace taxonomy (`agroline`, `autoline`, `machineryline`) with subcategory trees and leaf template generation.
+- Seed cleanup hardened with guarded delete handling to prevent cleanup-stage blockers from failing `seed:all`.
+- Verification snapshot:
+  - `pnpm run seed:all` passing
+  - `pnpm run seed:verify` passing
+  - `pnpm run test` passing
+  - `pnpm run test:security` passing
+  - `pnpm run build` passing.

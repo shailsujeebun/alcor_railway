@@ -3,6 +3,249 @@ import * as bcrypt from 'bcrypt';
 import { daysAgo, daysFromNow, type SeedCatalog, type SeedGeo, type SeedPlans, type SeedUsers } from './shared';
 import { DEFAULT_MOTORIZED_BLOCK_FIELDS } from '../../src/templates/template-schema';
 
+type CategorySeedNode = {
+  slug: string;
+  name: string;
+  hasEngine?: boolean;
+  children?: CategorySeedNode[];
+};
+
+const MARKETPLACE_DEFINITIONS = [
+  { key: 'agroline', name: 'Agroline', isActive: true },
+  { key: 'autoline', name: 'Autoline', isActive: true },
+  { key: 'machineryline', name: 'Machineryline', isActive: true },
+  { key: 'agriculture', name: 'Agriculture (legacy)', isActive: false },
+  { key: 'commercial', name: 'Commercial transport (legacy)', isActive: false },
+  { key: 'industrial', name: 'Industrial equipment (legacy)', isActive: false },
+  { key: 'cars', name: 'Passenger cars (legacy)', isActive: false },
+] as const;
+
+const AGROLINE_TREE: CategorySeedNode[] = [
+  {
+    slug: 'tractors',
+    name: 'Tractors',
+    children: [
+      { slug: 'wheel-tractors', name: 'Wheel tractors' },
+      { slug: 'tracked-tractors', name: 'Tracked tractors' },
+      { slug: 'mini-tractors', name: 'Mini tractors' },
+      { slug: 'garden-tractors', name: 'Garden tractors' },
+    ],
+  },
+  {
+    slug: 'combines',
+    name: 'Combines',
+    children: [
+      { slug: 'grain-harvesters', name: 'Grain harvesters' },
+      { slug: 'forage-harvesters', name: 'Forage harvesters' },
+      { slug: 'beet-harvesters', name: 'Beet harvesters' },
+    ],
+  },
+  {
+    slug: 'combine-headers',
+    name: 'Combine headers',
+    children: [
+      { slug: 'grain-headers', name: 'Grain headers' },
+      { slug: 'corn-headers', name: 'Corn headers' },
+      { slug: 'sunflower-headers', name: 'Sunflower headers' },
+    ],
+  },
+  { slug: 'tillage-equipment', name: 'Tillage equipment' },
+  { slug: 'planting-equipment', name: 'Planting equipment' },
+  { slug: 'irrigation-equipment', name: 'Irrigation equipment' },
+  { slug: 'fertilizer-application-equipment', name: 'Fertilizer application equipment' },
+  { slug: 'grain-processing-equipment', name: 'Grain processing equipment' },
+  {
+    slug: 'hay-making-equipment',
+    name: 'Hay making equipment',
+    children: [
+      { slug: 'mowers', name: 'Mowers' },
+      { slug: 'balers', name: 'Balers' },
+      { slug: 'rakes-tedders', name: 'Rakes and tedders' },
+    ],
+  },
+  {
+    slug: 'livestock-equipment',
+    name: 'Livestock equipment',
+    children: [
+      { slug: 'feed-mixers', name: 'Feed mixers' },
+      { slug: 'grain-crushers', name: 'Grain crushers' },
+      { slug: 'feeders', name: 'Feeders' },
+    ],
+  },
+  {
+    slug: 'transportation-machinery',
+    name: 'Transportation machinery',
+    children: [
+      { slug: 'tractor-trailers', name: 'Tractor trailers' },
+      { slug: 'grain-carts', name: 'Grain carts' },
+    ],
+  },
+  { slug: 'forestry-equipment', name: 'Forestry equipment' },
+  { slug: 'garden-machinery', name: 'Garden machinery' },
+  { slug: 'vineyard-equipment', name: 'Vineyard equipment' },
+  { slug: 'potato-equipment', name: 'Potato equipment' },
+  { slug: 'crop-growing', name: 'Crop growing' },
+  { slug: 'animal-husbandry', name: 'Animal husbandry' },
+  { slug: 'agricultural-products', name: 'Agricultural products' },
+  { slug: 'packaging-and-containers', name: 'Packaging and containers' },
+  { slug: 'farm-lands-and-buildings', name: 'Farm lands and buildings' },
+  { slug: 'other-farm-equipment', name: 'Other farm equipment' },
+  { slug: 'agroline-spare-parts', name: 'Spare parts', hasEngine: false },
+  { slug: 'agroline-equipment', name: 'Equipment', hasEngine: false },
+  { slug: 'agroline-tires-and-wheels', name: 'Tires and wheels', hasEngine: false },
+  { slug: 'agroline-services', name: 'Services', hasEngine: false },
+];
+
+const AUTOLINE_TREE: CategorySeedNode[] = [
+  {
+    slug: 'trucks',
+    name: 'Trucks',
+    children: [
+      { slug: 'flatbed-trucks', name: 'Flatbed trucks' },
+      { slug: 'curtain-trucks', name: 'Curtain trucks' },
+      { slug: 'vans-trucks', name: 'Vans trucks' },
+      { slug: 'refrigerated-trucks', name: 'Refrigerated trucks' },
+      { slug: 'dump-trucks', name: 'Dump trucks' },
+      { slug: 'car-carriers', name: 'Car carriers' },
+      { slug: 'container-carriers', name: 'Container carriers' },
+      { slug: 'timber-trucks', name: 'Timber trucks' },
+    ],
+  },
+  { slug: 'trucks-with-trailer', name: 'Trucks with trailer' },
+  { slug: 'truck-tractors', name: 'Truck tractors' },
+  { slug: 'tractor-units-with-semi-trailer', name: 'Tractor units with semi-trailer' },
+  {
+    slug: 'commercial-vehicles',
+    name: 'Commercial vehicles',
+    children: [
+      { slug: 'light-commercial-vans', name: 'Light commercial vans' },
+      { slug: 'refrigerated-vans', name: 'Refrigerated vans' },
+    ],
+  },
+  { slug: 'vans', name: 'Vans' },
+  {
+    slug: 'semi-trailers',
+    name: 'Semi-trailers',
+    children: [
+      { slug: 'curtain-semi-trailers', name: 'Curtain semi-trailers' },
+      { slug: 'refrigerated-semi-trailers', name: 'Refrigerated semi-trailers' },
+      { slug: 'tipper-semi-trailers', name: 'Tipper semi-trailers' },
+      { slug: 'lowbed-semi-trailers', name: 'Lowbed semi-trailers' },
+    ],
+  },
+  {
+    slug: 'trailers',
+    name: 'Trailers',
+    children: [
+      { slug: 'tipper-trailers', name: 'Tipper trailers' },
+      { slug: 'platform-trailers', name: 'Platform trailers' },
+      { slug: 'container-trailers', name: 'Container trailers' },
+    ],
+  },
+  {
+    slug: 'tank-transports',
+    name: 'Tank transports',
+    children: [
+      { slug: 'fuel-tankers', name: 'Fuel tankers' },
+      { slug: 'food-tankers', name: 'Food tankers' },
+      { slug: 'chemical-tankers', name: 'Chemical tankers' },
+    ],
+  },
+  {
+    slug: 'buses',
+    name: 'Buses',
+    children: [
+      { slug: 'city-buses', name: 'City buses' },
+      { slug: 'tourist-buses', name: 'Tourist buses' },
+      { slug: 'school-buses', name: 'School buses' },
+    ],
+  },
+  { slug: 'municipal-vehicles', name: 'Municipal vehicles' },
+  { slug: 'airport-equipment', name: 'Airport equipment' },
+  { slug: 'railway-equipment', name: 'Railway equipment' },
+  { slug: 'containers', name: 'Containers' },
+  {
+    slug: 'cars',
+    name: 'Cars',
+    children: [
+      { slug: 'sedans', name: 'Sedans' },
+      { slug: 'hatchbacks', name: 'Hatchbacks' },
+      { slug: 'suv', name: 'SUV' },
+      { slug: 'coupes', name: 'Coupes' },
+      { slug: 'convertibles', name: 'Convertibles' },
+      { slug: 'pickups', name: 'Pickups' },
+      { slug: 'minivans', name: 'Minivans' },
+      { slug: 'electric-cars', name: 'Electric cars' },
+      { slug: 'hybrid-cars', name: 'Hybrid cars' },
+    ],
+  },
+  { slug: 'campers', name: 'Campers' },
+  { slug: 'motorcycles', name: 'Motorcycles' },
+  { slug: 'water-transport', name: 'Water transport' },
+  { slug: 'air-transport', name: 'Air transport' },
+  { slug: 'autoline-equipment', name: 'Equipment', hasEngine: false },
+  { slug: 'autoline-tires-and-wheels', name: 'Tires and wheels', hasEngine: false },
+  { slug: 'autoline-spare-parts', name: 'Spare parts', hasEngine: false },
+  { slug: 'autoline-services', name: 'Services', hasEngine: false },
+];
+
+const MACHINERYLINE_TREE: CategorySeedNode[] = [
+  {
+    slug: 'construction-equipment',
+    name: 'Construction equipment',
+    children: [
+      { slug: 'excavators', name: 'Excavators' },
+      { slug: 'mini-excavators', name: 'Mini excavators' },
+      { slug: 'tracked-excavators', name: 'Tracked excavators' },
+      { slug: 'wheel-excavators', name: 'Wheel excavators' },
+      { slug: 'concrete-plants', name: 'Concrete plants' },
+      { slug: 'asphalt-plants', name: 'Asphalt plants' },
+    ],
+  },
+  {
+    slug: 'material-handling-equipment',
+    name: 'Material handling equipment',
+    children: [
+      { slug: 'wheel-loaders', name: 'Wheel loaders' },
+      { slug: 'telehandlers', name: 'Telehandlers' },
+      { slug: 'skid-steer-loaders', name: 'Skid steer loaders' },
+      { slug: 'forklifts', name: 'Forklifts' },
+    ],
+  },
+  { slug: 'industrial-equipment', name: 'Industrial equipment' },
+  { slug: 'mining-equipment', name: 'Mining equipment' },
+  { slug: 'machineryline-equipment', name: 'Equipment', hasEngine: false },
+  { slug: 'alternative-energy-sources', name: 'Alternative energy sources' },
+  { slug: 'tools', name: 'Tools' },
+  { slug: 'raw-materials', name: 'Raw materials' },
+  { slug: 'industrial-real-estate', name: 'Industrial real estate' },
+  { slug: 'machineryline-tires-and-wheels', name: 'Tires and wheels', hasEngine: false },
+  { slug: 'machineryline-spare-parts', name: 'Spare parts', hasEngine: false },
+  { slug: 'machineryline-services', name: 'Services', hasEngine: false },
+];
+
+const MARKETPLACE_TAXONOMY = [
+  AGROLINE_TREE,
+  AUTOLINE_TREE,
+  MACHINERYLINE_TREE,
+] as const;
+
+function collectLeafSlugs(nodes: readonly CategorySeedNode[]): string[] {
+  const leaves: string[] = [];
+  for (const node of nodes) {
+    if (!node.children || node.children.length === 0) {
+      leaves.push(node.slug);
+      continue;
+    }
+    leaves.push(...collectLeafSlugs(node.children));
+  }
+  return leaves;
+}
+
+const ALL_LEAF_CATEGORY_SLUGS = MARKETPLACE_TAXONOMY.flatMap((tree) =>
+  collectLeafSlugs(tree),
+);
+
 export type CoreSeedData = {
   users: SeedUsers;
   geo: SeedGeo;
@@ -13,7 +256,7 @@ export type CoreSeedData = {
 export async function seedCore(prisma: PrismaClient): Promise<CoreSeedData> {
   const isLikelyMotorizedSlug = (slug: string) => {
     const value = slug.toLowerCase();
-    const excludedTokens = ['trailer', 'semi-trailer', 'parts', 'tires', 'wheels', 'service'];
+    const excludedTokens = ['trailer', 'semi-trailer', 'parts', 'tires', 'wheels', 'service', 'services'];
     if (excludedTokens.some((token) => value.includes(token))) {
       return false;
     }
@@ -38,6 +281,8 @@ export async function seedCore(prisma: PrismaClient): Promise<CoreSeedData> {
       'minivan',
       'electric',
       'hybrid',
+      'motorcycle',
+      'van',
     ];
 
     return motorizedTokens.some((token) => value.includes(token));
@@ -183,144 +428,66 @@ export async function seedCore(prisma: PrismaClient): Promise<CoreSeedData> {
     prisma.activityType.create({ data: { code: 'AUTO_SERVICE', name: 'Auto service' } }),
   ]);
 
-  const marketplaceRows = await Promise.all([
-    prisma.marketplace.create({ data: { key: 'agriculture', name: 'Agriculture' } }),
-    prisma.marketplace.create({ data: { key: 'commercial', name: 'Commercial transport' } }),
-    prisma.marketplace.create({ data: { key: 'industrial', name: 'Industrial equipment' } }),
-    prisma.marketplace.create({ data: { key: 'cars', name: 'Passenger cars' } }),
-  ]);
+  const marketplaceRows = await Promise.all(
+    MARKETPLACE_DEFINITIONS.map((marketplace) =>
+      prisma.marketplace.create({
+        data: {
+          key: marketplace.key,
+          name: marketplace.name,
+          isActive: marketplace.isActive,
+        },
+      }),
+    ),
+  );
 
   const marketplaceMap = new Map<string, bigint>(marketplaceRows.map((row) => [row.key, row.id]));
   const categoriesBySlug = new Map<string, { id: bigint; marketplaceId: bigint }>();
 
-  async function createCategory(params: {
+  let sortOrder = 1;
+  async function insertNode(params: {
     marketplaceKey: string;
-    slug: string;
-    name: string;
-    parentSlug?: string;
-    sortOrder: number;
-    hasEngine?: boolean;
+    node: CategorySeedNode;
+    parentId?: bigint;
   }) {
     const marketplaceId = marketplaceMap.get(params.marketplaceKey);
     if (!marketplaceId) {
       throw new Error(`Unknown marketplace key: ${params.marketplaceKey}`);
     }
 
-    const parent = params.parentSlug ? categoriesBySlug.get(params.parentSlug) : undefined;
     const row = await prisma.category.create({
       data: {
         marketplaceId,
-        slug: params.slug,
-        name: params.name,
-        parentId: parent?.id,
-        sortOrder: params.sortOrder,
+        slug: params.node.slug,
+        name: params.node.name,
+        parentId: params.parentId,
+        sortOrder: sortOrder++,
         hasEngine:
-          params.hasEngine === undefined
-            ? isLikelyMotorizedSlug(params.slug)
-            : params.hasEngine,
+          params.node.hasEngine === undefined
+            ? isLikelyMotorizedSlug(params.node.slug)
+            : params.node.hasEngine,
       },
     });
 
-    categoriesBySlug.set(params.slug, { id: row.id, marketplaceId });
+    categoriesBySlug.set(params.node.slug, { id: row.id, marketplaceId });
+
+    for (const child of params.node.children ?? []) {
+      await insertNode({
+        marketplaceKey: params.marketplaceKey,
+        node: child,
+        parentId: row.id,
+      });
+    }
   }
 
-  await createCategory({ marketplaceKey: 'agriculture', slug: 'tractors', name: 'Tractors', sortOrder: 1 });
-  await createCategory({
-    marketplaceKey: 'agriculture',
-    slug: 'wheel-tractors',
-    name: 'Wheel tractors',
-    parentSlug: 'tractors',
-    sortOrder: 2,
-  });
-  await createCategory({
-    marketplaceKey: 'agriculture',
-    slug: 'tracked-tractors',
-    name: 'Tracked tractors',
-    parentSlug: 'tractors',
-    sortOrder: 3,
-  });
-  await createCategory({
-    marketplaceKey: 'agriculture',
-    slug: 'combine-harvesters',
-    name: 'Combine harvesters',
-    sortOrder: 4,
-  });
-  await createCategory({
-    marketplaceKey: 'agriculture',
-    slug: 'grain-harvesters',
-    name: 'Grain harvesters',
-    parentSlug: 'combine-harvesters',
-    sortOrder: 5,
-  });
-
-  await createCategory({ marketplaceKey: 'industrial', slug: 'excavators', name: 'Excavators', sortOrder: 1 });
-  await createCategory({
-    marketplaceKey: 'industrial',
-    slug: 'mini-excavators',
-    name: 'Mini excavators',
-    parentSlug: 'excavators',
-    sortOrder: 2,
-  });
-  await createCategory({
-    marketplaceKey: 'industrial',
-    slug: 'tracked-excavators',
-    name: 'Tracked excavators',
-    parentSlug: 'excavators',
-    sortOrder: 3,
-  });
-  await createCategory({ marketplaceKey: 'industrial', slug: 'loaders', name: 'Loaders', sortOrder: 4 });
-  await createCategory({
-    marketplaceKey: 'industrial',
-    slug: 'wheel-loaders',
-    name: 'Wheel loaders',
-    parentSlug: 'loaders',
-    sortOrder: 5,
-  });
-
-  await createCategory({ marketplaceKey: 'commercial', slug: 'trucks', name: 'Trucks', sortOrder: 1 });
-  await createCategory({
-    marketplaceKey: 'commercial',
-    slug: 'truck-tractors',
-    name: 'Truck tractors',
-    parentSlug: 'trucks',
-    sortOrder: 2,
-  });
-  await createCategory({
-    marketplaceKey: 'commercial',
-    slug: 'dump-trucks',
-    name: 'Dump trucks',
-    parentSlug: 'trucks',
-    sortOrder: 3,
-  });
-  await createCategory({ marketplaceKey: 'commercial', slug: 'trailers', name: 'Trailers', sortOrder: 4 });
-  await createCategory({
-    marketplaceKey: 'commercial',
-    slug: 'semi-trailers',
-    name: 'Semi-trailers',
-    parentSlug: 'trailers',
-    sortOrder: 5,
-  });
-
-  await createCategory({
-    marketplaceKey: 'cars',
-    slug: 'passenger-cars',
-    name: 'Passenger cars',
-    sortOrder: 1,
-  });
-  await createCategory({
-    marketplaceKey: 'cars',
-    slug: 'sedans',
-    name: 'Sedans',
-    parentSlug: 'passenger-cars',
-    sortOrder: 2,
-  });
-  await createCategory({
-    marketplaceKey: 'cars',
-    slug: 'suv',
-    name: 'SUV',
-    parentSlug: 'passenger-cars',
-    sortOrder: 3,
-  });
+  for (const node of AGROLINE_TREE) {
+    await insertNode({ marketplaceKey: 'agroline', node });
+  }
+  for (const node of AUTOLINE_TREE) {
+    await insertNode({ marketplaceKey: 'autoline', node });
+  }
+  for (const node of MACHINERYLINE_TREE) {
+    await insertNode({ marketplaceKey: 'machineryline', node });
+  }
 
   const brandRows = await Promise.all([
     prisma.brand.create({ data: { name: 'John Deere' } }),
@@ -357,21 +524,6 @@ export async function seedCore(prisma: PrismaClient): Promise<CoreSeedData> {
   await linkBrandToCategory('Toyota', 'sedans');
   await linkBrandToCategory('BMW', 'suv');
 
-  const leafCategorySlugs = [
-    'wheel-tractors',
-    'tracked-tractors',
-    'grain-harvesters',
-    'mini-excavators',
-    'tracked-excavators',
-    'wheel-loaders',
-    'truck-tractors',
-    'dump-trucks',
-    'semi-trailers',
-    'sedans',
-    'suv',
-  ];
-
-  // Ensure the system engine block exists before templates reference it.
   await prisma.formBlock.upsert({
     where: { id: 'engine_block' },
     create: {
@@ -387,7 +539,7 @@ export async function seedCore(prisma: PrismaClient): Promise<CoreSeedData> {
     },
   });
 
-  for (const slug of leafCategorySlugs) {
+  for (const slug of ALL_LEAF_CATEGORY_SLUGS) {
     const category = categoriesBySlug.get(slug);
     if (!category) continue;
 

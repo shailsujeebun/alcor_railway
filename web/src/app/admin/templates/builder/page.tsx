@@ -293,8 +293,8 @@ export default function AdminTemplatesPage() {
                 dataSource: 'static',
                 staticOptions: [],
                 dependsOn: [],
-                visibleIf: {},
-                requiredIf: {},
+                visibleIf: undefined,
+                requiredIf: undefined,
                 resetOnChange: [],
             },
         ]);

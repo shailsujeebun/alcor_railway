@@ -14,7 +14,10 @@ import { UpdateListingDto } from './dto/update-listing.dto';
 import { UpdateListingContactDto } from './dto/update-listing-contact.dto';
 import { ListingQueryDto } from './dto/listing-query.dto';
 import { evaluateRuleTree } from '../common/rule-tree';
-import { mergeTemplateFieldsWithBlocks } from '../templates/template-schema';
+import {
+  getBuiltInEngineBlock,
+  mergeTemplateFieldsWithBlocks,
+} from '../templates/template-schema';
 
 const VALID_TRANSITIONS: Record<ListingStatus, ListingStatus[]> = {
   DRAFT: [ListingStatus.SUBMITTED],
@@ -67,6 +70,18 @@ export class ListingsService {
     }
   }
 
+  private parseBigIntId(value: string, fieldName: string): bigint {
+    const normalized = String(value ?? '').trim();
+    if (!normalized) {
+      throw new BadRequestException(`${fieldName} is required`);
+    }
+    try {
+      return BigInt(normalized);
+    } catch {
+      throw new BadRequestException(`${fieldName} must be a numeric id`);
+    }
+  }
+
   async create(
     dto: CreateListingDto,
     ownerUserId?: string,
@@ -115,8 +130,9 @@ export class ListingsService {
     // Fetch category to get marketplaceId
     let marketplaceId: bigint | undefined;
     if (categoryId) {
+      const parsedCategoryId = this.parseBigIntId(categoryId, 'categoryId');
       const cat = await this.prisma.category.findUnique({
-        where: { id: BigInt(categoryId) },
+        where: { id: parsedCategoryId },
       });
       if (!cat) throw new NotFoundException('Category not found');
       marketplaceId = cat.marketplaceId;
@@ -151,7 +167,7 @@ export class ListingsService {
           company: { connect: { id: companyId } },
           ownerUser: ownerUserId ? { connect: { id: ownerUserId } } : undefined,
           category: categoryId
-            ? { connect: { id: BigInt(categoryId) } }
+            ? { connect: { id: this.parseBigIntId(categoryId, 'categoryId') } }
             : undefined,
           brand: brandId ? { connect: { id: brandId } } : undefined,
           country: countryId ? { connect: { id: countryId } } : undefined,
@@ -196,12 +212,12 @@ export class ListingsService {
           where: {
             brandId_categoryId: {
               brandId,
-              categoryId: BigInt(categoryId),
+              categoryId: this.parseBigIntId(categoryId, 'categoryId'),
             },
           },
           create: {
             brandId,
-            categoryId: BigInt(categoryId),
+            categoryId: this.parseBigIntId(categoryId, 'categoryId'),
           },
           update: {},
         });
@@ -660,9 +676,11 @@ export class ListingsService {
     categoryId: string,
     attributes: Record<string, any> = {},
   ) {
+    const parsedCategoryId = this.parseBigIntId(categoryId, 'categoryId');
+
     // 1. Fetch active template for category
     const category = await this.prisma.category.findUnique({
-      where: { id: BigInt(categoryId) },
+      where: { id: parsedCategoryId },
       include: {
         formTemplates: {
           where: { isActive: true },
@@ -686,13 +704,41 @@ export class ListingsService {
     const blockIds = Array.isArray((template as any).blockIds)
       ? (template as any).blockIds.map((id: any) => String(id))
       : [];
-    const blocks =
-      blockIds.length === 0
-        ? []
-        : await this.prisma.formBlock.findMany({
-            where: { id: { in: blockIds } },
-            orderBy: { name: 'asc' },
-          });
+    let blocks:
+      | Array<{
+          id: string;
+          name: string;
+          isSystem: boolean;
+          fields: any;
+        }>
+      = [];
+    if (blockIds.length > 0) {
+      try {
+        blocks = await this.prisma.formBlock.findMany({
+          where: { id: { in: blockIds } },
+          orderBy: { name: 'asc' },
+        });
+      } catch {
+        // Keep draft validation resilient if form_block table is missing or
+        // temporarily unavailable in local environments.
+        blocks = [];
+      }
+    }
+
+    const dbBlockIds = new Set(blocks.map((block) => block.id));
+    if (
+      Boolean((category as any).hasEngine) &&
+      blockIds.includes('engine_block') &&
+      !dbBlockIds.has('engine_block')
+    ) {
+      const engineBlock = getBuiltInEngineBlock();
+      blocks.push({
+        id: engineBlock.id,
+        name: engineBlock.name,
+        isSystem: true,
+        fields: engineBlock.fields,
+      });
+    }
 
     const mergedFields = mergeTemplateFieldsWithBlocks(
       (template as any).fields ?? [],

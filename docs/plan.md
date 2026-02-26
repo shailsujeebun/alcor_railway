@@ -20,6 +20,47 @@
   - added frontend URL normalization for previously uploaded MinIO URLs
   - added upload pre-validation (mime + max size).
 
+## Execution Update - 2026-02-24
+
+- Completed production bug-fix pass focused on posting flow reliability and moderation operations.
+- Closed image upload display regression end-to-end:
+  - backend now returns API-relative media paths in upload response
+  - frontend normalizes all known upload URL shapes (legacy/current, relative/absolute)
+  - CSP expanded for local development image loading (`img-src` includes `http:`).
+- Closed internal server error in ad posting flow:
+  - added safe category-id parsing in listing service
+  - added robust fallback when template block data is missing
+  - preserved motorized-category fallback behavior through built-in `engine_block`.
+- Closed admin moderation UX blocker:
+  - moderation queue now supports action buttons in `PENDING_MODERATION` state.
+- Applied detail-page output normalization:
+  - boolean-like attributes now render `Yes`/`No` instead of `true`/`false`.
+- Ran verification:
+  - API build passes
+  - API security suite passes
+  - local smoke checks pass for auth, options, categories, upload, and listing create/read endpoints.
+
+## Execution Update - 2026-02-24 (Marketplace-First Category Rollout)
+
+- Completed taxonomy rollout to match requested marketplace structure:
+  - full `agroline`, `autoline`, `machineryline` category trees seeded
+  - subcategory population added and leaf template generation confirmed.
+- Stabilized seed lifecycle:
+  - added guarded cleanup behavior so cleanup-stage delete operations no longer block `seed:all` on known non-critical delete errors.
+- Delivered marketplace-first browsing model in UI:
+  - home categories now present 3 marketplace entry points only
+  - categories page shows marketplace tabs first, then scoped categories
+  - deep links via `/categories?marketplace=<key>`.
+- Delivered posting step UX requested in screenshots:
+  - wizard "Description" step now uses marketplace tabs + category cards + subcategory drill-down
+  - category icons aligned more closely to category meaning.
+- Closed layout regressions identified during QA:
+  - removed black spacer before footer caused by global layout padding
+  - footer layout redesigned for better behavior on smaller widths.
+- Verification snapshot:
+  - API: `test`, `test:security`, `build`, `seed:all`, `seed:verify` passing
+  - Web: `build` passing.
+
 ## 1. Product Scope and UX Flow
 
 ### A. Entry

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { CategoriesPageContent } from '@/components/categories/categories-page';
 
 export const metadata = {
@@ -6,5 +7,9 @@ export const metadata = {
 };
 
 export default function CategoriesPage() {
-  return <CategoriesPageContent />;
+  return (
+    <Suspense fallback={null}>
+      <CategoriesPageContent />
+    </Suspense>
+  );
 }

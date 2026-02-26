@@ -10,9 +10,9 @@ export function Footer() {
 
   return (
     <footer className="border-t border-[var(--border-color)]" style={{ background: 'var(--bg-secondary)' }}>
-      <div className="container-main section-padding">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
-          <div className="sm:col-span-2 lg:col-span-1">
+      <div className="container-main py-10 sm:py-12 lg:py-14">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
+          <div className="md:col-span-2 lg:col-span-5">
             <div className="logo-link flex items-center gap-3 mb-4">
               <Image
                 src="/alcor-logo.png"
@@ -23,33 +23,35 @@ export function Footer() {
               />
               <span className="logo-text font-heading font-bold text-xl">АЛЬКОР</span>
             </div>
-            <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{t('footer.description')}</p>
+            <p className="text-[var(--text-secondary)] text-sm leading-relaxed max-w-xl">
+              {t('footer.description')}
+            </p>
           </div>
 
-          <div>
+          <div className="lg:col-span-2">
             <h4 className="font-heading font-bold text-sm uppercase tracking-wider mb-4 text-[var(--text-primary)]">
               {t('footer.servicesTitle')}
             </h4>
             <ul className="space-y-3">
               <li>
-                <span className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors cursor-pointer">
+                <Link href="/pricing" className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors">
                   {t('footer.autoLeasing')}
-                </span>
+                </Link>
               </li>
               <li>
-                <span className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors cursor-pointer">
+                <Link href="/pricing" className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors">
                   {t('footer.businessLoans')}
-                </span>
+                </Link>
               </li>
               <li>
-                <span className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors cursor-pointer">
+                <Link href="/pricing" className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors">
                   {t('footer.factoring')}
-                </span>
+                </Link>
               </li>
             </ul>
           </div>
 
-          <div>
+          <div className="lg:col-span-2">
             <h4 className="font-heading font-bold text-sm uppercase tracking-wider mb-4 text-[var(--text-primary)]">
               {t('footer.companyTitle')}
             </h4>
@@ -82,7 +84,7 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
+          <div className="lg:col-span-3">
             <h4 className="font-heading font-bold text-sm uppercase tracking-wider mb-4 text-[var(--text-primary)]">
               {t('footer.contactsTitle')}
             </h4>
@@ -103,7 +105,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-[var(--border-color)] mt-8 md:mt-12 pt-6 md:pt-8 text-center">
+        <div className="border-t border-[var(--border-color)] mt-8 lg:mt-10 pt-5 lg:pt-6">
           <p className="text-sm text-[var(--text-secondary)]">
             &copy; {new Date().getFullYear()} АЛЬКОР. {t('footer.rights')}
           </p>

@@ -8,6 +8,7 @@ import type { Listing, ListingStatus } from '@/types/api';
 
 const STATUS_TABS: { label: string; value: ListingStatus }[] = [
   { label: 'На модерації', value: 'SUBMITTED' },
+  { label: 'Очікує перевірки', value: 'PENDING_MODERATION' },
   { label: 'Активні', value: 'ACTIVE' },
   { label: 'Відхилені', value: 'REJECTED' },
   { label: 'Призупинені', value: 'PAUSED' },
@@ -40,6 +41,8 @@ export function ModerationQueue() {
   const approveMutation = useApproveListing();
   const rejectMutation = useRejectListing();
   const removeMutation = useRemoveListing();
+  const isModerationTab =
+    activeTab === 'SUBMITTED' || activeTab === 'PENDING_MODERATION';
 
   const handleApprove = (id: string) => {
     approveMutation.mutate(id);
@@ -146,7 +149,7 @@ export function ModerationQueue() {
                   >
                     <Eye size={18} />
                   </button>
-                  {activeTab === 'SUBMITTED' && (
+                  {isModerationTab && (
                     <>
                       <button
                         onClick={() => handleApprove(listing.id)}

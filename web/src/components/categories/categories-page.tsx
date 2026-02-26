@@ -1,22 +1,112 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Layers, ChevronRight } from 'lucide-react';
 import { useCategories, useMarketplaces } from '@/lib/queries';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useSearchParams } from 'next/navigation';
+
+const MARKETPLACE_ORDER = ['autoline', 'machineryline', 'agroline'] as const;
+const CATEGORY_PREVIEW_LIMIT = 12;
+
+function iconForCategory(name: string): string {
+  const value = name.toLowerCase();
+  if (value.includes('airport')) return '🛫';
+  if (value.includes('air transport')) return '✈';
+  if (value.includes('water transport')) return '🚢';
+  if (value.includes('railway')) return '🚆';
+  if (value.includes('municipal')) return '🚧';
+  if (value.includes('container')) return '📦';
+  if (value.includes('service')) return '🛎';
+  if (value.includes('spare')) return '🔩';
+  if (value.includes('tire') || value.includes('wheel')) return '🛞';
+  if (value.includes('camp')) return '🏕';
+  if (value.includes('bus')) return '🚌';
+  if (value.includes('motorcycle')) return '🏍';
+  if (value.includes('tractor')) return '🚜';
+  if (value.includes('truck')) return '🚛';
+  if (value.includes('trailer')) return '🚚';
+  if (value.includes('tank')) return '🛢';
+  if (value.includes('van')) return '🚐';
+  if (value.includes('commercial')) return '💼';
+  if (value.includes('excavator')) return '🏗';
+  if (value.includes('loader') || value.includes('handling')) return '🏋';
+  if (value.includes('combine') || value.includes('harvester')) return '🌾';
+  if (value.includes('header')) return '🌽';
+  if (value.includes('irrigation')) return '💧';
+  if (value.includes('fertilizer')) return '🧪';
+  if (value.includes('livestock') || value.includes('animal')) return '🐄';
+  if (value.includes('forestry')) return '🌲';
+  if (value.includes('garden')) return '🌿';
+  if (value.includes('vineyard')) return '🍇';
+  if (value.includes('potato')) return '🥔';
+  if (value.includes('crop')) return '🌱';
+  if (value.includes('mining')) return '⛏';
+  if (value.includes('industrial')) return '🏭';
+  if (value.includes('tool')) return '🧰';
+  if (value.includes('raw material')) return '🧱';
+  if (value.includes('real estate')) return '🏢';
+  if (value.includes('energy')) return '⚡';
+  if (value.includes('equipment')) return '🧩';
+  if (value.includes('car')) return '🚗';
+  return '🔹';
+}
 
 export function CategoriesPageContent() {
+  const searchParams = useSearchParams();
   const { data: marketplaces, isLoading: loadingMarketplaces } = useMarketplaces();
-  const [activeMarketplaceId, setActiveMarketplaceId] = useState<string | undefined>(undefined);
-  const fallbackMarketplaceId = useMemo(
-    () => marketplaces?.[0]?.id,
-    [marketplaces],
-  );
-  const effectiveMarketplaceId = activeMarketplaceId ?? fallbackMarketplaceId;
+  const [activeMarketplaceId, setActiveMarketplaceId] = useState<string>('');
+  const [search, setSearch] = useState('');
+  const [showAll, setShowAll] = useState(false);
+  const marketplaceQueryKey = searchParams.get('marketplace')?.trim().toLowerCase() ?? '';
 
-  const { data: categories, isLoading: loadingCategories } = useCategories(effectiveMarketplaceId);
-  const topLevel = categories?.filter((c) => !c.parentId) ?? [];
+  const orderedMarketplaces = useMemo(() => {
+    if (!marketplaces) return [];
+    const byKey = new Map(marketplaces.map((marketplace) => [marketplace.key, marketplace]));
+    const preferred = MARKETPLACE_ORDER
+      .map((key) => byKey.get(key))
+      .filter((marketplace): marketplace is NonNullable<typeof marketplace> =>
+        Boolean(marketplace),
+      );
+    const preferredIds = new Set(preferred.map((marketplace) => marketplace!.id));
+    const remainder = marketplaces.filter((marketplace) => !preferredIds.has(marketplace.id));
+    return [...preferred, ...remainder];
+  }, [marketplaces]);
+
+  useEffect(() => {
+    if (activeMarketplaceId || orderedMarketplaces.length === 0) return;
+    const fromQuery = marketplaceQueryKey
+      ? orderedMarketplaces.find((marketplace) => marketplace.key === marketplaceQueryKey)
+      : undefined;
+    const autoline = orderedMarketplaces.find((marketplace) => marketplace.key === 'autoline');
+    setActiveMarketplaceId(fromQuery?.id ?? autoline?.id ?? orderedMarketplaces[0].id);
+  }, [orderedMarketplaces, activeMarketplaceId, marketplaceQueryKey]);
+
+  const effectiveMarketplaceId = activeMarketplaceId || orderedMarketplaces[0]?.id || '';
+  const { data: categories, isLoading: loadingCategories } = useCategories(
+    effectiveMarketplaceId || undefined,
+  );
+  const topLevel = useMemo(
+    () => categories?.filter((category) => !category.parentId) ?? [],
+    [categories],
+  );
+
+  const filteredTopLevel = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return topLevel;
+    return topLevel.filter((category) => category.name.toLowerCase().includes(query));
+  }, [topLevel, search]);
+
+  const visibleTopLevel = useMemo(() => {
+    if (showAll || search.trim()) return filteredTopLevel;
+    return filteredTopLevel.slice(0, CATEGORY_PREVIEW_LIMIT);
+  }, [filteredTopLevel, showAll, search]);
+
+  const hasHiddenItems =
+    !showAll &&
+    !search.trim() &&
+    filteredTopLevel.length > CATEGORY_PREVIEW_LIMIT;
 
   const isLoading = loadingMarketplaces || loadingCategories;
 
@@ -43,12 +133,16 @@ export function CategoriesPageContent() {
       </div>
 
       {/* Marketplace Tabs */}
-      {marketplaces && marketplaces.length > 1 && (
+      {orderedMarketplaces.length > 0 && (
         <div className="flex gap-2 mb-8 border-b border-[var(--border-color)] overflow-x-auto">
-          {marketplaces.map((mp) => (
+          {orderedMarketplaces.map((mp) => (
             <button
               key={mp.id}
-              onClick={() => setActiveMarketplaceId(mp.id)}
+              onClick={() => {
+                setActiveMarketplaceId(mp.id);
+                setSearch('');
+                setShowAll(false);
+              }}
               className={`px-6 py-3 font-medium transition-colors relative whitespace-nowrap ${effectiveMarketplaceId === mp.id
                 ? 'text-blue-bright'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -63,19 +157,29 @@ export function CategoriesPageContent() {
         </div>
       )}
 
-      {topLevel.length === 0 ? (
+      <div className="mb-6">
+        <input
+          type="text"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search category..."
+          className="w-full md:w-[420px] px-4 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] focus:border-blue-bright outline-none transition-colors"
+        />
+      </div>
+
+      {filteredTopLevel.length === 0 ? (
         <div className="text-center py-20">
           <Layers size={48} className="mx-auto text-blue-bright/20 mb-4" />
-          <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] mb-2">Категорій ще немає</h3>
-          <p className="text-sm text-[var(--text-secondary)]">Категорії з'являться тут після додавання.</p>
+          <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] mb-2">No categories found</h3>
+          <p className="text-sm text-[var(--text-secondary)]">Try a different marketplace or search query.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {topLevel.map((cat) => (
+          {visibleTopLevel.map((cat) => (
             <div key={cat.id} className="glass-card card-hover p-6" data-aos="fade-up">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 rounded-xl bg-blue-bright/10 flex items-center justify-center">
-                  <Layers size={24} className="text-blue-bright" />
+                  <span className="text-xl">{iconForCategory(cat.name)}</span>
                 </div>
                 <Link
                   href={`/listings?marketplaceId=${effectiveMarketplaceId ?? ''}&categoryId=${cat.id}`}
@@ -111,6 +215,30 @@ export function CategoriesPageContent() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {hasHiddenItems && (
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={() => setShowAll(true)}
+            className="text-sm text-blue-bright hover:text-blue-light"
+          >
+            Show all {filteredTopLevel.length} categories
+          </button>
+        </div>
+      )}
+
+      {showAll && !search.trim() && filteredTopLevel.length > CATEGORY_PREVIEW_LIMIT && (
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={() => setShowAll(false)}
+            className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          >
+            Show fewer
+          </button>
         </div>
       )}
     </div>

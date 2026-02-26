@@ -185,3 +185,43 @@ For more information, please refer to the detailed documentation files listed ab
   - upload endpoint now returns stable API URLs
   - frontend normalizes older MinIO URLs into API file URLs
   - added client-side type/size validation for image uploads.
+
+## Update - 2026-02-24 (Sync + Runtime Fixes)
+- Repository sync and remote stability:
+  - fixed malformed Git remote URL that blocked remote operations
+  - synchronized updates for target repositories/branches used in today’s migration/sync flow.
+- Upload and media runtime fixes:
+  - backend upload response now returns API-relative media paths
+  - frontend upload URL normalization hardened for mixed path/url formats
+  - Next.js security policy updated to allow local HTTP image rendering in dev mode.
+- Listing creation reliability:
+  - hardened category ID parsing to avoid BigInt conversion crashes
+  - added safe fallback when template block data is missing during draft validation.
+- Admin moderation workflow:
+  - added support for moderation actions on `PENDING_MODERATION` listings.
+- Listing detail UX:
+  - boolean values now display as `Yes`/`No`.
+- Verification run:
+  - API build passing
+  - API security suite passing
+  - local smoke tests passing across auth/category/options/upload/listing flows.
+
+## Update - 2026-02-24 (Taxonomy Rollout + Category UX + Responsive Footer)
+- Seeded complete marketplace taxonomy across `agroline`, `autoline`, and `machineryline`:
+  - full top-level categories
+  - structured subcategories
+  - leaf-category templates generated in seed pipeline.
+- Added resilient cleanup handling in seed flow to avoid cleanup-stage permission/blocker failures from halting `seed:all`.
+- Reworked listing-posting category selection UI:
+  - marketplace tabs + category/subcategory cards
+  - improved category icon matching.
+- Reworked category discovery/navigation:
+  - home now shows 3 top-level marketplace cards
+  - category catalog is marketplace-scoped with tab switching and search
+  - direct links supported through `/categories?marketplace=<key>`.
+- Fixed layout issues found in QA screenshots:
+  - removed unwanted dark spacer above footer
+  - made footer alignment/responsiveness more professional at reduced widths.
+- Reliability/build follow-up:
+  - fixed TS issues in template builder and listing/company UI code paths
+  - confirmed green build and verification commands (`api`: seed/test/build, `web`: build).
