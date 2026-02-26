@@ -1,5 +1,5 @@
   [build]
-  builder = "RAILPACK"
+  builder = "NIXPACKS"
 
   [deploy]
   preDeployCommand = "pnpm exec prisma migrate deploy"
