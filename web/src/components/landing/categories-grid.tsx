@@ -32,14 +32,14 @@ export function CategoriesGrid() {
   return (
     <section className="section-padding" style={{ background: 'var(--bg-secondary)' }}>
       <div className="container-main">
-        <div className="text-center mb-8 md:mb-12" data-aos="fade-up">
-          <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold bg-orange/10 text-orange border border-orange/20 mb-4">
+        <div className="text-center mb-8 md:mb-12" data-aos="fade-up" suppressHydrationWarning>
+          <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold bg-orange/10 text-orange border border-orange/20 mb-4" suppressHydrationWarning>
             Категорії
           </span>
-          <h2 className="font-heading font-extrabold text-2xl sm:text-3xl md:text-4xl text-[var(--text-primary)]">
+          <h2 className="font-heading font-extrabold text-2xl sm:text-3xl md:text-4xl text-[var(--text-primary)]" suppressHydrationWarning>
             Перегляд за <span className="gradient-text">категоріями</span>
           </h2>
-          <p className="mt-3 text-[var(--text-secondary)]">
+          <p className="mt-3 text-[var(--text-secondary)]" suppressHydrationWarning>
             Оберіть маркетплейс, щоб відкрити повний список категорій.
           </p>
         </div>
