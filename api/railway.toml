@@ -1,6 +1,6 @@
-[build]
-builder = "nixpacks"
+  [build]
+  builder = "RAILPACK"
 
-[deploy]
-releaseCommand = "pnpm exec prisma migrate deploy"
-startCommand = "pnpm run start:prod"
+  [deploy]
+  preDeployCommand = "pnpm exec prisma migrate deploy"
+  startCommand = "pnpm run start:prod"

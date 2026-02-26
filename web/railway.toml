@@ -1,5 +1,5 @@
-[build]
-builder = "nixpacks"
+  [build]
+  builder = "RAILPACK"
 
-[deploy]
-startCommand = "node .next/standalone/server.js"
+  [deploy]
+  startCommand = "node .next/standalone/server.js"
