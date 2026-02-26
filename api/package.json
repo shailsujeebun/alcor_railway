@@ -105,7 +105,8 @@
     "overrides": {
       "hono": "^4.11.7",
       "lodash": "^4.17.23",
-      "qs": "^6.15.0"
+      "qs": "^6.15.0",
+      "fast-xml-parser": "^5.3.6"
     },
     "onlyBuiltDependencies": [
       "@prisma/engines",

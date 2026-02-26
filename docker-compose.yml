@@ -6,8 +6,9 @@ services:
       POSTGRES_USER: mp
       POSTGRES_PASSWORD: mp
       POSTGRES_DB: mpdb
+      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
-      - "5433:5432"
+      - "5555:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 

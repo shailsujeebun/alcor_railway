@@ -13,7 +13,7 @@ import {
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async createMarketplace(data: { key: string; name: string }) {
     return this.prisma.marketplace.create({
@@ -377,9 +377,9 @@ export class AdminService {
       blockIds: this.parseBlockIds(template.blockIds),
       category: template.category
         ? {
-            ...template.category,
-            id: template.category.id.toString(),
-          }
+          ...template.category,
+          id: template.category.id.toString(),
+        }
         : undefined,
       fields: template.fields.map((field) => ({
         id: field.id.toString(),
@@ -503,8 +503,9 @@ export class AdminService {
     }
     const created = await this.prisma.formBlock.create({
       data: {
+        id: globalThis.crypto.randomUUID(),
         name: data.name.trim(),
-        fields: data.fields ?? [],
+        fields: (data.fields ?? []) as any,
         isSystem: Boolean(data.isSystem),
       },
     });

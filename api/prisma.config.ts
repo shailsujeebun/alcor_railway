@@ -7,6 +7,6 @@ export default defineConfig({
     seed: "npx ts-node prisma/seed.ts",
   },
   datasource: {
-    url: process.env.DATABASE_URL!,
+    url: "postgresql://mp:mp@127.0.0.1:5555/mpdb?schema=public",
   },
 });
