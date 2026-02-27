@@ -43,6 +43,8 @@ The backend runs on `http://localhost:3000` and the frontend on `http://localhos
 - **[security-hardening.md](./security-hardening.md)** - Prioritized security hardening backlog with owners, acceptance criteria, and verification tests
 - **[security-signoff-evidence.md](./security-signoff-evidence.md)** - Production security sign-off evidence matrix and verification runbook
 - **[production-test.md](./production-test.md)** - Production readiness testing strategy, gates, and pass criteria
+- **[COMPREHENSIVE_GUIDE_EN.md](./COMPREHENSIVE_GUIDE_EN.md)** - Plain-language business documentation in English for non-technical teams
+- **[COMPREHENSIVE_GUIDE_UA.md](./COMPREHENSIVE_GUIDE_UA.md)** - Plain-language business documentation in Ukrainian for non-technical teams
 - **[DB_ER_DIAGRAM.MD](./DB_ER_DIAGRAM.MD)** - Database entity relationship diagram
 - **[plan.md](./plan.md)** - Marketplace ad-posting system implementation plan
 - **[task.md](./task.md)** - Development task checklist

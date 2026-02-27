@@ -31,7 +31,7 @@ A B2B equipment marketplace platform (АЛЬКОР) with a NestJS backend API an
 docker compose up -d
 
 # Run database migrations
-cd api && npx prisma migrate dev
+docker compose up -d
 
 # Generate Prisma client
 cd api && npx prisma generate
