@@ -1,5 +1,6 @@
   [build]
   builder = "NIXPACKS"
+  nixpacksPlan = { phases = { install = { cmds = ["npm i -g pnpm", "pnpm install --no-frozen-lockfile"] } } }
 
   [deploy]
   preDeployCommand = "pnpm exec prisma migrate deploy"
