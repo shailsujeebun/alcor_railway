@@ -30,6 +30,8 @@ import type {
   UpdateTicketPayload,
   User,
   ViewHistoryItem,
+  MyCompanyOption,
+  CsvImportResponse,
 } from '@/types/api';
 import { useAuthStore } from '@/stores/auth-store';
 import { refreshTokens } from '@/lib/auth-api';
@@ -112,9 +114,26 @@ async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> {
     let detail = '';
     try {
       const body = await res.json();
-      detail = body.message || JSON.stringify(body);
+      if (typeof body?.message === 'string') {
+        detail = body.message;
+      } else if (Array.isArray(body?.message)) {
+        detail = body.message.join(', ');
+      } else {
+        detail = JSON.stringify(body);
+      }
     } catch { /* empty */ }
-    throw new Error(detail || `API error: ${res.status}`);
+
+    if (!detail) {
+      try {
+        detail = (await res.text()).trim();
+      } catch {
+        detail = '';
+      }
+    }
+
+    const method = (init?.method || 'GET').toUpperCase();
+    const context = `${method} ${path} -> ${res.status}${res.statusText ? ` ${res.statusText}` : ''}`;
+    throw new Error(detail ? `${context}: ${detail}` : context);
   }
   return res.json();
 }
@@ -234,6 +253,9 @@ export const getCompanyListings = (companyId: string, params?: URLSearchParams) 
 export const getCompanies = (params?: URLSearchParams) =>
   fetchApi<PaginatedResponse<Company>>(`/companies?${params?.toString() ?? ''}`);
 
+export const getMyCompanies = () =>
+  fetchApi<MyCompanyOption[]>('/companies/mine');
+
 export const getCompanyBySlug = (slug: string) =>
   fetchApi<Company>(`/companies/${slug}`);
 
@@ -299,6 +321,15 @@ export const createListing = (data: CreateListingPayload) =>
     method: 'POST',
     body: JSON.stringify(data),
   }).then((payload: any) => normalizeListing(payload));
+
+export const importListingsCsv = (data: {
+  csvContent: string;
+  defaultCompanyId?: string;
+}) =>
+  fetchApi<CsvImportResponse>('/listings/import/csv', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 
 export const updateListing = (id: string, data: UpdateListingPayload) =>
   fetchApi<Listing>(`/listings/${id}`, {
@@ -375,6 +406,15 @@ export async function uploadImages(files: File[]): Promise<{ urls: string[] }> {
 export const updateProfile = (data: UpdateProfilePayload) =>
   fetchApi<User>('/users/me', {
     method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+
+export const changeAdminPassword = (data: {
+  currentPassword: string;
+  newPassword: string;
+}) =>
+  fetchApi<{ ok: boolean }>('/auth/change-password', {
+    method: 'POST',
     body: JSON.stringify(data),
   });
 

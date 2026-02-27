@@ -38,11 +38,16 @@ export class OptionsService {
   async getModelOptions(brandId?: string): Promise<OptionItem[]> {
     if (!brandId) return [];
 
-    const storedModels = await this.prisma.model.findMany({
-      where: { brandId },
-      orderBy: { name: 'asc' },
-      take: 500,
-    });
+    let storedModels: Array<{ name: string }> = [];
+    try {
+      storedModels = await this.prisma.model.findMany({
+        where: { brandId },
+        orderBy: { name: 'asc' },
+        take: 500,
+      });
+    } catch {
+      storedModels = [];
+    }
     if (storedModels.length > 0) {
       return storedModels.map((model) => ({
         value: model.name,
@@ -50,16 +55,21 @@ export class OptionsService {
       }));
     }
 
-    const rows = await this.prisma.$queryRaw<Array<{ value: string | null }>>(
-      Prisma.sql`
-        SELECT DISTINCT NULLIF(TRIM(la.data->>'model'), '') AS value
-        FROM listing_attribute la
-        INNER JOIN listing l ON l.listing_id = la.listing_id
-        WHERE l.brand_id = ${brandId}
-        ORDER BY value ASC
-        LIMIT 500
-      `,
-    );
+    let rows: Array<{ value: string | null }> = [];
+    try {
+      rows = await this.prisma.$queryRaw<Array<{ value: string | null }>>(
+        Prisma.sql`
+          SELECT DISTINCT NULLIF(TRIM(la.data->>'model'), '') AS value
+          FROM listing_attribute la
+          INNER JOIN listing l ON l.listing_id = la.listing_id
+          WHERE l.brand_id = ${brandId}
+          ORDER BY value ASC
+          LIMIT 500
+        `,
+      );
+    } catch {
+      rows = [];
+    }
 
     const options = rows
       .map((row) => row.value?.trim())
@@ -68,12 +78,17 @@ export class OptionsService {
 
     if (options.length > 0) return options;
 
-    const listingTitleFallback = await this.prisma.listing.findMany({
-      where: { brandId, title: { not: null } },
-      select: { title: true },
-      orderBy: { title: 'asc' },
-      take: 100,
-    });
+    let listingTitleFallback: Array<{ title: string | null }> = [];
+    try {
+      listingTitleFallback = await this.prisma.listing.findMany({
+        where: { brandId, title: { not: null } },
+        select: { title: true },
+        orderBy: { title: 'asc' },
+        take: 100,
+      });
+    } catch {
+      listingTitleFallback = [];
+    }
 
     const deduped = new Set<string>();
     for (const listing of listingTitleFallback) {

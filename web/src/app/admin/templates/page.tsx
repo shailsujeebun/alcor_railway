@@ -14,17 +14,47 @@ import {
   Pencil,
   Plus,
   Power,
+  Search,
   Trash2,
   XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 export default function AdminTemplatesPage() {
   const { data: templates, isLoading, error } = useAdminTemplates();
   const deleteMutation = useDeleteAdminTemplate();
   const updateStatusMutation = useUpdateAdminTemplateStatus();
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
+  const filteredTemplates = useMemo(() => {
+    const list = templates ?? [];
+    const q = search.trim().toLowerCase();
+
+    return list.filter((template) => {
+      const statusMatch =
+        statusFilter === 'all' ||
+        (statusFilter === 'active' && template.isActive) ||
+        (statusFilter === 'inactive' && !template.isActive);
+      if (!statusMatch) return false;
+
+      if (!q) return true;
+
+      const haystack = [
+        template.id,
+        template.category?.name ?? '',
+        template.category?.slug ?? '',
+        template.category?.marketplace?.name ?? '',
+        `v${template.version}`,
+      ]
+        .join(' ')
+        .toLowerCase();
+
+      return haystack.includes(q);
+    });
+  }, [templates, search, statusFilter]);
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('Ви впевнені, що хочете видалити цей шаблон? Ця дія незворотна.')) {
@@ -98,6 +128,35 @@ export default function AdminTemplatesPage() {
       </div>
 
       <div className="glass-card overflow-hidden">
+        <div className="border-b border-[var(--border-color)] p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="relative">
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]"
+              />
+              <input
+                type="text"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Пошук за категорією, slug, ID..."
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] text-sm focus:border-blue-bright outline-none transition-colors"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(event) =>
+                setStatusFilter(event.target.value as 'all' | 'active' | 'inactive')
+              }
+              className="w-full px-4 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] text-sm focus:border-blue-bright outline-none transition-colors"
+            >
+              <option value="all">Всі статуси</option>
+              <option value="active">Активні</option>
+              <option value="inactive">Неактивні</option>
+            </select>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -112,7 +171,7 @@ export default function AdminTemplatesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)] text-[var(--text-primary)]">
-              {templates?.map((template) => {
+              {filteredTemplates.map((template) => {
                 const templateId = Number(template.id);
                 const isProcessing = processingId === templateId;
 
@@ -213,6 +272,14 @@ export default function AdminTemplatesPage() {
                         </Button>
                       </Link>
                     </div>
+                  </td>
+                </tr>
+              )}
+
+              {templates && templates.length > 0 && filteredTemplates.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-[var(--text-secondary)]">
+                    За вашим фільтром нічого не знайдено.
                   </td>
                 </tr>
               )}

@@ -147,6 +147,31 @@ export class CompaniesService {
     return company;
   }
 
+  async findMine(userId: string, role?: string) {
+    if (this.isPrivilegedRole(role)) {
+      return this.prisma.company.findMany({
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, slug: true, name: true },
+      });
+    }
+
+    const memberships = await this.prisma.companyUser.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        role: true,
+        company: {
+          select: { id: true, slug: true, name: true },
+        },
+      },
+    });
+
+    return memberships.map((membership) => ({
+      ...membership.company,
+      membershipRole: membership.role,
+    }));
+  }
+
   async update(
     id: string,
     dto: UpdateCompanyDto,

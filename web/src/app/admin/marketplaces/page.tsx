@@ -64,7 +64,7 @@ export default function AdminMarketplacesPage() {
             loadMarketplaces();
         } catch (error) {
             console.error('Failed to save marketplace', error);
-            alert('Failed to save marketplace');
+            alert('Не вдалося зберегти маркетплейс');
         }
     }
 
@@ -83,12 +83,12 @@ export default function AdminMarketplacesPage() {
         setIsDialogOpen(true);
     }
 
-    if (isLoading) return <div className="p-8">Loading...</div>;
+    if (isLoading) return <div className="p-8">Завантаження...</div>;
 
     return (
         <div className="container-main py-8">
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold">Manage Marketplaces</h1>
+                <h1 className="text-3xl font-bold">Керування маркетплейсами</h1>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button
@@ -98,46 +98,46 @@ export default function AdminMarketplacesPage() {
                             }}
                         >
                             <Plus className="w-4 h-4 mr-2" />
-                            Add Marketplace
+                            Додати маркетплейс
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>
-                                {editingId ? 'Edit Marketplace' : 'Create New Marketplace'}
+                                {editingId ? 'Редагувати маркетплейс' : 'Створити новий маркетплейс'}
                             </DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <Label htmlFor="key">Key (URL Slug)</Label>
+                                <Label htmlFor="key">Ключ (URL-слаг)</Label>
                                 <Input
                                     id="key"
                                     value={formData.key}
                                     onChange={(e) =>
                                         setFormData({ ...formData, key: e.target.value })
                                     }
-                                    placeholder="e.g., droneline"
+                                    placeholder="напр., droneline"
                                     disabled={!!editingId} // Key cannot be changed after creation
                                     required
                                 />
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    Unique identifier. Cannot be changed later.
+                                    Унікальний ідентифікатор. Після створення змінити не можна.
                                 </p>
                             </div>
                             <div>
-                                <Label htmlFor="name">Display Name</Label>
+                                <Label htmlFor="name">Назва для відображення</Label>
                                 <Input
                                     id="name"
                                     value={formData.name}
                                     onChange={(e) =>
                                         setFormData({ ...formData, name: e.target.value })
                                     }
-                                    placeholder="e.g., DroneLine"
+                                    placeholder="напр., DroneLine"
                                     required
                                 />
                             </div>
                             <Button type="submit" className="w-full">
-                                {editingId ? 'Update' : 'Create'}
+                                {editingId ? 'Оновити' : 'Створити'}
                             </Button>
                         </form>
                     </DialogContent>
@@ -176,11 +176,11 @@ export default function AdminMarketplacesPage() {
                             >
                                 {mp.isActive ? (
                                     <>
-                                        <CheckCircle className="w-4 h-4" /> Active
+                                        <CheckCircle className="w-4 h-4" /> Активний
                                     </>
                                 ) : (
                                     <>
-                                        <XCircle className="w-4 h-4" /> Inactive
+                                        <XCircle className="w-4 h-4" /> Неактивний
                                     </>
                                 )}
                             </span>
@@ -189,7 +189,7 @@ export default function AdminMarketplacesPage() {
                                 size="sm"
                                 onClick={() => toggleActive(mp.id, mp.isActive)}
                             >
-                                {mp.isActive ? 'Deactivate' : 'Activate'}
+                                {mp.isActive ? 'Деактивувати' : 'Активувати'}
                             </Button>
                         </div>
                     </div>
@@ -197,7 +197,7 @@ export default function AdminMarketplacesPage() {
 
                 {marketplaces.length === 0 && (
                     <div className="col-span-full text-center py-12 text-muted-foreground">
-                        No marketplaces found. Create your first one!
+                        Маркетплейси не знайдено. Створіть перший.
                     </div>
                 )}
             </div>

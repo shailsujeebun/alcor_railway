@@ -217,7 +217,7 @@ export function ListingDetail({ id }: { id: string }) {
 
   if (isLoading) {
     return (
-      <div className="container-main py-10 space-y-6">
+      <div className="container-main pt-24 md:pt-28 pb-10 space-y-6">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-[420px] w-full" />
         <Skeleton className="h-80 w-full" />
@@ -227,7 +227,7 @@ export function ListingDetail({ id }: { id: string }) {
 
   if (error || !listing) {
     return (
-      <div className="container-main py-20 text-center">
+      <div className="container-main pt-24 md:pt-28 pb-20 text-center">
         <Package size={48} className="mx-auto text-blue-bright/20 mb-4" />
         <h2 className="font-heading font-bold text-xl text-[var(--text-primary)]">Оголошення не знайдено</h2>
         <Link href="/listings" className="text-blue-bright mt-4 inline-block">
@@ -238,7 +238,7 @@ export function ListingDetail({ id }: { id: string }) {
   }
 
   return (
-    <div className="container-main py-8 md:py-10">
+    <div className="container-main pt-24 md:pt-28 pb-8 md:pb-10">
       <div className="relative overflow-hidden rounded-[28px] border border-white/8 bg-gradient-to-b from-[#0c1a33] via-[#071426] to-[#050b14] p-4 md:p-6">
         <div className="pointer-events-none absolute -left-24 -top-24 h-60 w-60 rounded-full bg-blue-500/15 blur-3xl" />
         <div className="pointer-events-none absolute -right-24 top-1/3 h-72 w-72 rounded-full bg-orange-500/10 blur-3xl" />

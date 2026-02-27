@@ -41,6 +41,13 @@ export function useCompanies(params: Record<string, string>) {
   });
 }
 
+export function useMyCompanies() {
+  return useQuery({
+    queryKey: ['my-companies'],
+    queryFn: api.getMyCompanies,
+  });
+}
+
 export function useCompanyDetail(slug: string) {
   return useQuery({
     queryKey: ['company', slug],
@@ -206,6 +213,17 @@ export function useResubmitListing() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.resubmitListing(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['listings'] });
+    },
+  });
+}
+
+export function useImportListingsCsv() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { csvContent: string; defaultCompanyId?: string }) =>
+      api.importListingsCsv(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['listings'] });
     },

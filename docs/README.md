@@ -244,3 +244,25 @@ For more information, please refer to the detailed documentation files listed ab
   - translation API updated with `targetLocale` handling and locale-aware filtering/caching.
 - Frontend runtime recovery note:
   - resolved Turbopack corrupted-cache startup failure by clearing `.next` and Turbo cache in `web/`.
+
+## Update - 2026-02-27 (Admin Localization Completion, Account Controls, CSV Import, UI Spacing)
+
+- Admin localization coverage was expanded for UA-first usage:
+  - remaining hardcoded English strings in key admin areas were removed/migrated.
+  - admin UI defaults to Ukrainian; English appears through explicit language toggle.
+- Admin account security flow improved:
+  - added ADMIN-only password change endpoint (`POST /auth/change-password`).
+  - admin dashboard now supports self-service password change with forced re-login.
+- Admin templates UX improved:
+  - added search + status filtering to template list page to reduce manual scrolling.
+- Company experience updates:
+  - removed company reviews section from detail page.
+  - added “Add Company” CTA entry points (redirect to company onboarding form).
+- Listing import for business users (CSV, phase 1):
+  - added `GET /companies/mine` for owned-company selection.
+  - added `POST /listings/import/csv` for bulk listing creation with row-level result reporting.
+  - added cabinet-side CSV import modal with downloadable template.
+- Frontend reliability/layout QA fixes:
+  - improved API error messages with request context for easier debugging.
+  - fixed spacing collisions near header/footer and removed black spacer artifacts on affected pages.
+  - adjusted footer top/internal spacing for cleaner visual separation.

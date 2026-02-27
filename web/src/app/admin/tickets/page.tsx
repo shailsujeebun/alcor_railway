@@ -100,7 +100,7 @@ export default function AdminTickets() {
                   </div>
                   <div className="flex items-center gap-4 text-sm text-[var(--text-secondary)]">
                     <span>
-                      Від: {ticket.user?.firstName || ticket.user?.email || 'N/A'}
+                      Від: {ticket.user?.firstName || ticket.user?.email || 'Н/Д'}
                     </span>
                     <span>ID: {ticket.id.slice(0, 8)}</span>
                     <span>

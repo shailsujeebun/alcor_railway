@@ -5,11 +5,17 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
-import { ListingStatus, NotificationType, UserRole } from '@prisma/client';
+import {
+  CompanyUserRole,
+  ListingStatus,
+  NotificationType,
+  UserRole,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginatedResponseDto } from '../common';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateListingDto } from './dto/create-listing.dto';
+import { ImportListingsCsvDto } from './dto/import-listings-csv.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
 import { UpdateListingContactDto } from './dto/update-listing-contact.dto';
 import { ListingQueryDto } from './dto/listing-query.dto';
@@ -70,6 +76,235 @@ export class ListingsService {
     }
   }
 
+  private async ensureCompanyCreateAccess(
+    companyId: string,
+    actorUserId: string,
+    actorRole?: string,
+  ) {
+    if (this.isPrivilegedRole(actorRole)) {
+      return;
+    }
+
+    const membership = await this.prisma.companyUser.findUnique({
+      where: {
+        userId_companyId: {
+          userId: actorUserId,
+          companyId,
+        },
+      },
+      select: { role: true },
+    });
+
+    if (
+      !membership ||
+      (membership.role !== CompanyUserRole.OWNER &&
+        membership.role !== CompanyUserRole.EDITOR)
+    ) {
+      throw new ForbiddenException(
+        'You do not have permission to create listings for this company',
+      );
+    }
+  }
+
+  private parseCsvLine(line: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i += 1) {
+      const char = line[i];
+      const next = line[i + 1];
+
+      if (char === '"') {
+        if (inQuotes && next === '"') {
+          current += '"';
+          i += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+        continue;
+      }
+
+      if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+        continue;
+      }
+
+      current += char;
+    }
+
+    result.push(current.trim());
+    return result;
+  }
+
+  private parseCsvContent(csvContent: string): {
+    headers: string[];
+    rows: Array<Record<string, string>>;
+  } {
+    const normalized = (csvContent || '').replace(/\r\n/g, '\n').trim();
+    if (!normalized) {
+      throw new BadRequestException('CSV content is empty');
+    }
+
+    const lines = normalized
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    if (lines.length < 2) {
+      throw new BadRequestException(
+        'CSV must include header and at least one data row',
+      );
+    }
+
+    const headers = this.parseCsvLine(lines[0]).map((h) => h.trim());
+    if (!headers.length) {
+      throw new BadRequestException('CSV header row is invalid');
+    }
+
+    const rows: Array<Record<string, string>> = [];
+    for (let i = 1; i < lines.length; i += 1) {
+      const cells = this.parseCsvLine(lines[i]);
+      const row: Record<string, string> = {};
+      headers.forEach((header, index) => {
+        row[header] = (cells[index] ?? '').trim();
+      });
+
+      const hasAnyValue = Object.values(row).some((value) => value.length > 0);
+      if (hasAnyValue) {
+        rows.push(row);
+      }
+    }
+
+    if (rows.length === 0) {
+      throw new BadRequestException('CSV does not contain data rows');
+    }
+
+    return { headers, rows };
+  }
+
+  async importFromCsv(
+    dto: ImportListingsCsvDto,
+    ownerUserId: string,
+    callerRole?: string,
+  ) {
+    const { rows } = this.parseCsvContent(dto.csvContent);
+
+    const parseIntSafe = (value?: string): number | undefined => {
+      const normalized = String(value ?? '').trim();
+      if (!normalized) return undefined;
+      const parsed = Number.parseInt(normalized, 10);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    };
+
+    const parseNumberSafe = (value?: string): number | undefined => {
+      const normalized = String(value ?? '').replace(',', '.').trim();
+      if (!normalized) return undefined;
+      const parsed = Number.parseFloat(normalized);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    };
+
+    const parseBoolSafe = (value?: string): boolean | undefined => {
+      const normalized = String(value ?? '').trim().toLowerCase();
+      if (!normalized) return undefined;
+      if (['1', 'true', 'yes', 'y', 'так'].includes(normalized)) return true;
+      if (['0', 'false', 'no', 'n', 'ні'].includes(normalized)) return false;
+      return undefined;
+    };
+
+    const results: Array<{
+      line: number;
+      status: 'created' | 'failed';
+      listingId?: string;
+      title?: string;
+      error?: string;
+    }> = [];
+
+    let createdCount = 0;
+    let failedCount = 0;
+
+    for (let i = 0; i < rows.length; i += 1) {
+      const row = rows[i];
+      const line = i + 2;
+
+      try {
+        const companyId = row.companyId || dto.defaultCompanyId;
+        const title = row.title?.trim();
+        const categoryId = row.categoryId?.trim();
+
+        if (!companyId) {
+          throw new BadRequestException(
+            'companyId is required (or provide defaultCompanyId)',
+          );
+        }
+        if (!title) {
+          throw new BadRequestException('title is required');
+        }
+        if (!categoryId) {
+          throw new BadRequestException('categoryId is required');
+        }
+
+        await this.ensureCompanyCreateAccess(companyId, ownerUserId, callerRole);
+
+        const sellerPhones = row.sellerPhones
+          ? row.sellerPhones
+              .split(/[;,|]/)
+              .map((item) => item.trim())
+              .filter(Boolean)
+          : undefined;
+
+        const payload: CreateListingDto = {
+          companyId,
+          title,
+          description: row.description || undefined,
+          categoryId,
+          brandId: row.brandId || undefined,
+          condition: (row.condition as any) || undefined,
+          year: parseIntSafe(row.year),
+          priceAmount: parseNumberSafe(row.priceAmount),
+          priceCurrency: row.priceCurrency || undefined,
+          priceType: (row.priceType as any) || undefined,
+          countryId: row.countryId || undefined,
+          cityId: row.cityId || undefined,
+          sellerName: row.sellerName || undefined,
+          sellerEmail: row.sellerEmail || undefined,
+          sellerPhones,
+          externalUrl: row.externalUrl || undefined,
+          hoursValue: parseIntSafe(row.hoursValue),
+          hoursUnit: row.hoursUnit || undefined,
+          listingType: (row.listingType as any) || undefined,
+          euroClass: row.euroClass || undefined,
+          isVideo: parseBoolSafe(row.isVideo),
+        };
+
+        const created = await this.create(payload, ownerUserId, callerRole);
+        createdCount += 1;
+        results.push({
+          line,
+          status: 'created',
+          listingId: String(created.id),
+          title: created.title ?? title,
+        });
+      } catch (error: any) {
+        failedCount += 1;
+        results.push({
+          line,
+          status: 'failed',
+          title: row.title || undefined,
+          error: error?.message || 'Unknown error',
+        });
+      }
+    }
+
+    return {
+      totalRows: rows.length,
+      createdCount,
+      failedCount,
+      results,
+    };
+  }
+
   private parseBigIntId(value: string, fieldName: string): bigint {
     const normalized = String(value ?? '').trim();
     if (!normalized) {
@@ -116,6 +351,10 @@ export class ListingsService {
       isVideo,
       ...rest
     } = dto;
+
+    if (ownerUserId && companyId) {
+      await this.ensureCompanyCreateAccess(companyId, ownerUserId, callerRole);
+    }
 
     const attributesData =
       attributes && attributes.length > 0

@@ -35,7 +35,7 @@ interface CategoryNode {
     children?: CategoryNode[];
 }
 
-const DEFAULT_SECTION = 'General Information';
+const DEFAULT_SECTION = 'Загальна інформація';
 
 export default function AdminTemplatesPage() {
     const { t } = useTranslation();
@@ -118,7 +118,7 @@ export default function AdminTemplatesPage() {
         }));
 
         setExistingTemplateId(Number(template.id));
-        setTemplateName(`Template v${template.version}`);
+        setTemplateName(`Шаблон v${template.version}`);
         setSelectedCategory(template.categoryId.toString());
         setFields(loadedFields);
         const nextSections = getSectionsFromFields(loadedFields);
@@ -450,7 +450,7 @@ export default function AdminTemplatesPage() {
             });
 
             setExistingTemplateId(Number(created.id));
-            setTemplateName(`Template v${created.version}`);
+            setTemplateName(`Шаблон v${created.version}`);
             alert(
                 asNew
                     ? t('admin.templateBuilder.alerts.newVersionCreated')
