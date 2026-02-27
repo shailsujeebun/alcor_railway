@@ -1,6 +1,0 @@
-[build]
-builder = "NIXPACKS"
-nixpacksPlan = { phases = { setup = { pkgs = ["nodejs_22", "pnpm-9_x"] }, install = { cmds = ["npm install -g pnpm", "pnpm install"] } } }
-
-  [deploy]
-  startCommand = "node .next/standalone/server.js"
