@@ -1,5 +1,0 @@
-[phases.setup]
-nixPkgs = ["...", "nodejs_22", "pnpm-9_x"]
-
-[phases.build]
-cmds = ["pnpm dlx prisma generate", "pnpm run build"]
