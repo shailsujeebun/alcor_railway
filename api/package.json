@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "pnpm exec prisma generate && nest build",
+    "build": "cross-env DATABASE_URL=\"postgresql://dummy\" pnpm exec prisma generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -65,6 +65,7 @@
     "@types/nodemailer": "^7.0.9",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.2",
+    "cross-env": "^10.1.0",
     "dotenv": "^17.2.3",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
