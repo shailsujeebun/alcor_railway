@@ -43,6 +43,8 @@ The backend runs on `http://localhost:3000` and the frontend on `http://localhos
 - **[security-hardening.md](./security-hardening.md)** - Prioritized security hardening backlog with owners, acceptance criteria, and verification tests
 - **[security-signoff-evidence.md](./security-signoff-evidence.md)** - Production security sign-off evidence matrix and verification runbook
 - **[production-test.md](./production-test.md)** - Production readiness testing strategy, gates, and pass criteria
+- **[COMPREHENSIVE_GUIDE_EN.md](./COMPREHENSIVE_GUIDE_EN.md)** - Plain-language business documentation in English for non-technical teams
+- **[COMPREHENSIVE_GUIDE_UA.md](./COMPREHENSIVE_GUIDE_UA.md)** - Plain-language business documentation in Ukrainian for non-technical teams
 - **[DB_ER_DIAGRAM.MD](./DB_ER_DIAGRAM.MD)** - Database entity relationship diagram
 - **[plan.md](./plan.md)** - Marketplace ad-posting system implementation plan
 - **[task.md](./task.md)** - Development task checklist
@@ -225,3 +227,42 @@ For more information, please refer to the detailed documentation files listed ab
 - Reliability/build follow-up:
   - fixed TS issues in template builder and listing/company UI code paths
   - confirmed green build and verification commands (`api`: seed/test/build, `web`: build).
+
+## Update - 2026-02-25 (Seed Alignment + Dev Ergonomics + Translation Coverage)
+
+- Seed reliability and consistency:
+  - switched Prisma default seed command to `seed-all.ts` in `api/prisma.config.ts`
+  - verified end-to-end seed health (`pnpm run seed:all` + `pnpm run seed:verify`).
+- API local DX:
+  - added `dev` alias in `api/package.json` so `pnpm dev` works in backend package.
+  - fixed `FormBlock` creation path by generating block IDs (`randomUUID()`), removing compile/create failures.
+- Template builder localization:
+  - migrated builder UI strings/prompts/alerts to i18n dictionary keys.
+  - expanded both `web/src/i18n/messages/en.ts` and `web/src/i18n/messages/uk.ts` with `admin.templateBuilder.*`.
+- Translation fallback upgrade:
+  - fallback translation now supports both directions (`uk -> en` and `en -> uk`).
+  - translation API updated with `targetLocale` handling and locale-aware filtering/caching.
+- Frontend runtime recovery note:
+  - resolved Turbopack corrupted-cache startup failure by clearing `.next` and Turbo cache in `web/`.
+
+## Update - 2026-02-27 (Admin Localization Completion, Account Controls, CSV Import, UI Spacing)
+
+- Admin localization coverage was expanded for UA-first usage:
+  - remaining hardcoded English strings in key admin areas were removed/migrated.
+  - admin UI defaults to Ukrainian; English appears through explicit language toggle.
+- Admin account security flow improved:
+  - added ADMIN-only password change endpoint (`POST /auth/change-password`).
+  - admin dashboard now supports self-service password change with forced re-login.
+- Admin templates UX improved:
+  - added search + status filtering to template list page to reduce manual scrolling.
+- Company experience updates:
+  - removed company reviews section from detail page.
+  - added “Add Company” CTA entry points (redirect to company onboarding form).
+- Listing import for business users (CSV, phase 1):
+  - added `GET /companies/mine` for owned-company selection.
+  - added `POST /listings/import/csv` for bulk listing creation with row-level result reporting.
+  - added cabinet-side CSV import modal with downloadable template.
+- Frontend reliability/layout QA fixes:
+  - improved API error messages with request context for easier debugging.
+  - fixed spacing collisions near header/footer and removed black spacer artifacts on affected pages.
+  - adjusted footer top/internal spacing for cleaner visual separation.

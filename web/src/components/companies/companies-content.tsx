@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SlidersHorizontal, X } from 'lucide-react';
+import Link from 'next/link';
 import { useCompanies } from '@/lib/queries';
 import { CompaniesFilters } from './companies-filters';
 import { CompaniesGrid } from './companies-grid';
@@ -78,6 +79,23 @@ export function CompaniesContent() {
           Каталог <span className="gradient-text">компаній</span>
         </h1>
         <p className="mt-2 text-[var(--text-secondary)]">Знайдіть перевірених постачальників та виробників.</p>
+      </div>
+
+      <div className="glass-card p-5 md:p-6 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 className="font-heading font-bold text-lg text-[var(--text-primary)]">
+            Хочете додати свою компанію?
+          </h2>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
+            Заповніть коротку форму і ми зв&apos;яжемось з вами для підключення до АЛЬКОР.
+          </p>
+        </div>
+        <Link
+          href="/dealer-registration"
+          className="inline-flex items-center justify-center rounded-xl gradient-cta text-white px-5 py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity"
+        >
+          Додати компанію
+        </Link>
       </div>
 
       <button

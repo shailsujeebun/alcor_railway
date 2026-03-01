@@ -4,6 +4,7 @@ import {
   HttpStatus,
   Injectable,
   Logger,
+  NotFoundException,
   OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -439,12 +440,33 @@ export class UploadService implements OnModuleInit {
     }
 
     const key = `${safeFolder}/${safeFilename}`;
-    const response = await this.s3.send(
-      new GetObjectCommand({
-        Bucket: this.bucket,
-        Key: key,
-      }),
-    );
+    let response;
+    try {
+      response = await this.s3.send(
+        new GetObjectCommand({
+          Bucket: this.bucket,
+          Key: key,
+        }),
+      );
+    } catch (error: unknown) {
+      const statusCode =
+        typeof error === 'object' &&
+        error !== null &&
+        '$metadata' in error &&
+        typeof (error as { $metadata?: { httpStatusCode?: number } }).$metadata
+          ?.httpStatusCode === 'number'
+          ? (error as { $metadata: { httpStatusCode: number } }).$metadata
+              .httpStatusCode
+          : undefined;
+      const code =
+        typeof error === 'object' && error !== null && 'Code' in error
+          ? String((error as { Code?: unknown }).Code)
+          : '';
+      if (statusCode === 404 || code === 'NoSuchKey') {
+        throw new NotFoundException('File not found');
+      }
+      throw error;
+    }
 
     if (!response.Body) {
       throw new BadRequestException('File not found');

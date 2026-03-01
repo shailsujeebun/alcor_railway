@@ -180,6 +180,48 @@ export class AuthService {
     return { ok: true };
   }
 
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.usersService.findById(userId);
+    if (!user || !user.passwordHash) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const passwordValid = await bcrypt.compare(
+      currentPassword,
+      user.passwordHash,
+    );
+    if (!passwordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    if (currentPassword === newPassword) {
+      throw new BadRequestException(
+        'New password must be different from current password',
+      );
+    }
+
+    this.ensurePasswordStrength(newPassword);
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: userId },
+        data: { passwordHash },
+      }),
+      // Revoke all active sessions. User should sign in again.
+      this.prisma.session.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      }),
+    ]);
+
+    return { ok: true };
+  }
+
   async verifyEmail(email: string, code: string, clientKey?: string) {
     const normalizedEmail = this.normalizeEmail(email);
     const normalizedClientKey = this.normalizeClientKey(clientKey);

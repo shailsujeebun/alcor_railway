@@ -514,3 +514,164 @@ Verification:
 - `pnpm --dir api run test:security` passing
 - `pnpm --dir api run build` passing
 - `pnpm --dir web run build` passing
+
+## 9. Patch Update - 2026-02-25 (Seed Consistency + Dev UX + Bilingual Translation Coverage)
+
+### 9.1 Seed pipeline and verification alignment
+Files:
+- `api/prisma.config.ts`
+
+What changed:
+- Updated Prisma default seed command to `npx ts-node prisma/seed-all.ts` (was `seed.ts`).
+- Verified full seed + integrity flow against local DB:
+  - `pnpm run seed:all`
+  - `pnpm run seed:verify`
+
+Why:
+- Prevents mismatch where legacy seed data fails current verification thresholds/integrity checks.
+
+### 9.2 API developer workflow and FormBlock creation fix
+Files:
+- `api/package.json`
+- `api/src/admin/admin.service.ts`
+
+What changed:
+- Added `dev` script alias for API (`nest start --watch`) so `pnpm dev` works in `api/`.
+- Fixed `FormBlock` creation compile/runtime issue by generating `id` with `randomUUID()` when creating custom blocks.
+
+Why:
+- Removes recurring local dev startup error and resolves Prisma create typing/runtime requirement for `FormBlock.id`.
+
+### 9.3 Frontend i18n hardening for template builder and global fallback
+Files:
+- `web/src/app/admin/templates/builder/page.tsx`
+- `web/src/i18n/messages/en.ts`
+- `web/src/i18n/messages/uk.ts`
+- `web/src/components/providers/translation-provider.tsx`
+- `web/src/app/api/translate/route.ts`
+
+What changed:
+- Migrated template builder UI text/prompts/alerts/buttons/labels to dictionary keys (`t(...)`).
+- Added full EN/UK message sets for template builder scope (`admin.templateBuilder.*`).
+- Upgraded fallback translation pipeline to support both directions:
+  - `uk -> en` and `en -> uk`.
+- Translation API now accepts target locale and applies source-language filtering accordingly.
+- Client translation cache is now locale-scoped to prevent cross-locale cache pollution.
+
+Why:
+- Ensures language switch is consistent on the form builder page and improves project-wide bilingual fallback behavior for remaining hardcoded strings.
+
+### 9.4 Frontend runtime cache corruption recovery
+Operational note:
+- Cleared frontend runtime caches to resolve Turbopack task DB corruption:
+  - removed `web/.next`
+  - removed `web/node_modules/.cache/turbo`
+
+Why:
+- Recovers from `Failed to restore task data ... corrupted database` startup crash in `next dev`.
+
+## 10. Patch Update - 2026-02-27 (Admin UA Completion, Auth Controls, CSV Import, Layout and Company UX)
+
+### 10.1 Admin localization completion and template list usability
+Files:
+- `web/src/app/admin/marketplaces/page.tsx`
+- `web/src/app/admin/categories/page.tsx`
+- `web/src/app/admin/page.tsx`
+- `web/src/app/admin/templates/builder/page.tsx`
+- `web/src/app/admin/templates/page.tsx`
+- `web/src/app/admin/tickets/page.tsx`
+
+What changed:
+- Removed remaining hardcoded English text from key admin surfaces and aligned defaults to Ukrainian.
+- Added template list search and status filter controls in admin templates page.
+
+Why:
+- Admin operators are UA-only and need complete local-language operation plus faster template lookup.
+
+### 10.2 Frontend API diagnostics and options runtime hardening
+Files:
+- `web/src/lib/api.ts`
+- `api/src/options/options.service.ts`
+
+What changed:
+- `fetchApi` now emits contextual error strings with method/path/status and parsed response detail.
+- Options service model-resolution paths now use safe fallbacks and guarded error handling to prevent internal crashes.
+
+Why:
+- Improves production debugging and prevents brand/model selection failures from surfacing as opaque 500 errors.
+
+### 10.3 Admin-only password change flow
+Files:
+- `api/src/auth/dto/change-password.dto.ts`
+- `api/src/auth/auth.controller.ts`
+- `api/src/auth/auth.service.ts`
+- `web/src/app/admin/page.tsx`
+- `web/src/lib/api.ts`
+
+What changed:
+- Added `POST /auth/change-password` (ADMIN-only).
+- Implemented current-password verification, strength enforcement, reuse prevention, password hash update, and active-session revocation.
+- Added admin dashboard UI form for password change and post-success re-authentication flow.
+
+Why:
+- Enables secure self-service admin credential management without exposing password reset dependency on external mailbox availability.
+
+### 10.4 Company UX updates and onboarding entry point
+Files:
+- `web/src/components/companies/company-detail.tsx`
+- `web/src/components/companies/companies-content.tsx`
+
+What changed:
+- Removed company reviews tab/section from company detail.
+- Added “Add Company” CTA blocks that route users to company onboarding form flow.
+
+Why:
+- Matches current business workflow and simplifies company profile UI.
+
+### 10.5 CSV bulk listing import (phase 1)
+Files:
+- `api/src/listings/dto/import-listings-csv.dto.ts`
+- `api/src/listings/listings.controller.ts`
+- `api/src/listings/listings.service.ts`
+- `api/src/companies/companies.controller.ts`
+- `api/src/companies/companies.service.ts`
+- `web/src/components/cabinet/my-listings.tsx`
+- `web/src/lib/api.ts`
+- `web/src/lib/queries.ts`
+- `web/src/types/api.ts`
+
+What changed:
+- Added `GET /companies/mine` to return user-owned companies.
+- Added `POST /listings/import/csv` for bulk listing import from CSV.
+- Implemented row-level validation and partial-success response (`createdCount`, `failedCount`, row errors).
+- Added cabinet import modal:
+  - upload CSV
+  - optional default company selection
+  - sample template download
+  - result feedback.
+
+Why:
+- Reduces manual one-by-one listing creation and enables practical onboarding of companies with existing inventory.
+
+### 10.6 Layout spacing and black-gap fixes from QA
+Files:
+- `web/src/app/layout.tsx`
+- `web/src/app/globals.css`
+- `web/src/components/layout/footer.tsx`
+- `web/src/components/listings/listing-detail.tsx`
+
+What changed:
+- Corrected global/container padding behavior that caused top/bottom black spacer artifacts.
+- Added explicit page spacing where needed (including listing detail views).
+- Increased footer top/internal spacing for cleaner separation from content.
+
+Why:
+- Resolves repeated visual regressions reported in QA screenshots and stabilizes spacing behavior across pages.
+
+### 10.7 Verification snapshot
+Verification:
+- Live local API checks confirmed:
+  - `POST /auth/login` passing
+  - `GET /companies/mine` passing
+  - `POST /listings/import/csv` passing for valid rows
+  - mixed valid/invalid CSV returns expected row-level errors.

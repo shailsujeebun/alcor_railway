@@ -27,6 +27,7 @@ import {
 import { ChevronDown, Plus, Save, Trash } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { TemplateBlockSchema } from '@/lib/schemaTypes';
+import { useTranslation } from '@/components/providers/translation-provider';
 
 interface CategoryNode {
     id: string;
@@ -34,9 +35,10 @@ interface CategoryNode {
     children?: CategoryNode[];
 }
 
-const DEFAULT_SECTION = 'General Information';
+const DEFAULT_SECTION = 'Загальна інформація';
 
 export default function AdminTemplatesPage() {
+    const { t } = useTranslation();
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [templateName, setTemplateName] = useState('');
     const [existingTemplateId, setExistingTemplateId] = useState<number | null>(null);
@@ -67,6 +69,11 @@ export default function AdminTemplatesPage() {
 
         return uniqueSections.length > 0 ? uniqueSections : [DEFAULT_SECTION];
     };
+
+    const getSectionLabel = (section: string) =>
+        section === DEFAULT_SECTION
+            ? t('admin.templateBuilder.defaultSection')
+            : section;
 
     const resetTemplateEditor = () => {
         setExistingTemplateId(null);
@@ -111,7 +118,7 @@ export default function AdminTemplatesPage() {
         }));
 
         setExistingTemplateId(Number(template.id));
-        setTemplateName(`Template v${template.version}`);
+        setTemplateName(`Шаблон v${template.version}`);
         setSelectedCategory(template.categoryId.toString());
         setFields(loadedFields);
         const nextSections = getSectionsFromFields(loadedFields);
@@ -256,7 +263,7 @@ export default function AdminTemplatesPage() {
     }, [categoryTree, selectionPath]);
 
     function addSection() {
-        const name = prompt('Enter section name (e.g., Engine Options, Dimensions):');
+        const name = prompt(t('admin.templateBuilder.prompts.enterSectionName'));
         if (name && !sections.includes(name)) {
             setSections([...sections, name]);
             setCollapsedSections((prev) => ({ ...prev, [name]: false }));
@@ -264,7 +271,9 @@ export default function AdminTemplatesPage() {
     }
 
     function deleteSection(sectionName: string) {
-        if (confirm(`Delete section "${sectionName}" and all its fields?`)) {
+        if (confirm(t('admin.templateBuilder.prompts.deleteSectionConfirm', {
+            sectionName: getSectionLabel(sectionName),
+        }))) {
             setSections(sections.filter((section) => section !== sectionName));
             setFields(fields.filter((field) => field.section !== sectionName));
             setCollapsedSections((prev) => {
@@ -283,7 +292,7 @@ export default function AdminTemplatesPage() {
             ...fields,
             {
                 key: `field_${Date.now()}`,
-                label: 'New Field',
+                label: t('admin.templateBuilder.defaultFieldLabel'),
                 type: 'TEXT',
                 isRequired: false,
                 section,
@@ -353,8 +362,8 @@ export default function AdminTemplatesPage() {
         const field = fields[fieldIndex];
         const newOption = {
             id: `opt_${Date.now()}`,
-            label: 'Option',
-            value: 'value',
+            label: t('admin.templateBuilder.optionDefaultLabel'),
+            value: t('admin.templateBuilder.optionDefaultValue'),
         };
         const updatedOptions = [...(field.options || []), newOption];
         updateField(fieldIndex, { options: updatedOptions as any });
@@ -370,8 +379,8 @@ export default function AdminTemplatesPage() {
     }
 
     async function handleSave(asNew = false) {
-        if (!selectedCategory) return alert('Select a category');
-        if (fields.length === 0) return alert('Add at least one field');
+        if (!selectedCategory) return alert(t('admin.templateBuilder.alerts.selectCategory'));
+        if (fields.length === 0) return alert(t('admin.templateBuilder.alerts.addOneField'));
 
         try {
             setIsLoading(true);
@@ -390,7 +399,7 @@ export default function AdminTemplatesPage() {
 
                 return {
                     key: finalKey,
-                    label: field.label || 'Unnamed Field',
+                    label: field.label || t('admin.templateBuilder.unnamedField'),
                     type: field.type || 'TEXT',
                     required: field.isRequired || false,
                     component: field.component || 'text',
@@ -429,24 +438,28 @@ export default function AdminTemplatesPage() {
                     fields: cleanFields,
                     blockIds: selectedBlockIds,
                 });
-                alert('Template updated successfully!');
+                alert(t('admin.templateBuilder.alerts.templateUpdated'));
                 return;
             }
 
             const created = await createAdminTemplate({
                 categoryId: Number(selectedCategory),
-                name: templateName || 'Default Template',
+                name: templateName || t('admin.templateBuilder.defaultTemplateName'),
                 fields: cleanFields,
                 blockIds: selectedBlockIds,
             });
 
             setExistingTemplateId(Number(created.id));
-            setTemplateName(`Template v${created.version}`);
-            alert(asNew ? 'New version created successfully!' : 'Template created successfully!');
+            setTemplateName(`Шаблон v${created.version}`);
+            alert(
+                asNew
+                    ? t('admin.templateBuilder.alerts.newVersionCreated')
+                    : t('admin.templateBuilder.alerts.templateCreated'),
+            );
             router.replace(`/admin/templates/builder?templateId=${created.id}`);
         } catch (error) {
             console.error(error);
-            alert('Failed to save template');
+            alert(t('admin.templateBuilder.alerts.saveFailed'));
         } finally {
             setIsLoading(false);
         }
@@ -461,7 +474,7 @@ export default function AdminTemplatesPage() {
             setNewBlockName('');
         } catch (error) {
             console.error(error);
-            alert('Failed to create block');
+            alert(t('admin.templateBuilder.alerts.createBlockFailed'));
         }
     }
 
@@ -469,8 +482,10 @@ export default function AdminTemplatesPage() {
         <div className="container-main pt-20 pb-12 max-w-6xl">
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h1 className="text-3xl font-heading font-bold text-white mb-2">Form Template Builder</h1>
-                    <p className="text-muted-foreground">Define custom fields and sections for category listings.</p>
+                    <h1 className="text-3xl font-heading font-bold text-white mb-2">
+                        {t('admin.templateBuilder.title')}
+                    </h1>
+                    <p className="text-muted-foreground">{t('admin.templateBuilder.subtitle')}</p>
                 </div>
                 <div className="flex gap-2">
                     <Button
@@ -480,7 +495,7 @@ export default function AdminTemplatesPage() {
                         className="bg-transparent border-white/20 hover:bg-white/10 text-white"
                     >
                         <Plus className="w-4 h-4 mr-2" />
-                        Save as New Version
+                        {t('admin.templateBuilder.saveAsNewVersion')}
                     </Button>
                     <Button
                         onClick={() => handleSave(false)}
@@ -488,7 +503,7 @@ export default function AdminTemplatesPage() {
                         className="bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-900/20"
                     >
                         <Save className="w-4 h-4 mr-2" />
-                        Save Changes
+                        {t('admin.templateBuilder.saveChanges')}
                     </Button>
                 </div>
             </div>
@@ -497,12 +512,14 @@ export default function AdminTemplatesPage() {
                 <div className="lg:col-span-4 space-y-6">
                     <div className="glass-card rounded-xl p-6 border border-white/10 sticky top-24">
                         <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                            Settings
+                            {t('admin.templateBuilder.settings')}
                         </h2>
 
                         <div className="space-y-6">
                             <div className="space-y-4">
-                                <Label className="text-muted-foreground">Category Selection</Label>
+                                <Label className="text-muted-foreground">
+                                    {t('admin.templateBuilder.categorySelection')}
+                                </Label>
 
                                 {levels.map((level) => {
                                     const options = getLevelOptions(level);
@@ -513,7 +530,11 @@ export default function AdminTemplatesPage() {
                                     return (
                                         <div key={level} className="space-y-1 animation-fade-in">
                                             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1 font-semibold">
-                                                {level === 0 ? 'Main Category' : level === 1 ? 'Subcategory' : `Level ${level + 1} Category`}
+                                                {level === 0
+                                                    ? t('admin.templateBuilder.mainCategory')
+                                                    : level === 1
+                                                        ? t('admin.templateBuilder.subcategory')
+                                                        : t('admin.templateBuilder.levelCategory', { level: level + 1 })}
                                             </p>
                                             <Select
                                                 key={`select-${level}-${selectedAtLevel}`}
@@ -521,7 +542,13 @@ export default function AdminTemplatesPage() {
                                                 onValueChange={(value) => handleLevelSelect(level, value)}
                                             >
                                                 <SelectTrigger className="w-full bg-white/5 border-white/10 text-white shadow-sm">
-                                                    <SelectValue placeholder={level === 0 ? 'Select Main Category' : 'Select Subcategory'} />
+                                                    <SelectValue
+                                                        placeholder={
+                                                            level === 0
+                                                                ? t('admin.templateBuilder.selectMainCategory')
+                                                                : t('admin.templateBuilder.selectSubcategory')
+                                                        }
+                                                    />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {options.map((category) => (
@@ -537,23 +564,30 @@ export default function AdminTemplatesPage() {
 
                                 {selectedCategory && (
                                     <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-sm text-blue-200">
-                                        Selected: <span className="font-semibold">{selectionPath.length} levels deep</span>
+                                        {t('admin.templateBuilder.selected')}:{' '}
+                                        <span className="font-semibold">
+                                            {t('admin.templateBuilder.levelsDeep', { count: selectionPath.length })}
+                                        </span>
                                     </div>
                                 )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-muted-foreground">Template Name</Label>
+                                <Label className="text-muted-foreground">
+                                    {t('admin.templateBuilder.templateName')}
+                                </Label>
                                 <Input
                                     value={templateName}
                                     onChange={(event) => setTemplateName(event.target.value)}
-                                    placeholder="e.g. Tractors V1"
+                                    placeholder={t('admin.templateBuilder.templateNamePlaceholder')}
                                     className="bg-white/5 border-white/10 text-white placeholder:text-muted-foreground/50"
                                 />
                             </div>
 
                             <div className="space-y-3 pt-2 border-t border-white/10">
-                                <Label className="text-muted-foreground">Reusable Blocks</Label>
+                                <Label className="text-muted-foreground">
+                                    {t('admin.templateBuilder.reusableBlocks')}
+                                </Label>
                                 <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
                                     {blocks.map((block) => (
                                         <div key={block.id} className="flex items-center justify-between gap-2 text-sm text-white/90">
@@ -571,7 +605,9 @@ export default function AdminTemplatesPage() {
                                                 />
                                                 <span>{block.name}</span>
                                                 {block.isSystem ? (
-                                                    <span className="text-[10px] uppercase text-blue-300">system</span>
+                                                    <span className="text-[10px] uppercase text-blue-300">
+                                                        {t('admin.templateBuilder.system')}
+                                                    </span>
                                                 ) : null}
                                             </label>
                                             {!block.isSystem ? (
@@ -582,18 +618,21 @@ export default function AdminTemplatesPage() {
                                                         variant="ghost"
                                                         className="h-6 px-2 text-xs"
                                                         onClick={async () => {
-                                                            const nextName = prompt('Block name', block.name)?.trim();
+                                                            const nextName = prompt(
+                                                                t('admin.templateBuilder.prompts.blockName'),
+                                                                block.name,
+                                                            )?.trim();
                                                             if (!nextName) return;
                                                             try {
                                                                 const updated = await updateTemplateBlock(block.id, { name: nextName });
                                                                 setBlocks((prev) => prev.map((entry) => (entry.id === block.id ? updated : entry)));
                                                             } catch (error) {
                                                                 console.error(error);
-                                                                alert('Failed to update block');
+                                                                alert(t('admin.templateBuilder.alerts.updateBlockFailed'));
                                                             }
                                                         }}
                                                     >
-                                                        Edit
+                                                        {t('admin.templateBuilder.edit')}
                                                     </Button>
                                                     <Button
                                                         type="button"
@@ -602,7 +641,7 @@ export default function AdminTemplatesPage() {
                                                         className="h-6 px-2 text-xs"
                                                         onClick={async () => {
                                                             const json = prompt(
-                                                                'Edit block fields JSON',
+                                                                t('admin.templateBuilder.prompts.editBlockFieldsJson'),
                                                                 JSON.stringify(block.fields ?? [], null, 2),
                                                             );
                                                             if (json === null) return;
@@ -612,11 +651,11 @@ export default function AdminTemplatesPage() {
                                                                 setBlocks((prev) => prev.map((entry) => (entry.id === block.id ? updated : entry)));
                                                             } catch (error) {
                                                                 console.error(error);
-                                                                alert('Invalid JSON or failed to update block fields');
+                                                                alert(t('admin.templateBuilder.alerts.updateBlockFieldsFailed'));
                                                             }
                                                         }}
                                                     >
-                                                        Fields
+                                                        {t('admin.templateBuilder.fields')}
                                                     </Button>
                                                     <Button
                                                         type="button"
@@ -624,36 +663,38 @@ export default function AdminTemplatesPage() {
                                                         variant="ghost"
                                                         className="h-6 px-2 text-xs text-red-300"
                                                         onClick={async () => {
-                                                            if (!confirm(`Delete block \"${block.name}\"?`)) return;
+                                                            if (!confirm(t('admin.templateBuilder.prompts.deleteBlockConfirm', { name: block.name }))) return;
                                                             try {
                                                                 await deleteTemplateBlock(block.id);
                                                                 setBlocks((prev) => prev.filter((entry) => entry.id !== block.id));
                                                                 setSelectedBlockIds((prev) => prev.filter((id) => id !== block.id));
                                                             } catch (error) {
                                                                 console.error(error);
-                                                                alert('Failed to delete block');
+                                                                alert(t('admin.templateBuilder.alerts.deleteBlockFailed'));
                                                             }
                                                         }}
                                                     >
-                                                        Delete
+                                                        {t('admin.templateBuilder.delete')}
                                                     </Button>
                                                 </div>
                                             ) : null}
                                         </div>
                                     ))}
                                     {blocks.length === 0 ? (
-                                        <p className="text-xs text-muted-foreground">No blocks yet.</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {t('admin.templateBuilder.noBlocks')}
+                                        </p>
                                     ) : null}
                                 </div>
                                 <div className="flex gap-2">
                                     <Input
                                         value={newBlockName}
                                         onChange={(event) => setNewBlockName(event.target.value)}
-                                        placeholder="New block name"
+                                        placeholder={t('admin.templateBuilder.newBlockName')}
                                         className="bg-white/5 border-white/10 text-white placeholder:text-muted-foreground/50"
                                     />
                                     <Button type="button" size="sm" onClick={handleCreateBlock}>
-                                        Add
+                                        {t('admin.templateBuilder.add')}
                                     </Button>
                                 </div>
                             </div>
@@ -663,16 +704,18 @@ export default function AdminTemplatesPage() {
 
                 <div className="lg:col-span-8 space-y-8">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-semibold text-white">Form Sections</h2>
+                        <h2 className="text-xl font-semibold text-white">
+                            {t('admin.templateBuilder.formSections')}
+                        </h2>
                         <Button onClick={addSection} variant="secondary" size="sm">
-                            <Plus className="w-4 h-4 mr-2" /> Add Section
+                            <Plus className="w-4 h-4 mr-2" /> {t('admin.templateBuilder.addSection')}
                         </Button>
                     </div>
 
                     {sections.length === 0 && (
                         <div className="text-center py-12 border-2 border-dashed border-white/10 rounded-xl bg-white/5">
-                            <p className="text-muted-foreground mb-4">No sections defined.</p>
-                            <Button onClick={addSection}>Create First Section</Button>
+                            <p className="text-muted-foreground mb-4">{t('admin.templateBuilder.noSections')}</p>
+                            <Button onClick={addSection}>{t('admin.templateBuilder.createFirstSection')}</Button>
                         </div>
                     )}
 
@@ -691,7 +734,7 @@ export default function AdminTemplatesPage() {
                                     <ChevronDown
                                         className={`h-4 w-4 transition-transform ${isSectionCollapsed ? '-rotate-90' : 'rotate-0'}`}
                                     />
-                                    <span>{section}</span>
+                                    <span>{getSectionLabel(section)}</span>
                                     <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-muted-foreground">
                                         {sectionFields.length}
                                     </span>
@@ -733,7 +776,7 @@ export default function AdminTemplatesPage() {
                                                             className={`h-4 w-4 transition-transform ${isFieldCollapsed ? '-rotate-90' : 'rotate-0'}`}
                                                         />
                                                         <span className="truncate text-sm font-semibold text-white">
-                                                            {field.label || 'Untitled field'}
+                                                            {field.label || t('admin.templateBuilder.untitledField')}
                                                         </span>
                                                         <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase text-muted-foreground">
                                                             {field.type || 'TEXT'}
@@ -746,7 +789,7 @@ export default function AdminTemplatesPage() {
                                                         onClick={() => removeField(index)}
                                                     >
                                                         <Trash className="w-4 h-4 mr-2" />
-                                                        Remove
+                                                        {t('admin.templateBuilder.remove')}
                                                     </Button>
                                                 </div>
 
@@ -758,7 +801,9 @@ export default function AdminTemplatesPage() {
                                                     <div className="space-y-6">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
-                                                            <Label className="text-xs uppercase text-muted-foreground">Field Label</Label>
+                                                            <Label className="text-xs uppercase text-muted-foreground">
+                                                                {t('admin.templateBuilder.fieldLabel')}
+                                                            </Label>
                                                             <Input
                                                                 value={field.label}
                                                                 onChange={(event) =>
@@ -771,7 +816,9 @@ export default function AdminTemplatesPage() {
                                                             />
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <Label className="text-xs uppercase text-muted-foreground">Field Type</Label>
+                                                            <Label className="text-xs uppercase text-muted-foreground">
+                                                                {t('admin.templateBuilder.fieldType')}
+                                                            </Label>
                                                             <Select
                                                                 value={field.type || 'TEXT'}
                                                                 onValueChange={(value: any) => updateField(index, { type: value })}
@@ -780,20 +827,20 @@ export default function AdminTemplatesPage() {
                                                                     <SelectValue />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
-                                                                    <SelectItem value="TEXT">Text Input</SelectItem>
-                                                                    <SelectItem value="NUMBER">Number Input</SelectItem>
-                                                                    <SelectItem value="PRICE">Price (Currency)</SelectItem>
-                                                                    <SelectItem value="RICHTEXT">Rich Text / Description</SelectItem>
-                                                                    <SelectItem value="SELECT">Dropdown Select</SelectItem>
-                                                                    <SelectItem value="MULTISELECT">Multi-Select</SelectItem>
-                                                                    <SelectItem value="RADIO">Radio Buttons</SelectItem>
-                                                                    <SelectItem value="CHECKBOX_GROUP">Checkbox Group</SelectItem>
-                                                                    <SelectItem value="BOOLEAN">Single Switch/Checkbox</SelectItem>
-                                                                    <SelectItem value="DATE">Date Picker</SelectItem>
-                                                                    <SelectItem value="YEAR_RANGE">Year Range</SelectItem>
-                                                                    <SelectItem value="COLOR">Color Picker</SelectItem>
-                                                                    <SelectItem value="LOCATION">Map Location</SelectItem>
-                                                                    <SelectItem value="MEDIA">Image/Video Upload</SelectItem>
+                                                                    <SelectItem value="TEXT">{t('admin.templateBuilder.fieldTypes.textInput')}</SelectItem>
+                                                                    <SelectItem value="NUMBER">{t('admin.templateBuilder.fieldTypes.numberInput')}</SelectItem>
+                                                                    <SelectItem value="PRICE">{t('admin.templateBuilder.fieldTypes.price')}</SelectItem>
+                                                                    <SelectItem value="RICHTEXT">{t('admin.templateBuilder.fieldTypes.richText')}</SelectItem>
+                                                                    <SelectItem value="SELECT">{t('admin.templateBuilder.fieldTypes.select')}</SelectItem>
+                                                                    <SelectItem value="MULTISELECT">{t('admin.templateBuilder.fieldTypes.multiselect')}</SelectItem>
+                                                                    <SelectItem value="RADIO">{t('admin.templateBuilder.fieldTypes.radio')}</SelectItem>
+                                                                    <SelectItem value="CHECKBOX_GROUP">{t('admin.templateBuilder.fieldTypes.checkboxGroup')}</SelectItem>
+                                                                    <SelectItem value="BOOLEAN">{t('admin.templateBuilder.fieldTypes.boolean')}</SelectItem>
+                                                                    <SelectItem value="DATE">{t('admin.templateBuilder.fieldTypes.date')}</SelectItem>
+                                                                    <SelectItem value="YEAR_RANGE">{t('admin.templateBuilder.fieldTypes.yearRange')}</SelectItem>
+                                                                    <SelectItem value="COLOR">{t('admin.templateBuilder.fieldTypes.color')}</SelectItem>
+                                                                    <SelectItem value="LOCATION">{t('admin.templateBuilder.fieldTypes.location')}</SelectItem>
+                                                                    <SelectItem value="MEDIA">{t('admin.templateBuilder.fieldTypes.media')}</SelectItem>
                                                                 </SelectContent>
                                                             </Select>
                                                         </div>
@@ -801,7 +848,9 @@ export default function AdminTemplatesPage() {
 
                                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                         <div className="space-y-2">
-                                                            <Label className="text-xs uppercase text-muted-foreground">Component</Label>
+                                                            <Label className="text-xs uppercase text-muted-foreground">
+                                                                {t('admin.templateBuilder.component')}
+                                                            </Label>
                                                             <Select
                                                                 value={(field.component as string) || 'text'}
                                                                 onValueChange={(value: any) => updateField(index, { component: value })}
@@ -810,18 +859,20 @@ export default function AdminTemplatesPage() {
                                                                     <SelectValue />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
-                                                                    <SelectItem value="text">Text</SelectItem>
-                                                                    <SelectItem value="number">Number</SelectItem>
-                                                                    <SelectItem value="select">Select</SelectItem>
-                                                                    <SelectItem value="checkbox">Checkbox</SelectItem>
-                                                                    <SelectItem value="radio">Radio</SelectItem>
-                                                                    <SelectItem value="textarea">Textarea</SelectItem>
-                                                                    <SelectItem value="date">Date</SelectItem>
+                                                                    <SelectItem value="text">{t('admin.templateBuilder.components.text')}</SelectItem>
+                                                                    <SelectItem value="number">{t('admin.templateBuilder.components.number')}</SelectItem>
+                                                                    <SelectItem value="select">{t('admin.templateBuilder.components.select')}</SelectItem>
+                                                                    <SelectItem value="checkbox">{t('admin.templateBuilder.components.checkbox')}</SelectItem>
+                                                                    <SelectItem value="radio">{t('admin.templateBuilder.components.radio')}</SelectItem>
+                                                                    <SelectItem value="textarea">{t('admin.templateBuilder.components.textarea')}</SelectItem>
+                                                                    <SelectItem value="date">{t('admin.templateBuilder.components.date')}</SelectItem>
                                                                 </SelectContent>
                                                             </Select>
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <Label className="text-xs uppercase text-muted-foreground">Data Source</Label>
+                                                            <Label className="text-xs uppercase text-muted-foreground">
+                                                                {t('admin.templateBuilder.dataSource')}
+                                                            </Label>
                                                             <Select
                                                                 value={(field.dataSource as string) || 'static'}
                                                                 onValueChange={(value: any) => updateField(index, { dataSource: value })}
@@ -830,14 +881,16 @@ export default function AdminTemplatesPage() {
                                                                     <SelectValue />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
-                                                                    <SelectItem value="static">Static</SelectItem>
+                                                                    <SelectItem value="static">{t('admin.templateBuilder.dataSources.static')}</SelectItem>
                                                                     <SelectItem value="api">API</SelectItem>
                                                                     <SelectItem value="db">DB</SelectItem>
                                                                 </SelectContent>
                                                             </Select>
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <Label className="text-xs uppercase text-muted-foreground">Placeholder</Label>
+                                                            <Label className="text-xs uppercase text-muted-foreground">
+                                                                {t('admin.templateBuilder.placeholder')}
+                                                            </Label>
                                                             <Input
                                                                 value={(field.placeholder as string) || ''}
                                                                 onChange={(event) => updateField(index, { placeholder: event.target.value })}
@@ -853,7 +906,7 @@ export default function AdminTemplatesPage() {
                                                             className="w-full flex items-center justify-between px-3 py-2 text-left"
                                                         >
                                                             <span className="text-xs uppercase tracking-wide text-muted-foreground">
-                                                                Advanced Settings
+                                                                {t('admin.templateBuilder.advancedSettings')}
                                                             </span>
                                                             <ChevronDown
                                                                 className={`h-4 w-4 text-muted-foreground transition-transform ${
@@ -869,7 +922,9 @@ export default function AdminTemplatesPage() {
                                                             <div className="space-y-4 px-3 pb-3 border-t border-white/10 pt-3">
                                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                                     <div className="space-y-2">
-                                                                        <Label className="text-xs uppercase text-muted-foreground">Depends On</Label>
+                                                                        <Label className="text-xs uppercase text-muted-foreground">
+                                                                            {t('admin.templateBuilder.dependsOn')}
+                                                                        </Label>
                                                                         <div className="rounded-lg border border-white/10 p-2 max-h-28 overflow-y-auto">
                                                                             {fields
                                                                                 .map((candidate, candidateIndex) => ({
@@ -903,7 +958,9 @@ export default function AdminTemplatesPage() {
                                                                         </div>
                                                                     </div>
                                                                     <div className="space-y-2">
-                                                                        <Label className="text-xs uppercase text-muted-foreground">Reset On Change</Label>
+                                                                        <Label className="text-xs uppercase text-muted-foreground">
+                                                                            {t('admin.templateBuilder.resetOnChange')}
+                                                                        </Label>
                                                                         <div className="rounded-lg border border-white/10 p-2 max-h-28 overflow-y-auto">
                                                                             {fields
                                                                                 .map((candidate, candidateIndex) => ({
@@ -941,7 +998,9 @@ export default function AdminTemplatesPage() {
                                                                 {(field.dataSource === 'api' || field.dataSource === 'db') ? (
                                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                                         <div className="space-y-2">
-                                                                            <Label className="text-xs uppercase text-muted-foreground">Options Endpoint (API)</Label>
+                                                                            <Label className="text-xs uppercase text-muted-foreground">
+                                                                                {t('admin.templateBuilder.optionsEndpoint')}
+                                                                            </Label>
                                                                             <Input
                                                                                 value={(field.optionsEndpoint as string) || ''}
                                                                                 onChange={(event) => updateField(index, { optionsEndpoint: event.target.value })}
@@ -950,7 +1009,9 @@ export default function AdminTemplatesPage() {
                                                                             />
                                                                         </div>
                                                                         <div className="space-y-2">
-                                                                            <Label className="text-xs uppercase text-muted-foreground">Options Query (JSON)</Label>
+                                                                            <Label className="text-xs uppercase text-muted-foreground">
+                                                                                {t('admin.templateBuilder.optionsQuery')}
+                                                                            </Label>
                                                                             <Input
                                                                                 value={field.optionsQuery ? JSON.stringify(field.optionsQuery) : ''}
                                                                                 onChange={(event) => {
@@ -972,7 +1033,9 @@ export default function AdminTemplatesPage() {
 
                                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                                     <div className="space-y-2">
-                                                                        <Label className="text-xs uppercase text-muted-foreground">VisibleIf (JSON RuleTree)</Label>
+                                                                        <Label className="text-xs uppercase text-muted-foreground">
+                                                                            {t('admin.templateBuilder.visibleIf')}
+                                                                        </Label>
                                                                         <textarea
                                                                             value={field.visibleIf ? JSON.stringify(field.visibleIf) : ''}
                                                                             onChange={(event) => {
@@ -987,11 +1050,13 @@ export default function AdminTemplatesPage() {
                                                                             }}
                                                                             rows={3}
                                                                             className="w-full rounded-md bg-black/20 border border-white/10 p-2 text-xs"
-                                                                            placeholder='{} = always visible'
+                                                                            placeholder={t('admin.templateBuilder.visibleIfPlaceholder')}
                                                                         />
                                                                     </div>
                                                                     <div className="space-y-2">
-                                                                        <Label className="text-xs uppercase text-muted-foreground">RequiredIf (JSON RuleTree)</Label>
+                                                                        <Label className="text-xs uppercase text-muted-foreground">
+                                                                            {t('admin.templateBuilder.requiredIf')}
+                                                                        </Label>
                                                                         <textarea
                                                                             value={field.requiredIf ? JSON.stringify(field.requiredIf) : ''}
                                                                             onChange={(event) => {
@@ -1006,7 +1071,7 @@ export default function AdminTemplatesPage() {
                                                                             }}
                                                                             rows={3}
                                                                             className="w-full rounded-md bg-black/20 border border-white/10 p-2 text-xs"
-                                                                            placeholder='{} = not conditionally required'
+                                                                            placeholder={t('admin.templateBuilder.requiredIfPlaceholder')}
                                                                         />
                                                                     </div>
                                                                 </div>
@@ -1018,7 +1083,9 @@ export default function AdminTemplatesPage() {
                                                         <div className="bg-black/20 p-4 rounded-lg space-y-3 border border-white/5">
                                                             <div className="flex justify-between items-center">
                                                                 <Label className="text-xs uppercase text-blue-400">
-                                                                    {field.type === 'COLOR' ? 'Color Options' : 'Options Configuration'}
+                                                                    {field.type === 'COLOR'
+                                                                        ? t('admin.templateBuilder.colorOptions')
+                                                                        : t('admin.templateBuilder.optionsConfiguration')}
                                                                 </Label>
                                                                 <Button
                                                                     size="sm"
@@ -1026,7 +1093,7 @@ export default function AdminTemplatesPage() {
                                                                     onClick={() => addOption(index)}
                                                                     className="h-6 text-xs hover:text-blue-400"
                                                                 >
-                                                                    <Plus className="w-3 h-3 mr-1" /> Add Option
+                                                                    <Plus className="w-3 h-3 mr-1" /> {t('admin.templateBuilder.addOption')}
                                                                 </Button>
                                                             </div>
 
@@ -1042,18 +1109,18 @@ export default function AdminTemplatesPage() {
                                                                             />
                                                                         ) : null}
 
-                                                                        <Input
-                                                                            value={option.label}
-                                                                            onChange={(event) => updateOption(index, optIndex, 'label', event.target.value)}
-                                                                            placeholder="Label"
-                                                                            className="h-8 text-sm bg-black/20 border-white/10"
-                                                                        />
-                                                                        <Input
-                                                                            value={option.value}
-                                                                            onChange={(event) => updateOption(index, optIndex, 'value', event.target.value)}
-                                                                            placeholder="Value"
-                                                                            className="h-8 text-sm bg-black/20 border-white/10 font-mono text-xs"
-                                                                        />
+                                                                            <Input
+                                                                                value={option.label}
+                                                                                onChange={(event) => updateOption(index, optIndex, 'label', event.target.value)}
+                                                                                placeholder={t('admin.templateBuilder.label')}
+                                                                                className="h-8 text-sm bg-black/20 border-white/10"
+                                                                            />
+                                                                            <Input
+                                                                                value={option.value}
+                                                                                onChange={(event) => updateOption(index, optIndex, 'value', event.target.value)}
+                                                                                placeholder={t('admin.templateBuilder.value')}
+                                                                                className="h-8 text-sm bg-black/20 border-white/10 font-mono text-xs"
+                                                                            />
                                                                         <Button
                                                                             size="icon"
                                                                             variant="ghost"
@@ -1070,7 +1137,7 @@ export default function AdminTemplatesPage() {
                                                                 ))}
                                                                 {(!field.options || field.options.length === 0) && (
                                                                     <div className="text-xs text-muted-foreground text-center py-2">
-                                                                        No options defined.
+                                                                        {t('admin.templateBuilder.noOptions')}
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -1085,7 +1152,7 @@ export default function AdminTemplatesPage() {
                                                                 onChange={(event) => updateField(index, { isRequired: event.target.checked })}
                                                                 className="w-4 h-4 rounded border-white/20 bg-black/20 text-blue-500 focus:ring-blue-500/20"
                                                             />
-                                                            Required Field
+                                                            {t('admin.templateBuilder.requiredField')}
                                                         </label>
                                                     </div>
                                                     </div>
@@ -1100,7 +1167,9 @@ export default function AdminTemplatesPage() {
                                     className="w-full py-4 border-dashed border-white/10 hover:border-blue-500/50 hover:bg-blue-500/5 text-muted-foreground hover:text-blue-400 transition-all"
                                 >
                                     <Plus className="w-4 h-4 mr-2" />
-                                    Add Field to {section}
+                                    {t('admin.templateBuilder.addFieldToSection', {
+                                        section: getSectionLabel(section),
+                                    })}
                                 </Button>
                             </div>
                         </div>
@@ -1109,9 +1178,11 @@ export default function AdminTemplatesPage() {
 
                     <div className="flex justify-center pt-8">
                         <div className="text-center">
-                            <p className="text-muted-foreground mb-4">Need more organization?</p>
+                            <p className="text-muted-foreground mb-4">
+                                {t('admin.templateBuilder.needMoreOrganization')}
+                            </p>
                             <Button onClick={addSection} variant="secondary">
-                                <Plus className="w-4 h-4 mr-2" /> Add Another Section
+                                <Plus className="w-4 h-4 mr-2" /> {t('admin.templateBuilder.addAnotherSection')}
                             </Button>
                         </div>
                     </div>

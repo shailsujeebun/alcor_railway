@@ -35,6 +35,12 @@ export class CompaniesController {
     return this.companiesService.findAll(query);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('mine')
+  findMine(@CurrentUser() user: { id: string; role: string }) {
+    return this.companiesService.findMine(user.id, user.role);
+  }
+
   @Get(':slug')
   findBySlug(@Param('slug') slug: string) {
     return this.companiesService.findBySlug(slug);

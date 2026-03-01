@@ -228,4 +228,63 @@ The API is failing to start due to two critical issues identified from the termi
   - refactored footer to behave correctly at half-width and mobile breakpoints.
 - Build/test status confirmed green after changes:
   - `api`: `pnpm test`, `pnpm test:security`, `pnpm build`, `pnpm run seed:all`, `pnpm run seed:verify`
-  - `web`: `pnpm build`.
+- `web`: `pnpm build`.
+
+## 8. Update - 2026-02-25 (Seed Verification Recovery + Dev Script + Full EN/UA Builder Localization)
+
+- Fixed seed verification failures caused by mismatched/partial dataset state:
+  - re-ran full seed (`pnpm run seed:all`) and verification (`pnpm run seed:verify`) successfully.
+  - updated Prisma config default seed target to `seed-all.ts` to keep future `prisma db seed` runs consistent with verifier expectations.
+- Fixed API local dev command mismatch:
+  - added `dev` script alias in `api/package.json` so `pnpm dev` works.
+- Fixed API compile issue in admin block creation:
+  - `FormBlock` create now sets `id` via `randomUUID()` in `admin.service.ts`.
+- Delivered localization fixes for form template builder:
+  - migrated hardcoded builder labels/actions/prompts/alerts to dictionary keys.
+  - added complete `admin.templateBuilder.*` entries in both EN and UK message dictionaries.
+- Upgraded translation fallback architecture to work in both directions:
+  - EN mode translates residual Ukrainian hardcoded text.
+  - UK mode translates residual English hardcoded text.
+  - translation API now accepts `targetLocale` and uses locale-aware filtering/caching.
+- Cleared `web` runtime caches (`.next`, `node_modules/.cache/turbo`) to recover from Turbopack corrupted task DB startup panic.
+
+### Test/Verification Snapshot (2026-02-25)
+- `api`: `pnpm run seed:verify` passing.
+- `api`: `pnpm run build` passing.
+- `web`: TypeScript check passing (`pnpm exec tsc --noEmit`).
+
+## 9. Update - 2026-02-27 (Admin UA Coverage, Account Controls, CSV Import, Layout QA Fixes)
+
+- Completed Ukrainian-first admin coverage for remaining hardcoded UI strings:
+  - admin dashboard/actions/pages and template builder defaults now render in UA by default.
+  - EN remains available only through the language toggle/translation flow.
+- Improved API error diagnostics on the frontend:
+  - `fetchApi` now throws method/path/status-aware error messages with parsed response details to simplify debugging.
+- Fixed listing-form brand/model instability:
+  - options service was hardened to avoid runtime crashes when model sources/queries fail or return unexpected shapes.
+- Added admin-only password change flow:
+  - new backend endpoint: `POST /auth/change-password` (ADMIN role only)
+  - verifies current password, enforces strength rules, prevents password reuse, revokes active sessions.
+  - admin UI now includes secure password-change form and forces re-login after success.
+- Added admin Form Templates search/filter UX:
+  - text search + status filtering to avoid long scroll-only template management.
+- Delivered cross-page spacing polish from QA screenshots:
+  - fixed top/bottom spacing collisions with header/footer.
+  - removed black spacer artifacts by correcting global/page padding interactions.
+  - adjusted footer top/internal spacing for cleaner separation.
+- Simplified company profile tabs:
+  - removed reviews section from company detail page as requested.
+- Added company onboarding CTA:
+  - “Add Company” entry points now available from company listing/detail views (redirect to company form flow).
+- Delivered CSV bulk listing import (phase 1):
+  - backend endpoint: `POST /listings/import/csv`
+  - frontend import modal in cabinet listings with CSV template download and optional default company selection
+  - row-level validation and per-row success/failure reporting
+  - added `GET /companies/mine` to drive ownership-aware import targeting.
+
+### Test/Verification Snapshot (2026-02-27)
+- Live API verification completed against local runtime:
+  - `POST /auth/login` successful
+  - `GET /companies/mine` successful
+  - `POST /listings/import/csv` successful for valid rows
+  - mixed valid/invalid CSV returns expected row-level error report.

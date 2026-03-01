@@ -358,36 +358,36 @@ select:focus-visible {
 .container-main {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 40px;
+  padding-inline: 40px;
 }
 
 @media (max-width: 1280px) {
   .container-main {
-    padding: 0 30px;
+    padding-inline: 30px;
   }
 }
 
 @media (max-width: 1024px) {
   .container-main {
-    padding: 0 25px;
+    padding-inline: 25px;
   }
 }
 
 @media (max-width: 768px) {
   .container-main {
-    padding: 0 15px;
+    padding-inline: 15px;
   }
 }
 
 @media (max-width: 480px) {
   .container-main {
-    padding: 0 12px;
+    padding-inline: 12px;
   }
 }
 
 @media (max-width: 320px) {
   .container-main {
-    padding: 0 10px;
+    padding-inline: 10px;
   }
 }
 

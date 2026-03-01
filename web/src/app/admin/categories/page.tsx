@@ -93,7 +93,7 @@ function CategoryItem({
                         size="icon"
                         className="h-8 w-8 hover:bg-blue-500/10 hover:text-blue-500"
                         onClick={() => onAddSub(Number(category.id))}
-                        title="Add Subcategory"
+                        title="Додати підкатегорію"
                     >
                         <Plus className="w-4 h-4" />
                     </Button>
@@ -102,7 +102,7 @@ function CategoryItem({
                         size="icon"
                         className="h-8 w-8 hover:bg-yellow-500/10 hover:text-yellow-500"
                         onClick={() => onEdit(category)}
-                        title="Edit"
+                        title="Редагувати"
                     >
                         <Edit2 className="w-4 h-4" />
                     </Button>
@@ -111,7 +111,7 @@ function CategoryItem({
                         size="icon"
                         className="h-8 w-8 hover:bg-red-500/10 hover:text-red-500"
                         onClick={() => onDelete(Number(category.id))}
-                        title="Delete"
+                        title="Видалити"
                     >
                         <Trash2 className="w-4 h-4" />
                     </Button>
@@ -200,18 +200,18 @@ export default function AdminCategoriesPage() {
             queryClient.invalidateQueries({ queryKey: ['categories'] });
         } catch (error) {
             console.error('Failed to save category', error);
-            alert('Failed to save category');
+            alert('Не вдалося зберегти категорію');
         }
     }
 
     async function handleDelete(id: number) {
-        if (!confirm('Are you sure? This will delete the category and all subcategories.')) return;
+        if (!confirm('Ви впевнені? Категорія та всі підкатегорії будуть видалені.')) return;
         try {
             await deleteAdminCategory(id);
             queryClient.invalidateQueries({ queryKey: ['categories'] });
         } catch (error) {
             console.error(error);
-            alert('Cannot delete category. It may have listings.');
+            alert('Не вдалося видалити категорію. Можливо, у ній є оголошення.');
         }
     }
 
@@ -260,14 +260,14 @@ export default function AdminCategoriesPage() {
         cat.marketplaceId === selectedMarketplace
     ) || [];
 
-    if (isLoading && !marketplaces) return <div className="p-8 text-center">Loading categories...</div>;
+    if (isLoading && !marketplaces) return <div className="p-8 text-center">Завантаження категорій...</div>;
 
     return (
         <div className="container-main pt-20 pb-12">
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h1 className="text-3xl font-heading font-bold text-white mb-2">Manage Categories</h1>
-                    <p className="text-muted-foreground">Organize your marketplace structure</p>
+                    <h1 className="text-3xl font-heading font-bold text-white mb-2">Керування категоріями</h1>
+                    <p className="text-muted-foreground">Організуйте структуру маркетплейсу</p>
                 </div>
 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -278,39 +278,39 @@ export default function AdminCategoriesPage() {
                             className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-900/20"
                         >
                             <Plus className="w-4 h-4 mr-2" />
-                            Add Marketplace
+                            Додати категорію
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>
-                                {editingId ? 'Edit Category' : 'Create New Category'}
+                                {editingId ? 'Редагувати категорію' : 'Створити нову категорію'}
                             </DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <Label htmlFor="name">Name</Label>
+                                <Label htmlFor="name">Назва</Label>
                                 <Input
                                     id="name"
                                     value={formData.name}
                                     onChange={(e) =>
                                         setFormData({ ...formData, name: e.target.value })
                                     }
-                                    placeholder="e.g., Tractors"
+                                    placeholder="напр., Трактори"
                                     required
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="slug">Slug</Label>
+                                <Label htmlFor="slug">Слаг (URL)</Label>
                                 <Input
                                     id="slug"
                                     value={formData.slug}
                                     onChange={(e) =>
                                         setFormData({ ...formData, slug: e.target.value })
                                     }
-                                    placeholder="e.g., tractors"
+                                    placeholder="напр., tractors"
                                 />
-                                <p className="text-xs text-muted-foreground mt-1">Leave empty to auto-generate from name.</p>
+                                <p className="text-xs text-muted-foreground mt-1">Залиште порожнім для автогенерації з назви.</p>
                             </div>
                             <div className="flex items-center gap-2 rounded-md border border-white/10 px-3 py-2">
                                 <input
@@ -322,16 +322,16 @@ export default function AdminCategoriesPage() {
                                     }
                                 />
                                 <Label htmlFor="hasEngine" className="cursor-pointer">
-                                    Has engine (uses motorized template fallback)
+                                    Має двигун (використовує fallback-шаблон для моторизованої техніки)
                                 </Label>
                             </div>
                             {formData.parentId && (
                                 <div className="text-sm text-muted-foreground">
-                                    Creating subcategory under ID: {formData.parentId}
+                                    Створюється підкатегорія під ID: {formData.parentId}
                                 </div>
                             )}
                             <Button type="submit" className="w-full">
-                                {editingId ? 'Update' : 'Create'}
+                                {editingId ? 'Оновити' : 'Створити'}
                             </Button>
                         </form>
                     </DialogContent>
@@ -369,12 +369,12 @@ export default function AdminCategoriesPage() {
                         </div>
                         <h3 className="text-lg font-medium text-white mb-1">
                             {selectedMarketplace
-                                ? 'No categories yet'
-                                : 'Select a marketplace'}
+                                ? 'Категорій поки немає'
+                                : 'Оберіть маркетплейс'}
                         </h3>
                         {selectedMarketplace && (
                             <p className="text-sm text-muted-foreground max-w-sm">
-                                This marketplace doesn't have any categories properly set up. Add your first root category to get started.
+                                Для цього маркетплейсу ще не налаштовано категорії. Додайте першу кореневу категорію.
                             </p>
                         )}
                     </div>

@@ -479,3 +479,25 @@ export interface AdminTemplate {
   };
   fields?: { id: string }[];
 }
+
+export interface MyCompanyOption {
+  id: string;
+  slug: string;
+  name: string;
+  membershipRole?: string;
+}
+
+export interface CsvImportResultRow {
+  line: number;
+  status: 'created' | 'failed';
+  listingId?: string;
+  title?: string;
+  error?: string;
+}
+
+export interface CsvImportResponse {
+  totalRows: number;
+  createdCount: number;
+  failedCount: number;
+  results: CsvImportResultRow[];
+}

@@ -17,6 +17,7 @@ import { ListingQueryDto } from './dto/listing-query.dto';
 import { ModerateListingDto } from './dto/moderate-listing.dto';
 import { ValidateDraftDto } from './dto/validate-draft.dto';
 import { UpdateListingContactDto } from './dto/update-listing-contact.dto';
+import { ImportListingsCsvDto } from './dto/import-listings-csv.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -39,6 +40,15 @@ export class ListingsController {
     @CurrentUser() user: { id: string; role: string },
   ) {
     return this.listingsService.create(dto, user.id, user.role);
+  }
+
+  @Post('listings/import/csv')
+  @UseGuards(JwtAuthGuard)
+  importFromCsv(
+    @Body() dto: ImportListingsCsvDto,
+    @CurrentUser() user: { id: string; role: string },
+  ) {
+    return this.listingsService.importFromCsv(dto, user.id, user.role);
   }
 
   @Get('listings')
