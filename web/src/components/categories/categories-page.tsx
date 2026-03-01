@@ -12,6 +12,10 @@ const CATEGORY_PREVIEW_LIMIT = 12;
 
 function iconForCategory(name: string): string {
   const value = name.toLowerCase();
+
+  // Specific mappings first
+  if (value.includes('легкові авто') || value.includes('авто') || value === 'cars' || value.includes('car')) return '🚗';
+
   if (value.includes('airport')) return '🛫';
   if (value.includes('air transport')) return '✈';
   if (value.includes('water transport')) return '🚢';
@@ -49,7 +53,6 @@ function iconForCategory(name: string): string {
   if (value.includes('real estate')) return '🏢';
   if (value.includes('energy')) return '⚡';
   if (value.includes('equipment')) return '🧩';
-  if (value.includes('car')) return '🚗';
   return '🔹';
 }
 

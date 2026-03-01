@@ -29,6 +29,10 @@ function getMarketplaceAccent(key: string): string {
 
 function getCategoryIcon(name: string): string {
   const value = name.toLowerCase();
+
+  // Specific mappings first
+  if (value.includes('легкові авто') || value.includes('авто') || value === 'cars' || value.includes('car')) return '🚗';
+
   if (value.includes('airport')) return '🛫';
   if (value.includes('air transport')) return '✈';
   if (value.includes('water transport')) return '🚢';
@@ -66,7 +70,6 @@ function getCategoryIcon(name: string): string {
   if (value.includes('real estate')) return '🏢';
   if (value.includes('energy')) return '⚡';
   if (value.includes('equipment')) return '🧩';
-  if (value.includes('car')) return '🚗';
   return '🔹';
 }
 
@@ -317,11 +320,10 @@ export function DescriptionStep() {
                     key={marketplace.id}
                     type="button"
                     onClick={() => handleMarketplaceChange(marketplace.id)}
-                    className={`px-4 py-2 rounded-lg border text-sm transition-colors ${
-                      isActive
+                    className={`px-4 py-2 rounded-lg border text-sm transition-colors ${isActive
                         ? `${getMarketplaceAccent(marketplace.key)} text-[var(--text-primary)]`
                         : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                    }`}
+                      }`}
                   >
                     {marketplace.name}
                   </button>
@@ -347,11 +349,10 @@ export function DescriptionStep() {
                     key={category.id}
                     type="button"
                     onClick={() => handleCategorySelect(category.id)}
-                    className={`text-left p-4 rounded-lg border transition-colors ${
-                      isSelected
+                    className={`text-left p-4 rounded-lg border transition-colors ${isSelected
                         ? 'border-blue-bright bg-blue-bright/10'
                         : 'border-[var(--border-color)] hover:border-blue-bright/40'
-                    }`}
+                      }`}
                   >
                     <p className="text-xl mb-1">{getCategoryIcon(category.name)}</p>
                     <p className="text-sm font-semibold text-[var(--text-primary)]">{category.name}</p>
@@ -400,11 +401,10 @@ export function DescriptionStep() {
                       key={subcategory.id}
                       type="button"
                       onClick={() => handleSubcategorySelect(subcategory.id)}
-                      className={`text-left p-3 rounded-lg border text-sm transition-colors ${
-                        isSelected
+                      className={`text-left p-3 rounded-lg border text-sm transition-colors ${isSelected
                           ? 'border-blue-bright bg-blue-bright/10'
                           : 'border-[var(--border-color)] hover:border-blue-bright/40'
-                      }`}
+                        }`}
                     >
                       {subcategory.name}
                     </button>

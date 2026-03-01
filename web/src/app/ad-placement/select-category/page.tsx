@@ -26,7 +26,7 @@ function getCategoryIcon(name: string): string {
     if (nameLower.includes('вантаж') || nameLower.includes('truck')) return '🚛';
     if (nameLower.includes('автобус') || nameLower.includes('bus')) return '🚌';
     if (nameLower.includes('причіп') || nameLower.includes('trailer')) return '🚚';
-    if (nameLower.includes('авто') || nameLower.includes('car')) return '🚗';
+    if (nameLower.includes('легкові авто') || nameLower.includes('авто') || nameLower === 'cars' || nameLower.includes('car')) return '🚗';
     if (nameLower.includes('мото') || nameLower.includes('motorcycle')) return '🏍️';
     if (nameLower.includes('екскаватор') || nameLower.includes('excavator')) return '🏗️';
     if (nameLower.includes('навантажувач') || nameLower.includes('loader')) return '⚙️';
