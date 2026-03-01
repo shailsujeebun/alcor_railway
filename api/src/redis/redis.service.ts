@@ -15,7 +15,9 @@ export class RedisService implements OnModuleDestroy {
   private useMemoryFallback = false;
 
   constructor(private configService: ConfigService) {
-    this.client = new Redis(this.configService.get<string>('redis.url')!, {
+    const redisUrl = this.configService.get<string>('redis.url')!;
+
+    this.client = new Redis(redisUrl, {
       maxRetriesPerRequest: 1,
       enableOfflineQueue: false,
       connectTimeout: 1000,
@@ -33,7 +35,7 @@ export class RedisService implements OnModuleDestroy {
     this.client.on('error', (error) => {
       if (!this.useMemoryFallback) {
         this.logger.warn(
-          `Redis unavailable (${error.message}). Using in-memory fallback.`,
+          `Redis unavailable at ${redisUrl}. Using in-memory fallback. (${error.message})`,
         );
       }
       this.useMemoryFallback = true;
@@ -120,7 +122,11 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    await this.client.quit().catch(() => undefined);
+    try {
+      await this.client.quit();
+    } catch {
+      this.client.disconnect();
+    }
   }
 
   private async safeRedisCall<T>(
