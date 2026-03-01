@@ -5,7 +5,8 @@ export type FieldComponent =
   | 'checkbox'
   | 'radio'
   | 'textarea'
-  | 'date';
+  | 'date'
+  | 'color';
 
 export type DataSourceType = 'static' | 'db' | 'api';
 
@@ -63,4 +64,3 @@ export interface TemplateBlockSchema {
   isSystem?: boolean;
   fields: TemplateFieldSchema[];
 }
-

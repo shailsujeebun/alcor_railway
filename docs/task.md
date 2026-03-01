@@ -122,3 +122,17 @@
 - 2026-02-24: `api` security tests green (`pnpm test:security`)
 - 2026-02-24: `api` build green (`pnpm build`)
 - 2026-02-24: `web` production build green (`pnpm build`)
+
+## Update - 2026-03-01 (Vehicle Parameters Parity Pass)
+- Upgraded the motorized dynamic template to an Agroline-style parameter model with expanded sections and field types.
+- Preserved config-driven behavior for dependencies/conditionals and added runtime `engine_block` consistency so rendered form and validator stay aligned.
+- Added submit-time mapping so dynamic attributes can populate core listing payload fields (brand/price/currency/year/condition/advert type/euro).
+
+## Test Status (Latest)
+- 2026-03-01: `api` unit/security suite green (`pnpm -C api test --runInBand`)
+- 2026-03-01: `api` TypeScript check green (`pnpm -C api exec tsc --noEmit`)
+- 2026-03-01: `web` TypeScript check green (`pnpm -C web exec tsc --noEmit`)
+- 2026-03-01: `web` lint green (`pnpm -C web lint`)
+- 2026-03-01: `api` build blocked in local shell (`cross-env` missing)
+- 2026-03-01: `web` build blocked in sandbox (Google Fonts network fetch unavailable)
+- 2026-03-01: `api` e2e blocked in sandbox (port bind `EPERM`)

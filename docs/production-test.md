@@ -162,3 +162,18 @@ This is the best approach because it catches issues early, then validates real-w
   - ad-posting category/subcategory flow
   - responsive footer/layout rendering fixes
   - TypeScript/build stability for updated UI paths.
+
+## Update - 2026-03-01 (Current Verification Snapshot)
+
+- Passing checks in this session:
+  - `pnpm -C api test --runInBand`
+  - `pnpm -C api exec tsc --noEmit`
+  - `pnpm -C web exec tsc --noEmit`
+  - `pnpm -C web lint`
+- Environment-restricted failures in sandbox:
+  - `pnpm -C api build` -> `cross-env: command not found`
+  - `pnpm -C web build` -> failed to download Google Fonts (`Inter`, `Manrope`)
+  - `pnpm -C api test:e2e` -> `listen EPERM` (port bind restriction).
+- Release interpretation:
+  - do not treat this as a complete Gate 0 pass
+  - rerun full Gate 0 in CI/staging with unrestricted network/port binding before production promotion.

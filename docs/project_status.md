@@ -229,3 +229,25 @@ The API is failing to start due to two critical issues identified from the termi
 - Build/test status confirmed green after changes:
   - `api`: `pnpm test`, `pnpm test:security`, `pnpm build`, `pnpm run seed:all`, `pnpm run seed:verify`
   - `web`: `pnpm build`.
+
+## 8. Update - 2026-03-01 (Agroline-Style Vehicle Form Expansion)
+
+- Delivered a major motorized form schema expansion for the posting wizard:
+  - Agroline-style sections and parameter coverage (basic characteristics, engine/gearbox, axles/brakes, options matrices, ad parameters).
+  - Dynamic field behavior preserved through config (cascades, conditional visibility, unit fields, radios/checkbox groups, color swatches).
+- Added runtime consistency hardening:
+  - built-in `engine_block` now takes precedence at runtime and validation time to avoid stale DB block mismatch.
+- Added dynamic-to-core payload mapping in listing submit:
+  - dynamic `brand`, `price`, `currency`, `year`, `condition`, `advert_type`, and `euro` now map into core listing payload where relevant.
+
+### Verification snapshot (2026-03-01)
+
+- Passing:
+  - `pnpm -C api test --runInBand`
+  - `pnpm -C api exec tsc --noEmit`
+  - `pnpm -C web exec tsc --noEmit`
+  - `pnpm -C web lint`
+- Environment-limited in this sandbox:
+  - `pnpm -C api build` blocked by missing `cross-env` binary
+  - `pnpm -C web build` blocked by external Google Fonts fetch restrictions
+  - `pnpm -C api test:e2e` blocked by sandbox port binding (`listen EPERM`).

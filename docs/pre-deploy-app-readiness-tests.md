@@ -135,3 +135,18 @@ A release is considered ready only when all gates below are marked `PASS`.
 
 - Go: all gates `PASS`, no open `P0/P1` defects, and evidence package complete.
 - No-Go: any failed gate, unresolved critical security issue, or missing rollback confidence.
+
+## Update - 2026-03-01 (Current Local Verification Snapshot)
+
+- Verified in current branch session:
+  - pass: `pnpm -C api test --runInBand`
+  - pass: `pnpm -C api exec tsc --noEmit`
+  - pass: `pnpm -C web exec tsc --noEmit`
+  - pass: `pnpm -C web lint`
+- Environment-constrained in this sandbox:
+  - `pnpm -C api build` failed due missing `cross-env` binary in shell environment
+  - `pnpm -C web build` failed because Google Fonts fetch is blocked
+  - `pnpm -C api test:e2e` failed due sandbox port binding restriction (`listen EPERM`).
+- Implication for Gate 0:
+  - quality baseline is partially evidenced locally
+  - full Gate 0 pass still requires running `api build`, `web build`, and `api test:e2e` in a non-restricted CI/staging environment.

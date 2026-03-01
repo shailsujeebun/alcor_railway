@@ -182,24 +182,23 @@ export class CategoriesService {
             orderBy: { name: 'asc' },
           });
 
-    const dbBlockIdSet = new Set(dbBlocks.map((b: any) => b.id));
-
-    // If engine_block is needed but not yet in DB, use the built-in definition.
-    const extraBlocks: any[] =
-      effectiveBlockIds.includes('engine_block') &&
-      !dbBlockIdSet.has('engine_block')
-        ? [getBuiltInEngineBlock()]
-        : [];
-
-    const blocks = [
-      ...dbBlocks.map((block: any) => ({
+    const mappedDbBlocks = dbBlocks
+      .filter(
+        (block: any) =>
+          !(effectiveBlockIds.includes('engine_block') && block.id === 'engine_block'),
+      )
+      .map((block: any) => ({
         id: block.id,
         name: block.name,
         isSystem: block.isSystem,
         fields: (block.fields as any[]) ?? [],
-      })),
-      ...extraBlocks,
-    ];
+      }));
+
+    // Always use the built-in engine block for runtime category forms so
+    // schema updates are applied immediately without waiting for DB reseed.
+    const blocks = effectiveBlockIds.includes('engine_block')
+      ? [...mappedDbBlocks, getBuiltInEngineBlock()]
+      : mappedDbBlocks;
 
     const mergedFields = mergeTemplateFieldsWithBlocks(
       template.fields ?? [],

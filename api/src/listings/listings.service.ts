@@ -725,13 +725,12 @@ export class ListingsService {
       }
     }
 
-    const dbBlockIds = new Set(blocks.map((block) => block.id));
     if (
       Boolean((category as any).hasEngine) &&
-      blockIds.includes('engine_block') &&
-      !dbBlockIds.has('engine_block')
+      blockIds.includes('engine_block')
     ) {
       const engineBlock = getBuiltInEngineBlock();
+      blocks = blocks.filter((block) => block.id !== 'engine_block');
       blocks.push({
         id: engineBlock.id,
         name: engineBlock.name,

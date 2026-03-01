@@ -514,3 +514,65 @@ Verification:
 - `pnpm --dir api run test:security` passing
 - `pnpm --dir api run build` passing
 - `pnpm --dir web run build` passing
+
+## 9. Patch Update - 2026-03-01 (Agroline-Style Vehicle Parameters + Runtime Coverage)
+
+### 9.1 Motorized template schema expansion
+Files:
+- `api/src/templates/template-schema.ts`
+- `web/src/lib/schemaTypes.ts`
+
+What changed:
+- Replaced the default motorized field set with a larger Agroline-style schema including:
+  - `Basic characteristics`
+  - `Engine, gearbox` (conditional)
+  - `Axles, brakes` (conditional)
+  - `Additional options` + grouped feature matrices
+  - `More details`
+  - `Ad parameters`
+- Added richer field behavior coverage:
+  - dependent `brand -> model`
+  - radio/checkbox groups
+  - color swatches (`component: "color"`)
+  - unit-backed numeric fields
+  - month/year split fields.
+
+Why:
+- Delivers “same-to-same” marketplace parameter behavior with config-driven rendering instead of hardcoded forms.
+
+### 9.2 Runtime block resolution safety
+Files:
+- `api/src/categories/categories.service.ts`
+- `api/src/listings/listings.service.ts`
+
+What changed:
+- Ensured runtime always uses built-in `engine_block` definition when `engine_block` is requested.
+- Validation path now replaces DB `engine_block` with built-in schema to keep draft validation consistent with rendered form.
+
+Why:
+- Prevents stale DB block definitions from overriding current runtime schema and avoids forced reseed during iteration.
+
+### 9.3 Listing payload mapping from dynamic parameters
+File:
+- `web/src/components/listings/wizard/contact-step.tsx`
+
+What changed:
+- Added fallback mapping from dynamic attributes into top-level listing payload:
+  - `brand`, `price`, `currency`, `year_of_manufacture_year`, `condition`, `advert_type`, `euro`
+- Added condition/listingType normalization into API enum-compatible values.
+
+Why:
+- Keeps facts/search-critical values populated even when sourced from dynamic template fields.
+
+### 9.4 Verification snapshot (2026-03-01)
+
+Passing:
+- `pnpm -C api test --runInBand`
+- `pnpm -C api exec tsc --noEmit`
+- `pnpm -C web exec tsc --noEmit`
+- `pnpm -C web lint`
+
+Known environment constraints during this session:
+- `pnpm -C api build` failed in local shell due missing `cross-env` binary.
+- `pnpm -C web build` failed in sandbox because Google Fonts download was blocked.
+- `pnpm -C api test:e2e` failed in sandbox due `listen EPERM` (port binding restriction).
