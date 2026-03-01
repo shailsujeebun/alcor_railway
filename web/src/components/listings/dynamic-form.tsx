@@ -22,11 +22,11 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 interface DynamicFormProps {
   categoryId: string;
   template:
-    | {
-        fields: TemplateField[];
-        category?: { id: string; slug: string; hasEngine?: boolean };
-      }
-    | undefined;
+  | {
+    fields: TemplateField[];
+    category?: { id: string; slug: string; hasEngine?: boolean };
+  }
+  | undefined;
   values: Record<string, string>;
   onChange: (values: Record<string, string>) => void;
 }
@@ -78,6 +78,7 @@ function normalizeComponent(field: TemplateField): string {
   if (type === 'CHECKBOX_GROUP' || type === 'BOOLEAN') return 'checkbox';
   if (type === 'RICHTEXT') return 'textarea';
   if (type === 'DATE') return 'date';
+  if (type === 'COLOR') return 'color';
   return 'text';
 }
 
@@ -94,11 +95,10 @@ function OptionChip({
     <button
       type="button"
       onClick={onClick}
-      className={`px-3 py-1.5 rounded-md border text-sm transition-colors ${
-        active
-          ? 'bg-blue-bright/20 text-blue-bright border-blue-bright/50'
-          : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-blue-bright/40 hover:text-[var(--text-primary)]'
-      }`}
+      className={`px-3 py-1.5 rounded-md border text-sm transition-colors ${active
+        ? 'bg-blue-bright/20 text-blue-bright border-blue-bright/50'
+        : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-blue-bright/40 hover:text-[var(--text-primary)]'
+        }`}
     >
       {label}
     </button>
@@ -392,6 +392,24 @@ export function DynamicForm({ categoryId, template, values, onChange }: DynamicF
           </div>
         );
 
+      case 'color':
+        return (
+          <div className="flex flex-wrap gap-3">
+            {options.map((option) => (
+              <button
+                key={`${field.key}:${option.value}`}
+                type="button"
+                className={`w-10 h-10 rounded-full border-2 transition-transform hover:scale-110 ${value === option.value ? 'border-blue-bright scale-110 shadow-md ring-2 ring-blue-bright/20' : 'border-black/10 shadow-sm'
+                  }`}
+                style={{ backgroundColor: option.value }}
+                title={option.label}
+                aria-label={option.label}
+                onClick={() => handleFieldChange(field.key, option.value)}
+              />
+            ))}
+          </div>
+        );
+
       case 'date':
         return (
           <input
@@ -526,11 +544,10 @@ export function DynamicForm({ categoryId, template, values, onChange }: DynamicF
       {sectionEntries.map(([sectionName, sectionFields]) => (
         <section
           key={sectionName}
-          className={`rounded-xl border bg-[var(--bg-secondary)]/15 overflow-hidden transition-colors ${
-            openSection === sectionName
-              ? 'border-blue-bright/40'
-              : 'border-[var(--border-color)] hover:border-blue-bright/30'
-          }`}
+          className={`rounded-xl border bg-[var(--bg-secondary)]/15 overflow-hidden transition-colors ${openSection === sectionName
+            ? 'border-blue-bright/40'
+            : 'border-[var(--border-color)] hover:border-blue-bright/30'
+            }`}
         >
           <button
             type="button"
@@ -543,16 +560,14 @@ export function DynamicForm({ categoryId, template, values, onChange }: DynamicF
               {sectionName}
             </span>
             <ChevronDown
-              className={`h-4 w-4 text-[var(--text-secondary)] shrink-0 transition-transform ${
-                openSection === sectionName ? 'rotate-180' : 'rotate-0'
-              }`}
+              className={`h-4 w-4 text-[var(--text-secondary)] shrink-0 transition-transform ${openSection === sectionName ? 'rotate-180' : 'rotate-0'
+                }`}
             />
           </button>
 
           <div
-            className={`overflow-hidden transition-all duration-300 ease-out ${
-              openSection === sectionName ? 'max-h-[3200px] opacity-100' : 'max-h-0 opacity-0'
-            }`}
+            className={`overflow-hidden transition-all duration-300 ease-out ${openSection === sectionName ? 'max-h-[3200px] opacity-100' : 'max-h-0 opacity-0'
+              }`}
           >
             <div className="p-4 sm:p-5 border-t border-[var(--border-color)]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
@@ -560,8 +575,8 @@ export function DynamicForm({ categoryId, template, values, onChange }: DynamicF
                   const hint = formatFieldHint((field.validationRules ?? {}) as FieldValidation);
                   const required = Boolean(
                     field.required ||
-                      field.isRequired ||
-                      evaluateRuleTree(field.requiredIf, formValues, context),
+                    field.isRequired ||
+                    evaluateRuleTree(field.requiredIf, formValues, context),
                   );
                   return (
                     <div key={field.key} className={`space-y-2 ${getFieldSpanClass(normalizeComponent(field))}`}>

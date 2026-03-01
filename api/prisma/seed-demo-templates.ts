@@ -12,20 +12,20 @@ type DemoField = {
   key: string;
   label: string;
   type:
-    | 'TEXT'
-    | 'NUMBER'
-    | 'SELECT'
-    | 'MULTISELECT'
-    | 'BOOLEAN'
-    | 'RADIO'
-    | 'CHECKBOX_GROUP'
-    | 'DATE'
-    | 'YEAR_RANGE'
-    | 'COLOR'
-    | 'LOCATION'
-    | 'MEDIA'
-    | 'RICHTEXT'
-    | 'PRICE';
+  | 'TEXT'
+  | 'NUMBER'
+  | 'SELECT'
+  | 'MULTISELECT'
+  | 'BOOLEAN'
+  | 'RADIO'
+  | 'CHECKBOX_GROUP'
+  | 'DATE'
+  | 'YEAR_RANGE'
+  | 'COLOR'
+  | 'LOCATION'
+  | 'MEDIA'
+  | 'RICHTEXT'
+  | 'PRICE';
   required?: boolean;
   section: string;
   validations?: Prisma.InputJsonValue;
@@ -170,146 +170,155 @@ function buildFields(params: {
   index: number;
 }): DemoField[] {
   const { categoryName, marketplaceKey, index } = params;
-  const safeMarket = focusByMarketplace[marketplaceKey] ? marketplaceKey : 'industrial';
-  const addonOptions = addonSets[index % addonSets.length];
-  const driveOptions = driveOptionsByMarketplace[safeMarket] ?? driveOptionsByMarketplace.industrial;
-  const useCaseOptions = focusByMarketplace[safeMarket];
-  const derivedOptions = categoryDerivedOptions(categoryName);
 
-  const sectionVariant = index % 2 === 0 ? 'Technical' : 'Configuration';
-  const complianceVariant = index % 3 === 0 ? 'Compliance' : 'History';
-
-  return [
+  // Base fields shown for ALL categories
+  const baseFields: DemoField[] = [
     {
-      key: 'public_title_suffix',
-      label: `${categoryName} version label`,
-      type: 'TEXT',
-      required: true,
-      section: 'Overview / Identity',
-      validations: { hint: 'Short visible tag for this unit' },
-    },
-    {
-      key: 'listing_price_note',
-      label: 'Price details',
-      type: 'PRICE',
-      required: true,
-      section: 'Commercial / Pricing',
-      validations: { hint: 'Include VAT/ex works notes' },
-    },
-    {
-      key: 'usage_hours',
-      label: 'Usage hours',
+      key: 'price_amount',
+      label: 'Price',
       type: 'NUMBER',
       required: true,
-      section: `${sectionVariant} / Runtime`,
-      validations: { min: 0, max: 120000, unit: 'h' },
+      section: 'Ad parameters',
     },
     {
-      key: 'power_output_hp',
-      label: 'Power output',
+      key: 'price_currency',
+      label: 'Currency',
+      type: 'SELECT',
+      section: 'Ad parameters',
+      options: [
+        { value: 'USD', label: '$ - USD' },
+        { value: 'EUR', label: '€ - EUR' },
+        { value: 'UAH', label: '₴ - UAH' },
+      ],
+    },
+    {
+      key: 'vat_mode',
+      label: 'VAT Mode',
+      type: 'RADIO',
+      section: 'Ad parameters',
+      options: [
+        { value: 'excluding', label: 'excluding VAT' },
+        { value: 'including', label: 'including VAT' },
+      ],
+    },
+    {
+      key: 'condition',
+      label: 'Condition',
+      type: 'RADIO',
+      required: true,
+      section: 'Basic characteristics',
+      options: [
+        { value: 'new', label: 'New' },
+        { value: 'used', label: 'Used' },
+        { value: 'defect', label: 'With defect' },
+        { value: 'remanufactured', label: 'Remanufactured' },
+        { value: 'parts', label: 'For parts' },
+      ],
+    },
+    {
+      key: 'color',
+      label: 'Colour',
+      type: 'COLOR',
+      section: 'Basic characteristics',
+      options: colorPalette, // Assumes colorPalette exists (from previous lines)
+    },
+  ];
+
+  // Engine & Gearbox fields (conditional logic applied at UI rendering time based on category.hasEngine, 
+  // but we add them to the template now and set visibility_if rule)
+
+  const engineFields: DemoField[] = [
+    {
+      key: 'fuel_type',
+      label: 'Fuel type',
+      type: 'SELECT',
+      section: 'Engine & Gearbox',
+      validations: { hint: 'Specify the fuel type used' },
+      options: [
+        { value: 'petrol', label: 'Petrol' },
+        { value: 'diesel', label: 'Diesel' },
+        { value: 'electric', label: 'Electric' },
+        { value: 'hybrid', label: 'Hybrid' },
+      ],
+    },
+    {
+      key: 'power',
+      label: 'Power',
       type: 'NUMBER',
-      section: `${sectionVariant} / Powertrain`,
-      validations: { min: 10, max: 3000, unit: 'hp' },
+      section: 'Engine & Gearbox',
+      validations: { unit: 'HP' },
+    },
+    {
+      key: 'engine_volume',
+      label: 'Engine volume',
+      type: 'NUMBER',
+      section: 'Engine & Gearbox',
+      validations: { unit: 'cm³' },
+    },
+    {
+      key: 'gearbox_type',
+      label: 'Gearbox type',
+      type: 'SELECT',
+      section: 'Engine & Gearbox',
+      options: [
+        { value: 'manual', label: 'Manual' },
+        { value: 'automatic', label: 'Automatic' },
+        { value: 'semi-auto', label: 'Semi-automatic' },
+      ],
     },
     {
       key: 'drive_type',
       label: 'Drive type',
-      type: 'SELECT',
-      required: true,
-      section: `${sectionVariant} / Drivetrain`,
-      options: driveOptions,
-    },
-    {
-      key: 'condition_grade',
-      label: 'Condition grade',
       type: 'RADIO',
-      required: true,
-      section: `${complianceVariant} / Condition`,
+      section: 'Engine & Gearbox',
       options: [
-        { value: 'new', label: 'New' },
-        { value: 'excellent', label: 'Excellent' },
-        { value: 'good', label: 'Good' },
-        { value: 'fair', label: 'Fair' },
+        { value: 'fwd', label: 'FWD' },
+        { value: 'rwd', label: 'RWD' },
+        { value: 'awd', label: 'AWD' },
       ],
-    },
-    {
-      key: 'included_addons',
-      label: 'Included add-ons',
-      type: 'MULTISELECT',
-      section: 'Configuration / Packages',
-      options: addonOptions,
-    },
-    {
-      key: 'safety_systems',
-      label: 'Safety systems',
-      type: 'CHECKBOX_GROUP',
-      section: `${complianceVariant} / Safety`,
-      options: [
-        { value: 'abs', label: 'ABS' },
-        { value: 'esp', label: 'ESP / stability control' },
-        { value: 'camera_360', label: '360 camera' },
-        { value: 'collision_alert', label: 'Collision alert' },
-      ],
-    },
-    {
-      key: 'ready_for_delivery',
-      label: 'Ready for delivery',
-      type: 'BOOLEAN',
-      section: `${complianceVariant} / Availability`,
-    },
-    {
-      key: 'production_window',
-      label: 'Production year range',
-      type: 'YEAR_RANGE',
-      section: 'Overview / Timeline',
-    },
-    {
-      key: 'inspection_date',
-      label: 'Last inspection date',
-      type: 'DATE',
-      section: `${complianceVariant} / Service`,
-    },
-    {
-      key: 'use_case_focus',
-      label: 'Best use case',
-      type: 'SELECT',
-      section: 'Overview / Application',
-      options: useCaseOptions,
-    },
-    {
-      key: 'subcategory_package',
-      label: `${categoryName} package`,
-      type: 'SELECT',
-      section: 'Configuration / Subcategory',
-      options: derivedOptions,
-    },
-    {
-      key: 'primary_color',
-      label: 'Primary color',
-      type: 'COLOR',
-      section: 'Appearance / Exterior',
-      options: colorPalette,
-    },
-    {
-      key: 'operating_location',
-      label: 'Current location',
-      type: 'LOCATION',
-      section: 'Location / Delivery',
-    },
-    {
-      key: 'brochure_or_specs',
-      label: 'Brochure or specification sheet',
-      type: 'MEDIA',
-      section: 'Media / Documents',
-    },
-    {
-      key: 'seller_notes',
-      label: 'Detailed notes',
-      type: 'RICHTEXT',
-      section: 'Notes / Sales',
-      validations: { hint: 'Mention service history, wear points, delivery terms' },
     },
   ];
+
+  // Additional options blocks
+
+  const comfortOptions: DemoField[] = [
+    {
+      key: 'cabin_comfort',
+      label: 'Cabin and comfort',
+      type: 'CHECKBOX_GROUP',
+      section: 'Additional options',
+      options: [
+        { value: 'board_computer', label: 'Board computer' },
+        { value: 'keyless', label: 'Keyless entry' },
+        { value: 'start_stop', label: 'Start-stop' },
+        { value: 'cruise', label: 'Cruise control' },
+        { value: 'adaptive_cruise', label: 'Adaptive cruise' },
+        { value: 'heated_steering', label: 'Heated steering wheel' },
+        { value: 'rain_sensor', label: 'Rain sensor' },
+        { value: 'panoramic_roof', label: 'Panoramic roof' },
+      ],
+    }
+  ];
+
+  const safetyOptions: DemoField[] = [
+    {
+      key: 'safety_features',
+      label: 'Safety features',
+      type: 'CHECKBOX_GROUP',
+      section: 'Additional options',
+      options: [
+        { value: 'airbag', label: 'Airbag' },
+        { value: 'lane_departure', label: 'Lane departure warning' },
+        { value: 'alarm', label: 'Alarm system' },
+        { value: 'immobiliser', label: 'Immobiliser' },
+        { value: 'isofix', label: 'Isofix' },
+        { value: 'abs', label: 'ABS' },
+        { value: 'esp', label: 'ESP' },
+      ],
+    }
+  ];
+
+  return [...baseFields, ...engineFields, ...comfortOptions, ...safetyOptions];
 }
 
 async function main() {
@@ -368,12 +377,12 @@ async function main() {
               validations: field.validations ?? {},
               options: field.options
                 ? {
-                    create: field.options.map((option, optionSort) => ({
-                      value: option.value,
-                      label: option.label,
-                      sortOrder: optionSort,
-                    })),
-                  }
+                  create: field.options.map((option, optionSort) => ({
+                    value: option.value,
+                    label: option.label,
+                    sortOrder: optionSort,
+                  })),
+                }
                 : undefined,
             })),
           },
