@@ -121,6 +121,44 @@ export function ContactStep() {
                 .filter(([key, value]) => key && value !== undefined && value !== null && String(value) !== '')
                 .map(([key, value]) => ({ key, value: String(value) }));
 
+            const dynamicBrandId = typeof form.dynamicAttributes.brand === 'string'
+                ? form.dynamicAttributes.brand
+                : '';
+            const dynamicCurrency = typeof form.dynamicAttributes.currency === 'string'
+                ? form.dynamicAttributes.currency
+                : '';
+            const dynamicEuro = typeof form.dynamicAttributes.euro === 'string'
+                ? form.dynamicAttributes.euro
+                : '';
+            const dynamicAdvertType = typeof form.dynamicAttributes.advert_type === 'string'
+                ? form.dynamicAttributes.advert_type
+                : '';
+            const dynamicCondition = typeof form.dynamicAttributes.condition === 'string'
+                ? form.dynamicAttributes.condition
+                : '';
+            const dynamicPriceRaw = Number(form.dynamicAttributes.price);
+            const dynamicPrice = Number.isFinite(dynamicPriceRaw) ? dynamicPriceRaw : undefined;
+            const dynamicYearRaw = Number(form.dynamicAttributes.year_of_manufacture_year);
+            const dynamicYear = Number.isFinite(dynamicYearRaw) ? dynamicYearRaw : undefined;
+
+            const normalizedCondition = (form.condition || dynamicCondition).toLowerCase();
+            const mappedCondition =
+                normalizedCondition === 'new'
+                    ? 'NEW'
+                    : normalizedCondition === 'used'
+                        ? 'USED'
+                        : normalizedCondition === 'demo' || normalizedCondition === 'demonstration'
+                            ? 'DEMO'
+                            : undefined;
+
+            const normalizedAdvertType = dynamicAdvertType.toLowerCase();
+            const mappedListingType =
+                normalizedAdvertType === 'rent'
+                    ? 'RENT'
+                    : normalizedAdvertType === 'sale' || normalizedAdvertType === 'sale_rent'
+                        ? 'SALE'
+                        : undefined;
+
             if (form.categoryId) {
                 const validation = await validateListingDraft({
                     categoryId: form.categoryId,
@@ -140,19 +178,19 @@ export function ContactStep() {
                 title: form.title,
                 description: form.description || undefined,
                 categoryId: form.categoryId || undefined,
-                brandId: form.brandId || undefined,
-                condition: (form.condition as any) || undefined,
-                year: form.year ? parseInt(form.year) : undefined,
-                priceAmount: form.priceAmount ? parseFloat(form.priceAmount) : undefined,
-                priceCurrency: form.priceCurrency || undefined,
+                brandId: form.brandId || dynamicBrandId || undefined,
+                condition: mappedCondition as any,
+                year: form.year ? parseInt(form.year) : dynamicYear,
+                priceAmount: form.priceAmount ? parseFloat(form.priceAmount) : dynamicPrice,
+                priceCurrency: form.priceCurrency || dynamicCurrency || undefined,
                 priceType: (form.priceType as any) || undefined,
                 countryId: form.countryId || undefined,
                 cityId: form.cityId || undefined,
                 sellerName: form.sellerName || undefined,
                 sellerEmail: form.sellerEmail || undefined,
                 sellerPhones: form.sellerPhones ? form.sellerPhones.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
-                listingType: (form.listingType as any) || undefined,
-                euroClass: form.euroClass || undefined,
+                listingType: (form.listingType as any) || (mappedListingType as any) || undefined,
+                euroClass: form.euroClass || dynamicEuro || undefined,
                 hoursValue: form.hoursValue ? parseInt(form.hoursValue) : undefined,
                 hoursUnit: form.hoursUnit || undefined,
                 externalUrl: form.externalUrl || undefined,

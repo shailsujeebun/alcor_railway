@@ -156,3 +156,19 @@ Updated `web/src/app/admin/layout.tsx` to include sidebar links:
 - Added persistent "create new option" flows and APIs for `brand`, `model`, `subcategory`, `country`, and `city`, so new values are saved once and reused by all users.
 - Added options/cascade runtime behavior: parent-change child reset, dependency-based option loading, and dependency-state caching.
 - Completed validation checks and build/test verification; local infrastructure (Postgres/Redis/MinIO) confirmed working for this flow.
+
+## Update - 2026-03-01 (Admin Template Runtime + Moderation Verification Snapshot)
+
+### Admin-impacting changes delivered
+- Motorized system template (`engine_block`) expanded to Agroline-style vehicle parameters.
+- Runtime template resolution now prioritizes built-in `engine_block` for consistency even when DB block payloads are stale.
+- Draft validation path mirrors this behavior, reducing admin-side mismatch between template editor output and posting form behavior.
+
+### Current verification scope
+- Confirmed green:
+  - API unit/security suites
+  - API/web TypeScript checks
+  - web lint.
+- Not fully validated end-to-end in sandbox:
+  - admin UI click-through flows (moderation/messages/delete conversation) need runtime manual smoke in deployed/local full-stack env
+  - `api test:e2e` is blocked in this sandbox due port binding restriction (`listen EPERM`).

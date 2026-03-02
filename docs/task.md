@@ -122,40 +122,17 @@
 - 2026-02-24: `api` security tests green (`pnpm test:security`)
 - 2026-02-24: `api` build green (`pnpm build`)
 - 2026-02-24: `web` production build green (`pnpm build`)
-- 2026-02-25: `api` seed verification recovered and passing (`pnpm run seed:all`, `pnpm run seed:verify`)
-- 2026-02-25: `api` build green after `FormBlock` ID fix (`pnpm run build`)
-- 2026-02-25: `web` TypeScript check green after i18n refactor (`pnpm exec tsc --noEmit`)
 
-## Update - 2026-02-25 (Operational Fixes + Localization Completion)
-- Added API `dev` script alias so `pnpm dev` works in `api/`.
-- Updated Prisma seed config to use `seed-all.ts` by default (prevents legacy seed/verifier mismatch).
-- Fixed admin block creation by setting `FormBlock.id` with `randomUUID()`.
-- Localized Form Template Builder page to dictionary keys and added corresponding EN/UK translations.
-- Upgraded translation fallback to support both language directions (EN↔UK) and locale-aware translation API routing.
-- Cleared frontend caches (`web/.next`, `web/node_modules/.cache/turbo`) during recovery from Turbopack cache corruption.
-
-## Update - 2026-02-27 (Admin UX/Localization + Company Flow + CSV Import)
-- Completed remaining admin UI localization cleanup toward UA-first behavior (hardcoded English labels/actions removed from key admin views).
-- Enhanced frontend API error reporting to include request context (`METHOD path -> status`) for faster debugging.
-- Hardened brand/model options resolution path to prevent internal errors during listing flow.
-- Added admin-only password change capability:
-  - backend endpoint `POST /auth/change-password` with role guard and session revocation.
-  - admin dashboard form for secure password update.
-- Added search + status filters on admin form templates list page.
-- Applied layout spacing fixes from QA feedback:
-  - header/content and content/footer separation issues resolved.
-  - black spacer artifacts removed via layout/container padding corrections.
-  - footer content moved lower with clearer top spacing.
-- Company page update:
-  - removed reviews tab/section from company detail.
-  - added “Add Company” CTA path to company registration/form flow.
-- Implemented CSV bulk import for company listings:
-  - new API endpoint `POST /listings/import/csv`
-  - new API endpoint `GET /companies/mine`
-  - cabinet UI import modal with template download and default company selector
-  - row-level validation and partial-success reporting.
+## Update - 2026-03-01 (Vehicle Parameters Parity Pass)
+- Upgraded the motorized dynamic template to an Agroline-style parameter model with expanded sections and field types.
+- Preserved config-driven behavior for dependencies/conditionals and added runtime `engine_block` consistency so rendered form and validator stay aligned.
+- Added submit-time mapping so dynamic attributes can populate core listing payload fields (brand/price/currency/year/condition/advert type/euro).
 
 ## Test Status (Latest)
-- 2026-02-27: CSV import live test passing for valid payload (`POST /listings/import/csv`)
-- 2026-02-27: CSV import mixed test returning expected `createdCount`/`failedCount` with row errors
-- 2026-02-27: company ownership lookup passing (`GET /companies/mine`)
+- 2026-03-01: `api` unit/security suite green (`pnpm -C api test --runInBand`)
+- 2026-03-01: `api` TypeScript check green (`pnpm -C api exec tsc --noEmit`)
+- 2026-03-01: `web` TypeScript check green (`pnpm -C web exec tsc --noEmit`)
+- 2026-03-01: `web` lint green (`pnpm -C web lint`)
+- 2026-03-01: `api` build blocked in local shell (`cross-env` missing)
+- 2026-03-01: `web` build blocked in sandbox (Google Fonts network fetch unavailable)
+- 2026-03-01: `api` e2e blocked in sandbox (port bind `EPERM`)

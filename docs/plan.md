@@ -402,3 +402,19 @@ CREATE TABLE listing_wizard_state (
 - Added persistent "create new option" flows and APIs for `brand`, `model`, `subcategory`, `country`, and `city`, so new values are saved once and reused by all users.
 - Added options/cascade runtime behavior: parent-change child reset, dependency-based option loading, and dependency-state caching.
 - Completed validation checks and build/test verification; local infrastructure (Postgres/Redis/MinIO) confirmed working for this flow.
+
+## Execution Update - 2026-03-01
+
+- Completed Agroline-style vehicle form expansion inside the existing config-driven template system.
+- Expanded motorized schema coverage across required sections:
+  - basic characteristics
+  - engine/gearbox
+  - axles/brakes
+  - grouped additional options
+  - ad parameters.
+- Added runtime guardrails:
+  - built-in `engine_block` precedence for category template resolution and draft validation.
+- Added posting payload mapping from dynamic fields to indexed listing fields for better downstream search/facet behavior.
+- Verification snapshot:
+  - pass: `api` unit tests, `api/web` TypeScript checks, `web` lint
+  - environment-blocked: `api build` (`cross-env` missing), `web build` (Google Fonts fetch blocked), `api e2e` (sandbox port bind `EPERM`).
