@@ -27,6 +27,7 @@ import {
 import { ChevronDown, Plus, Save, Trash } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { TemplateBlockSchema } from '@/lib/schemaTypes';
+import { getCategoryDisplayName } from '@/lib/display-labels';
 
 interface CategoryNode {
     id: string;
@@ -526,7 +527,7 @@ export default function AdminTemplatesPage() {
                                                 <SelectContent>
                                                     {options.map((category) => (
                                                         <SelectItem key={category.id} value={category.id.toString()}>
-                                                            {category.name}
+                                                            {getCategoryDisplayName(category.name)}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>

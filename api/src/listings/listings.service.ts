@@ -30,6 +30,14 @@ const VALID_TRANSITIONS: Record<ListingStatus, ListingStatus[]> = {
   REMOVED: [],
 };
 
+const IMPORTANT_REQUIRED_DYNAMIC_KEYS = new Set([
+  'brand',
+  'model',
+  'year_of_manufacture_year',
+  'year',
+  'condition',
+]);
+
 const listingIncludes = {
   company: { include: { country: true, city: true } },
   category: true,
@@ -472,7 +480,11 @@ export class ListingsService {
       include: {
         category: true,
         media: true,
-        seller: true,
+        seller: {
+          include: {
+            sellerContact: true,
+          },
+        },
         attribute: true,
       },
     });
@@ -498,7 +510,26 @@ export class ListingsService {
     }
 
     // 3. Contact
-    if (!listing.seller) {
+    const directSellerEmail = String((listing as any).sellerEmail ?? '').trim();
+    const directSellerPhones = Array.isArray((listing as any).sellerPhones)
+      ? (listing as any).sellerPhones
+      : String((listing as any).sellerPhones ?? '')
+          .split(',')
+          .map((entry) => entry.trim())
+          .filter(Boolean);
+    const contactEmail = String(
+      (listing as any).seller?.sellerContact?.email ?? '',
+    ).trim();
+    const contactPhone = String(
+      (listing as any).seller?.sellerContact?.phoneNumber ?? '',
+    ).trim();
+    const hasContactMethod = Boolean(
+      directSellerEmail ||
+        (directSellerPhones as string[]).length > 0 ||
+        contactEmail ||
+        contactPhone,
+    );
+    if (!hasContactMethod) {
       errors.push('Seller contact information is required');
     }
 
@@ -765,14 +796,7 @@ export class ListingsService {
       const visible = evaluateRuleTree(field.visibleIf, attributes, context);
       if (!visible) continue;
 
-      const requiredByRule = evaluateRuleTree(
-        field.requiredIf,
-        attributes,
-        context,
-      );
-      const required = Boolean(
-        field.required || field.isRequired || requiredByRule,
-      );
+      const required = IMPORTANT_REQUIRED_DYNAMIC_KEYS.has(String(field.key));
 
       // Check required
       if (required && (value === undefined || value === null || value === '')) {

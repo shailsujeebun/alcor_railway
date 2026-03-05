@@ -21,6 +21,7 @@ import { Plus, Edit2, Trash2, Folder, ChevronRight, ChevronDown } from 'lucide-r
 import { useAuthStore } from '@/stores/auth-store';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
+import { getCategoryDisplayName, getMarketplaceDisplayName } from '@/lib/display-labels';
 
 // Recursive Category Item Component
 function CategoryItem({
@@ -79,7 +80,7 @@ function CategoryItem({
                 {/* Content */}
                 <div className="flex-1 flex items-center gap-3">
                     <span className={`font-medium ${depth === 0 ? 'text-base' : 'text-sm'}`}>
-                        {category.name}
+                        {getCategoryDisplayName(category.name)}
                     </span>
                     <span className="text-xs text-muted-foreground px-2 py-0.5 rounded-full bg-white/5 border border-white/5">
                         {category.slug}
@@ -354,7 +355,7 @@ export default function AdminCategoriesPage() {
                                     }
                                 `}
                             >
-                                {mp.name}
+                                {getMarketplaceDisplayName(mp.name, mp.key)}
                             </button>
                         ))}
                     </div>

@@ -13,6 +13,7 @@ import {
 } from '@/lib/queries';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Listing, ListingStatus } from '@/types/api';
+import { getCategoryDisplayName } from '@/lib/display-labels';
 
 const STATUS_TABS: { label: string; value: string }[] = [
   { label: 'Всі', value: '' },
@@ -134,7 +135,7 @@ export function MyListings() {
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
-                    {listing.category && <span>{listing.category.name}</span>}
+                    {listing.category && <span>{getCategoryDisplayName(listing.category.name)}</span>}
                     {listing.priceAmount && (
                       <span>{listing.priceAmount.toLocaleString()} {listing.priceCurrency}</span>
                     )}

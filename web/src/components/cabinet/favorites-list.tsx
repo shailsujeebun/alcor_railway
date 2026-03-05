@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Heart, Building2, MapPin } from 'lucide-react';
 import { useFavorites, useRemoveFavorite } from '@/lib/queries';
 import type { Favorite } from '@/types/api';
+import { getCategoryDisplayName } from '@/lib/display-labels';
 
 export function FavoritesList() {
   const [page, setPage] = useState(1);
@@ -66,7 +67,7 @@ export function FavoritesList() {
                   </h3>
                 </Link>
                 <div className="flex items-center gap-3 text-sm text-[var(--text-secondary)] mt-1">
-                  {fav.listing.category && <span>{fav.listing.category.name}</span>}
+                  {fav.listing.category && <span>{getCategoryDisplayName(fav.listing.category.name)}</span>}
                   {fav.listing.priceAmount && (
                     <span>{fav.listing.priceAmount.toLocaleString()} {fav.listing.priceCurrency}</span>
                   )}

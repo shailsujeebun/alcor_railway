@@ -576,3 +576,84 @@ Known environment constraints during this session:
 - `pnpm -C api build` failed in local shell due missing `cross-env` binary.
 - `pnpm -C web build` failed in sandbox because Google Fonts download was blocked.
 - `pnpm -C api test:e2e` failed in sandbox due `listen EPERM` (port binding restriction).
+
+## 10. Update - 2026-03-05 (UI Naming + Required Rules + i18n + Dedupe)
+
+### 10.1 Marketplace/category display-label normalization
+Files:
+- `web/src/lib/display-labels.ts`
+- UI callsites in categories, landing, wizard, listing cards/details, cabinet, moderation, admin screens
+
+What changed:
+- Added centralized display label mapping for UI names:
+  - `autoline` -> `automarket`
+  - `machineryline` -> `industrial machinery`
+  - `agroline` -> `agromarket`
+  - category label normalization: `industrial equipment` -> `equipment`
+
+Why:
+- Keeps product-facing naming consistent without changing internal keys/slugs.
+
+### 10.2 Important-only required-field policy
+Files:
+- `web/src/components/listings/dynamic-form.tsx`
+- `api/src/listings/listings.service.ts`
+- `web/src/components/listings/wizard/contact-step.tsx`
+
+What changed:
+- Dynamic required logic narrowed to critical keys:
+  - `brand`, `model`, `year_of_manufacture_year` (plus `year` alias), `condition`
+- Submit flow requires at least one contact channel (`email` or `phone`).
+- Moderation validation mirrors the same required policy in API service.
+
+Why:
+- Reduces unnecessary mandatory fields while preserving listing quality gates.
+
+### 10.3 Future year support for validity/expiry fields
+Files:
+- `api/src/templates/template-schema.ts`
+- `web/src/components/listings/dynamic-form.tsx`
+
+What changed:
+- `technical_inspection_year` now uses future-inclusive year options.
+- Frontend adds runtime future-year expansion for selectors identified as validity/expiry style fields.
+
+Why:
+- Supports real-world future expiration dates (inspection validity, similar fields).
+
+### 10.4 Bidirectional fallback translation
+Files:
+- `web/src/app/api/translate/route.ts`
+- `web/src/components/providers/translation-provider.tsx`
+
+What changed:
+- Translation API now accepts target locale (`en` or `uk`).
+- Provider fallback translation now works both directions (`uk -> en` and `en -> uk`) for still-hardcoded or late-rendered text and attributes.
+
+Why:
+- Eliminates mixed-language UI leftovers in either language mode.
+
+### 10.5 Dynamic-form repetition cleanup
+File:
+- `web/src/components/listings/dynamic-form.tsx`
+
+What changed:
+- Added render-time dedupe for repeated fields (key/signature based).
+- Added dedupe for repeated select options (value/label signature).
+
+Why:
+- Prevents duplicate controls/options in ad-posting form UX.
+
+### 10.6 Verification snapshot (2026-03-05)
+
+Passing:
+- `web`: `pnpm run lint`
+- `web`: `pnpm exec tsc --noEmit`
+- `web`: `pnpm run i18n:guard`
+- `api`: `pnpm run test`
+- `api`: `pnpm run test:security`
+- `api`: `pnpm run test:e2e`
+- `api` compile flow: `DATABASE_URL=postgresql://dummy pnpm exec prisma generate && pnpm exec nest build`
+
+Environment-limited:
+- `web`: `pnpm run build` blocked by Google Fonts fetch restrictions in sandbox.

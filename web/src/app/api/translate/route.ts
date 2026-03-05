@@ -20,6 +20,7 @@ const TRANSLATE_TIMEOUT_MS = 3500;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 45;
 const CYRILLIC_REGEX = /[\u0400-\u04FF]/;
+const LATIN_REGEX = /[A-Za-z]/;
 const WHITESPACE_REGEX = /\s+/g;
 const EMAIL_REGEX = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
 const PHONE_REGEX = /(?:\+?\d[\d\s().-]{7,}\d)/;
@@ -141,8 +142,11 @@ function setCachedValue(cache: TranslationCache, key: string, value: string) {
   cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
 }
 
-async function translateWithGoogle(text: string): Promise<string> {
-  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${encodeURIComponent(text)}`;
+async function translateWithGoogle(
+  text: string,
+  targetLocale: 'en' | 'uk',
+): Promise<string> {
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLocale}&dt=t&q=${encodeURIComponent(text)}`;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TRANSLATE_TIMEOUT_MS);
 
@@ -179,10 +183,11 @@ async function translateWithGoogle(text: string): Promise<string> {
 
 async function getTranslatedValue(
   text: string,
+  targetLocale: 'en' | 'uk',
   cache: TranslationCache,
   inFlight: InFlightTranslations,
 ): Promise<string> {
-  const cacheKey = `en:${text}`;
+  const cacheKey = `${targetLocale}:${text}`;
   const cached = getCachedValue(cache, cacheKey);
   if (cached !== undefined) {
     return cached;
@@ -195,7 +200,7 @@ async function getTranslatedValue(
 
   const translationPromise = (async () => {
     try {
-      const translated = await translateWithGoogle(text);
+      const translated = await translateWithGoogle(text, targetLocale);
       setCachedValue(cache, cacheKey, translated);
       return translated;
     } catch {
@@ -211,6 +216,7 @@ async function getTranslatedValue(
 
 async function translateTexts(
   texts: string[],
+  targetLocale: 'en' | 'uk',
   cache: TranslationCache,
   inFlight: InFlightTranslations,
 ): Promise<Record<string, string>> {
@@ -224,7 +230,12 @@ async function translateTexts(
       if (current >= texts.length) return;
 
       const text = texts[current];
-      translations[text] = await getTranslatedValue(text, cache, inFlight);
+      translations[text] = await getTranslatedValue(
+        text,
+        targetLocale,
+        cache,
+        inFlight,
+      );
     }
   };
 
@@ -262,9 +273,12 @@ export async function POST(request: NextRequest) {
     const body: unknown = rawBody ? JSON.parse(rawBody) : {};
     const parsedBody =
       typeof body === 'object' && body !== null
-        ? (body as { texts?: unknown })
+        ? (body as { texts?: unknown; targetLocale?: unknown })
         : {};
     const incomingTexts = Array.isArray(parsedBody.texts) ? parsedBody.texts : [];
+    const rawTargetLocale = parsedBody.targetLocale;
+    const targetLocale: 'en' | 'uk' =
+      rawTargetLocale === 'uk' ? 'uk' : 'en';
     if (!Array.isArray(parsedBody.texts)) {
       return NextResponse.json({ translations: {}, error: 'Expected "texts" array' }, { status: 400 });
     }
@@ -277,7 +291,8 @@ export async function POST(request: NextRequest) {
       if (typeof value !== 'string') continue;
       const normalized = normalizeText(value).slice(0, MAX_TEXT_LENGTH);
       if (!normalized) continue;
-      if (!CYRILLIC_REGEX.test(normalized)) continue;
+      if (targetLocale === 'en' && !CYRILLIC_REGEX.test(normalized)) continue;
+      if (targetLocale === 'uk' && !LATIN_REGEX.test(normalized)) continue;
       if (
         !TRANSLATION_ALLOW_PII &&
         containsPotentialSensitiveData(normalized)
@@ -298,7 +313,12 @@ export async function POST(request: NextRequest) {
 
     const cache = getCache();
     const inFlight = getInFlightStore();
-    const translations = await translateTexts(texts, cache, inFlight);
+    const translations = await translateTexts(
+      texts,
+      targetLocale,
+      cache,
+      inFlight,
+    );
 
     return NextResponse.json({ translations });
   } catch {

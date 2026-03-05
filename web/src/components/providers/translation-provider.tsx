@@ -35,6 +35,7 @@ const EXCLUDED_SELECTOR = '[data-no-translate],script,style,noscript,textarea,co
 const ATTRIBUTE_SELECTOR =
   '[placeholder],[title],[aria-label],input[type="button"][value],input[type="submit"][value]';
 const CYRILLIC_REGEX = /[\u0400-\u04FF]/;
+const LATIN_REGEX = /[A-Za-z]/;
 const BATCH_SIZE = 120;
 const REQUEST_PARALLELISM = 3;
 const FIRST_PASS_DELAY_MS = 60;
@@ -51,10 +52,10 @@ function splitWhitespace(value: string): { leading: string; core: string; traili
   return { leading: match[1], core: match[2], trailing: match[3] };
 }
 
-function isFallbackTranslatable(value: string): boolean {
+function isFallbackTranslatable(value: string, locale: Locale): boolean {
   const text = normalizeText(value);
   if (text.length < 2) return false;
-  return CYRILLIC_REGEX.test(text);
+  return locale === 'en' ? CYRILLIC_REGEX.test(text) : LATIN_REGEX.test(text);
 }
 
 function chunk<T>(items: T[], size: number): T[][] {
@@ -93,49 +94,63 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
     [locale],
   );
 
-  const requestBatchTranslations = useCallback(async (batch: string[]) => {
-    if (localeRef.current !== 'en') return;
+  const requestBatchTranslations = useCallback(
+    async (batch: string[], targetLocale: Locale) => {
+      if (localeRef.current !== targetLocale) return;
 
-    try {
-      const response = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ texts: batch }),
-      });
+      try {
+        const response = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ texts: batch, targetLocale }),
+        });
 
-      if (!response.ok) {
-        for (const text of batch) translationCacheRef.current.set(text, text);
-        return;
+        if (!response.ok) {
+          for (const text of batch) {
+            translationCacheRef.current.set(`${targetLocale}:${text}`, text);
+          }
+          return;
+        }
+
+        const payload = await response.json();
+        const translations: Record<string, string> = payload?.translations ?? {};
+        for (const source of batch) {
+          translationCacheRef.current.set(
+            `${targetLocale}:${source}`,
+            translations[source] ?? source,
+          );
+        }
+      } catch {
+        for (const text of batch) {
+          translationCacheRef.current.set(`${targetLocale}:${text}`, text);
+        }
       }
-
-      const payload = await response.json();
-      const translations: Record<string, string> = payload?.translations ?? {};
-      for (const source of batch) {
-        translationCacheRef.current.set(source, translations[source] ?? source);
-      }
-    } catch {
-      for (const text of batch) translationCacheRef.current.set(text, text);
-    }
-  }, []);
+    },
+    [],
+  );
 
   const requestTranslations = useCallback(
-    async (texts: string[]) => {
-      if (localeRef.current !== 'en') return;
+    async (texts: string[], targetLocale: Locale) => {
+      if (localeRef.current !== targetLocale) return;
 
-      const missing = texts.filter((text) => !translationCacheRef.current.has(text));
+      const missing = texts.filter(
+        (text) => !translationCacheRef.current.has(`${targetLocale}:${text}`),
+      );
       if (!missing.length) return;
 
       const batches = chunk(missing, BATCH_SIZE);
       for (let i = 0; i < batches.length; i += REQUEST_PARALLELISM) {
-        if (localeRef.current !== 'en') return;
+        if (localeRef.current !== targetLocale) return;
         const group = batches.slice(i, i + REQUEST_PARALLELISM);
-        await Promise.all(group.map((batch) => requestBatchTranslations(batch)));
+        await Promise.all(
+          group.map((batch) => requestBatchTranslations(batch, targetLocale)),
+        );
       }
     },
     [requestBatchTranslations],
   );
 
-  const collectTextNodes = (root: ParentNode): Text[] => {
+  const collectTextNodes = (root: ParentNode, locale: Locale): Text[] => {
     const nodes: Text[] = [];
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode: (node) => {
@@ -144,7 +159,7 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
         if (parent.closest(EXCLUDED_SELECTOR)) return NodeFilter.FILTER_REJECT;
 
         const { core } = splitWhitespace(node.nodeValue ?? '');
-        if (!isFallbackTranslatable(core)) return NodeFilter.FILTER_REJECT;
+        if (!isFallbackTranslatable(core, locale)) return NodeFilter.FILTER_REJECT;
         return NodeFilter.FILTER_ACCEPT;
       },
     });
@@ -189,15 +204,15 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const applyFallbackEnglishToRoot = useCallback(
-    async (root: ParentNode) => {
-      if (!root || localeRef.current !== 'en' || isApplyingRef.current) return;
+  const applyFallbackTranslationsToRoot = useCallback(
+    async (root: ParentNode, targetLocale: Locale) => {
+      if (!root || localeRef.current !== targetLocale || isApplyingRef.current) return;
 
       isApplyingRef.current = true;
       try {
         cleanupSnapshots();
 
-        const textNodes = collectTextNodes(root);
+        const textNodes = collectTextNodes(root, targetLocale);
         const attributeElements = collectAttributeElements(root);
         const pendingTexts = new Set<string>();
 
@@ -208,7 +223,7 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
           }
 
           const { core } = splitWhitespace(original);
-          if (isFallbackTranslatable(core)) {
+          if (isFallbackTranslatable(core, targetLocale)) {
             pendingTexts.add(normalizeText(core));
           }
         }
@@ -236,13 +251,13 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
 
           const values = [snapshot.placeholder, snapshot.title, snapshot['aria-label'], snapshot.value];
           for (const value of values) {
-            if (value && isFallbackTranslatable(value)) {
+            if (value && isFallbackTranslatable(value, targetLocale)) {
               pendingTexts.add(normalizeText(value));
             }
           }
         }
 
-        await requestTranslations(Array.from(pendingTexts));
+        await requestTranslations(Array.from(pendingTexts), targetLocale);
 
         for (const node of textNodes) {
           const original = textOriginalsRef.current.get(node);
@@ -250,9 +265,11 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
 
           const { leading, core, trailing } = splitWhitespace(original);
           const normalizedCore = normalizeText(core);
-          if (!isFallbackTranslatable(normalizedCore)) continue;
+          if (!isFallbackTranslatable(normalizedCore, targetLocale)) continue;
 
-          const translated = translationCacheRef.current.get(normalizedCore) ?? normalizedCore;
+          const translated =
+            translationCacheRef.current.get(`${targetLocale}:${normalizedCore}`) ??
+            normalizedCore;
           node.nodeValue = `${leading}${translated}${trailing}`;
         }
 
@@ -262,17 +279,23 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
 
           if (snapshot.placeholder) {
             const normalized = normalizeText(snapshot.placeholder);
-            const translated = translationCacheRef.current.get(normalized) ?? snapshot.placeholder;
+            const translated =
+              translationCacheRef.current.get(`${targetLocale}:${normalized}`) ??
+              snapshot.placeholder;
             element.setAttribute('placeholder', translated);
           }
           if (snapshot.title) {
             const normalized = normalizeText(snapshot.title);
-            const translated = translationCacheRef.current.get(normalized) ?? snapshot.title;
+            const translated =
+              translationCacheRef.current.get(`${targetLocale}:${normalized}`) ??
+              snapshot.title;
             element.setAttribute('title', translated);
           }
           if (snapshot['aria-label']) {
             const normalized = normalizeText(snapshot['aria-label']);
-            const translated = translationCacheRef.current.get(normalized) ?? snapshot['aria-label'];
+            const translated =
+              translationCacheRef.current.get(`${targetLocale}:${normalized}`) ??
+              snapshot['aria-label'];
             element.setAttribute('aria-label', translated);
           }
           if (
@@ -281,7 +304,9 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
             (element.type === 'button' || element.type === 'submit')
           ) {
             const normalized = normalizeText(snapshot.value);
-            const translated = translationCacheRef.current.get(normalized) ?? snapshot.value;
+            const translated =
+              translationCacheRef.current.get(`${targetLocale}:${normalized}`) ??
+              snapshot.value;
             element.value = translated;
           }
         }
@@ -316,25 +341,22 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (locale === 'uk') {
-      if (observerDebounceRef.current !== null) {
-        window.clearTimeout(observerDebounceRef.current);
-        observerDebounceRef.current = null;
-      }
-      restoreOriginalLanguage();
-      return;
+    if (observerDebounceRef.current !== null) {
+      window.clearTimeout(observerDebounceRef.current);
+      observerDebounceRef.current = null;
     }
+    restoreOriginalLanguage();
 
     const firstPass = window.setTimeout(() => {
-      void applyFallbackEnglishToRoot(document.body);
+      void applyFallbackTranslationsToRoot(document.body, locale);
     }, FIRST_PASS_DELAY_MS);
 
     const secondPass = window.setTimeout(() => {
-      void applyFallbackEnglishToRoot(document.body);
+      void applyFallbackTranslationsToRoot(document.body, locale);
     }, SECOND_PASS_DELAY_MS);
 
     const observer = new MutationObserver((mutations) => {
-      if (localeRef.current !== 'en' || isApplyingRef.current) return;
+      if (isApplyingRef.current) return;
 
       const hasStructuralChanges = mutations.some(
         (mutation) =>
@@ -350,8 +372,8 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
 
       observerDebounceRef.current = window.setTimeout(() => {
         observerDebounceRef.current = null;
-        if (localeRef.current !== 'en') return;
-        void applyFallbackEnglishToRoot(document.body);
+        const targetLocale = localeRef.current;
+        void applyFallbackTranslationsToRoot(document.body, targetLocale);
       }, OBSERVER_DEBOUNCE_MS);
     });
 
@@ -369,7 +391,7 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
         observerDebounceRef.current = null;
       }
     };
-  }, [locale, pathname, applyFallbackEnglishToRoot, restoreOriginalLanguage]);
+  }, [locale, pathname, applyFallbackTranslationsToRoot, restoreOriginalLanguage]);
 
   const contextValue = useMemo(
     () => ({

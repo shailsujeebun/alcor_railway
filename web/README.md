@@ -47,3 +47,26 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
   - improved footer responsiveness/positioning for reduced viewport widths.
 - Build status:
   - `pnpm run build` passing.
+
+## Project Update - 2026-03-05
+
+- UI naming normalization shipped across marketplace/category views:
+  - `autoline` -> `automarket`
+  - `machineryline` -> `industrial machinery`
+  - `agroline` -> `agromarket`
+  - `industrial equipment` -> `equipment`
+- Listing wizard required markers were tightened to important fields only:
+  - marketplace/category/subcategory/title
+  - dynamic essentials: brand/model/year(condition-specific year key)/condition
+- Added contact guard in submit flow:
+  - requires at least one method (`sellerEmail` or `sellerPhones`).
+- Dynamic form updates:
+  - strips stray label `*` suffixes so stars reflect real required state only
+  - supports future years for expiration-like selectors (e.g. technical inspection valid till year)
+  - dedupes repeated fields and repeated select options in render output.
+- Runtime translation fallback now works both directions (`uk <-> en`) for non-keyed/late-rendered text and common attributes.
+
+### Validation
+- `pnpm run lint` passing
+- `pnpm exec tsc --noEmit` passing
+- `pnpm run i18n:guard` passing

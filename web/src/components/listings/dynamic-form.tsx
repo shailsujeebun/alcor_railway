@@ -41,6 +41,13 @@ type FieldValidation = {
 const inputClass =
   'w-full px-4 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/70 focus:border-blue-bright outline-none transition-colors';
 const selectClass = `${inputClass} appearance-none`;
+const IMPORTANT_REQUIRED_DYNAMIC_KEYS = new Set([
+  'brand',
+  'model',
+  'year_of_manufacture_year',
+  'year',
+  'condition',
+]);
 
 function parseSelection(value: string): string[] {
   if (!value) return [];
@@ -69,6 +76,10 @@ function getFieldSpanClass(fieldComponent: string | undefined) {
   return '';
 }
 
+function normalizeLabel(label: string): string {
+  return String(label ?? '').replace(/\s*\*+\s*$/, '').trim();
+}
+
 function normalizeComponent(field: TemplateField): string {
   if (field.component) return field.component;
   const type = String(field.type ?? '').toUpperCase();
@@ -80,6 +91,72 @@ function normalizeComponent(field: TemplateField): string {
   if (type === 'DATE') return 'date';
   if (type === 'COLOR') return 'color';
   return 'text';
+}
+
+function shouldAllowFutureYears(field: TemplateField): boolean {
+  const key = String(field.key ?? '').toLowerCase();
+  const label = String(field.label ?? '').toLowerCase();
+  return (
+    key.includes('technical_inspection') ||
+    key.includes('valid_till') ||
+    key.includes('expiry') ||
+    key.includes('expiration') ||
+    key.includes('expires') ||
+    (key.includes('until') && key.endsWith('_year')) ||
+    label.includes('valid till') ||
+    label.includes('expiry') ||
+    label.includes('expiration') ||
+    label.includes('expires') ||
+    (label.includes('until') && label.includes('year'))
+  );
+}
+
+function expandYearOptionsForFuture(
+  field: TemplateField,
+  options: FieldOption[],
+): FieldOption[] {
+  if (!shouldAllowFutureYears(field)) return options;
+
+  const yearLike = options.every((option) => /^\d{4}$/.test(String(option.value)));
+  if (!yearLike) return options;
+
+  const currentYear = new Date().getUTCFullYear();
+  const minYear = currentYear - 80;
+  const maxYear = currentYear + 15;
+  const merged = new Map<string, FieldOption>();
+
+  for (const option of options) {
+    merged.set(String(option.value), {
+      id: option.id ?? String(option.value),
+      value: String(option.value),
+      label: String(option.label ?? option.value),
+    });
+  }
+
+  for (let year = maxYear; year >= minYear; year -= 1) {
+    const value = String(year);
+    if (!merged.has(value)) {
+      merged.set(value, { id: value, value, label: value });
+    }
+  }
+
+  return Array.from(merged.values()).sort(
+    (a, b) => Number(b.value) - Number(a.value),
+  );
+}
+
+function dedupeOptions(options: FieldOption[]): FieldOption[] {
+  const seen = new Set<string>();
+  const deduped: FieldOption[] = [];
+  for (const option of options) {
+    const value = String(option.value ?? '').trim();
+    const label = String(option.label ?? '').trim();
+    const signature = `${value.toLowerCase()}|${label.toLowerCase()}`;
+    if (seen.has(signature)) continue;
+    seen.add(signature);
+    deduped.push(option);
+  }
+  return deduped;
 }
 
 function OptionChip({
@@ -260,10 +337,24 @@ export function DynamicForm({ categoryId, template, values, onChange }: DynamicF
     if (!visibleFields.length) return [];
 
     const grouped = new Map<string, TemplateField[]>();
+    const seenKeys = new Set<string>();
+    const seenSignatures = new Set<string>();
     const defaultSectionName = 'Additional details';
 
     for (const field of visibleFields) {
       const section = field.group || field.section || defaultSectionName;
+      const normalizedKey = String(field.key ?? '').trim().toLowerCase();
+      const signature = [
+        section.toLowerCase(),
+        normalizeLabel(field.label).toLowerCase(),
+        normalizeComponent(field).toLowerCase(),
+      ].join('|');
+
+      if (normalizedKey && seenKeys.has(normalizedKey)) continue;
+      if (seenSignatures.has(signature)) continue;
+
+      if (normalizedKey) seenKeys.add(normalizedKey);
+      seenSignatures.add(signature);
       const current = grouped.get(section) ?? [];
       current.push(field);
       grouped.set(section, current);
@@ -292,9 +383,13 @@ export function DynamicForm({ categoryId, template, values, onChange }: DynamicF
   const renderFieldControl = (field: TemplateField) => {
     const value = formValues[field.key] || '';
     const validation = (field.validationRules ?? {}) as FieldValidation;
-    const options = optionsMap[field.key] ?? field.staticOptions ?? field.options ?? [];
+    const baseOptions = optionsMap[field.key] ?? field.staticOptions ?? field.options ?? [];
+    const options = dedupeOptions(expandYearOptionsForFuture(field, baseOptions));
     const component = normalizeComponent(field);
     const isDisabled = !hasRequiredParents(field, formValues);
+
+    const isRequired = IMPORTANT_REQUIRED_DYNAMIC_KEYS.has(field.key);
+    const labelText = normalizeLabel(field.label);
 
     switch (component) {
       case 'text':
@@ -304,8 +399,8 @@ export function DynamicForm({ categoryId, template, values, onChange }: DynamicF
             value={value}
             onChange={(event) => handleFieldChange(field.key, event.target.value)}
             className={inputClass}
-            placeholder={field.placeholder || field.label}
-            required={Boolean(field.required || field.isRequired || evaluateRuleTree(field.requiredIf, formValues, context))}
+            placeholder={field.placeholder || labelText}
+            required={isRequired}
           />
         );
 
@@ -317,8 +412,8 @@ export function DynamicForm({ categoryId, template, values, onChange }: DynamicF
               value={value}
               onChange={(event) => handleFieldChange(field.key, event.target.value)}
               className={`${inputClass} ${validation.unit ? 'pr-14' : ''}`}
-              placeholder={field.placeholder || field.label}
-              required={Boolean(field.required || field.isRequired || evaluateRuleTree(field.requiredIf, formValues, context))}
+              placeholder={field.placeholder || labelText}
+              required={isRequired}
               min={validation.min}
               max={validation.max}
             />
@@ -336,8 +431,8 @@ export function DynamicForm({ categoryId, template, values, onChange }: DynamicF
             value={value}
             onChange={(event) => handleFieldChange(field.key, event.target.value)}
             className={`${inputClass} min-h-[120px] resize-y`}
-            placeholder={field.placeholder || field.label}
-            required={Boolean(field.required || field.isRequired || evaluateRuleTree(field.requiredIf, formValues, context))}
+            placeholder={field.placeholder || labelText}
+            required={isRequired}
           />
         );
 
@@ -417,7 +512,7 @@ export function DynamicForm({ categoryId, template, values, onChange }: DynamicF
             value={value}
             onChange={(event) => handleFieldChange(field.key, event.target.value)}
             className={inputClass}
-            required={Boolean(field.required || field.isRequired || evaluateRuleTree(field.requiredIf, formValues, context))}
+            required={isRequired}
           />
         );
 
@@ -429,10 +524,10 @@ export function DynamicForm({ categoryId, template, values, onChange }: DynamicF
                 value={value}
                 onChange={(event) => handleFieldChange(field.key, event.target.value)}
                 className={`${selectClass} disabled:opacity-50`}
-                required={Boolean(field.required || field.isRequired || evaluateRuleTree(field.requiredIf, formValues, context))}
+                required={isRequired}
                 disabled={isDisabled}
               >
-                <option value="">Choose {field.label.toLowerCase()}</option>
+                <option value="">Choose {labelText.toLowerCase()}</option>
                 {options.map((option) => (
                   <option key={`${field.key}:${option.value}`} value={option.value}>
                     {option.label}
@@ -573,16 +668,13 @@ export function DynamicForm({ categoryId, template, values, onChange }: DynamicF
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
                 {sectionFields.map((field) => {
                   const hint = formatFieldHint((field.validationRules ?? {}) as FieldValidation);
-                  const required = Boolean(
-                    field.required ||
-                    field.isRequired ||
-                    evaluateRuleTree(field.requiredIf, formValues, context),
-                  );
+                  const required = IMPORTANT_REQUIRED_DYNAMIC_KEYS.has(field.key);
+                  const labelText = normalizeLabel(field.label);
                   return (
                     <div key={field.key} className={`space-y-2 ${getFieldSpanClass(normalizeComponent(field))}`}>
                       <div className="flex items-center justify-between gap-2">
                         <label className="text-sm font-medium text-[var(--text-primary)]">
-                          {field.label}
+                          {labelText}
                           {required && <span className="text-red-400 ml-1">*</span>}
                         </label>
                         <span className="text-[11px] uppercase tracking-wide text-[var(--text-secondary)]">

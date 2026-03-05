@@ -32,6 +32,10 @@ const YEAR_OPTIONS = Array.from({ length: 80 }, (_, index) => {
   const year = CURRENT_YEAR - index;
   return { value: String(year), label: String(year) };
 });
+const YEAR_OPTIONS_WITH_FUTURE = Array.from({ length: 96 }, (_, index) => {
+  const year = CURRENT_YEAR + 15 - index;
+  return { value: String(year), label: String(year) };
+});
 
 const MONTH_OPTIONS = [
   { value: '01', label: 'January' },
@@ -140,7 +144,7 @@ export const DEFAULT_MOTORIZED_BLOCK_FIELDS = [
     group: 'Basic characteristics',
     order: 1080,
     dataSource: 'static',
-    staticOptions: YEAR_OPTIONS,
+    staticOptions: YEAR_OPTIONS_WITH_FUTURE,
   },
   {
     key: 'technical_inspection_month',

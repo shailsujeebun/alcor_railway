@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useMarketplaces } from '@/lib/queries';
+import { getMarketplaceDisplayName } from '@/lib/display-labels';
 
 const MARKETPLACE_ORDER = ['autoline', 'machineryline', 'agroline'] as const;
 
@@ -55,7 +56,7 @@ export function CategoriesGrid() {
                 <span className="text-2xl sm:text-3xl">{marketplaceIcon(marketplace.key)}</span>
               </div>
               <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] leading-tight">
-                {marketplace.name}
+                {getMarketplaceDisplayName(marketplace.name, marketplace.key)}
               </h3>
               <p className="text-sm text-[var(--text-secondary)] mt-2">{marketplaceSubtitle(marketplace.key)}</p>
               <p className="text-xs text-blue-bright mt-4">Open all categories</p>

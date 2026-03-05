@@ -225,3 +225,31 @@ For more information, please refer to the detailed documentation files listed ab
 - Reliability/build follow-up:
   - fixed TS issues in template builder and listing/company UI code paths
   - confirmed green build and verification commands (`api`: seed/test/build, `web`: build).
+
+## Update - 2026-03-05 (Naming, Form Rules, Date Range, i18n, Dedupe)
+- Marketplace/category naming updates in UI:
+  - `autoline` -> `automarket`
+  - `machineryline` -> `industrial machinery`
+  - `agroline` -> `agromarket`
+  - `industrial equipment` -> `equipment`
+- Required-field policy was narrowed to critical ad-posting fields only:
+  - marketplace, category/subcategory, ad title
+  - dynamic essentials: brand, model, year of manufacture (year), condition
+  - moderation readiness: at least one photo + at least one contact method (phone/email)
+- Future date support added for expiration-like fields:
+  - `technical_inspection_year` now includes future years (current year + 15)
+  - frontend fallback logic also extends future years for `valid till` / `expiry` / `expiration` year selectors in existing templates.
+- Translation fallback made bidirectional for runtime hardcoded text:
+  - kept dictionary i18n as primary path
+  - fallback API/provider now support both `uk -> en` and `en -> uk` for late/legacy UI text and common attributes.
+- Form rendering dedupe hardening:
+  - removes repeated dynamic fields (by key/signature)
+  - removes repeated select options (value/label duplicates).
+
+### Verification snapshot (2026-03-05)
+- Passing:
+  - `web`: `pnpm run lint`, `pnpm exec tsc --noEmit`, `pnpm run i18n:guard`
+  - `api`: `pnpm run test`, `pnpm run test:security`, `pnpm run test:e2e`
+  - `api` compile path: `DATABASE_URL=postgresql://dummy pnpm exec prisma generate && pnpm exec nest build`
+- Environment-limited in this sandbox:
+  - `web`: `pnpm run build` blocked by Google Fonts fetch restrictions.
