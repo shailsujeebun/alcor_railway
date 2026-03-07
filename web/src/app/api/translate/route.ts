@@ -142,7 +142,10 @@ function setCachedValue(cache: TranslationCache, key: string, value: string) {
   cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
 }
 
-async function translateWithGoogle(text: string, targetLocale: 'en' | 'uk'): Promise<string> {
+async function translateWithGoogle(
+  text: string,
+  targetLocale: 'en' | 'uk',
+): Promise<string> {
   const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLocale}&dt=t&q=${encodeURIComponent(text)}`;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TRANSLATE_TIMEOUT_MS);
@@ -227,7 +230,12 @@ async function translateTexts(
       if (current >= texts.length) return;
 
       const text = texts[current];
-      translations[text] = await getTranslatedValue(text, targetLocale, cache, inFlight);
+      translations[text] = await getTranslatedValue(
+        text,
+        targetLocale,
+        cache,
+        inFlight,
+      );
     }
   };
 
@@ -268,7 +276,9 @@ export async function POST(request: NextRequest) {
         ? (body as { texts?: unknown; targetLocale?: unknown })
         : {};
     const incomingTexts = Array.isArray(parsedBody.texts) ? parsedBody.texts : [];
-    const targetLocale = parsedBody.targetLocale === 'uk' ? 'uk' : 'en';
+    const rawTargetLocale = parsedBody.targetLocale;
+    const targetLocale: 'en' | 'uk' =
+      rawTargetLocale === 'uk' ? 'uk' : 'en';
     if (!Array.isArray(parsedBody.texts)) {
       return NextResponse.json({ translations: {}, error: 'Expected "texts" array' }, { status: 400 });
     }
@@ -303,7 +313,12 @@ export async function POST(request: NextRequest) {
 
     const cache = getCache();
     const inFlight = getInFlightStore();
-    const translations = await translateTexts(texts, targetLocale, cache, inFlight);
+    const translations = await translateTexts(
+      texts,
+      targetLocale,
+      cache,
+      inFlight,
+    );
 
     return NextResponse.json({ translations });
   } catch {

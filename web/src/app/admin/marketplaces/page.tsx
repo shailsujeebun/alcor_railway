@@ -20,6 +20,7 @@ import {
 import { Plus, Edit2, CheckCircle, XCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { useRouter } from 'next/navigation';
+import { getMarketplaceDisplayName } from '@/lib/display-labels';
 
 export default function AdminMarketplacesPage() {
     const [marketplaces, setMarketplaces] = useState<AdminMarketplace[]>([]);
@@ -152,7 +153,9 @@ export default function AdminMarketplacesPage() {
                     >
                         <div className="flex justify-between items-start mb-4">
                             <div>
-                                <h3 className="text-xl font-semibold mb-1">{mp.name}</h3>
+                                <h3 className="text-xl font-semibold mb-1">
+                                  {getMarketplaceDisplayName(mp.name, mp.key)}
+                                </h3>
                                 <code className="text-sm bg-muted px-2 py-1 rounded text-muted-foreground">
                                     {mp.key}
                                 </code>

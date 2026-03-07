@@ -28,6 +28,7 @@ import { ChevronDown, Plus, Save, Trash } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { TemplateBlockSchema } from '@/lib/schemaTypes';
 import { useTranslation } from '@/components/providers/translation-provider';
+import { getCategoryDisplayName } from '@/lib/display-labels';
 
 interface CategoryNode {
     id: string;
@@ -553,7 +554,7 @@ export default function AdminTemplatesPage() {
                                                 <SelectContent>
                                                     {options.map((category) => (
                                                         <SelectItem key={category.id} value={category.id.toString()}>
-                                                            {category.name}
+                                                            {getCategoryDisplayName(category.name)}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -724,456 +725,452 @@ export default function AdminTemplatesPage() {
                         const isSectionCollapsed = Boolean(collapsedSections[section]);
 
                         return (
-                        <div key={section} className="glass-card rounded-xl border border-white/10 overflow-hidden">
-                            <div className="bg-white/5 p-4 flex justify-between items-center border-b border-white/10">
-                                <button
-                                    type="button"
-                                    onClick={() => toggleSection(section)}
-                                    className="flex items-center gap-2 text-left text-white font-bold"
-                                >
-                                    <ChevronDown
-                                        className={`h-4 w-4 transition-transform ${isSectionCollapsed ? '-rotate-90' : 'rotate-0'}`}
-                                    />
-                                    <span>{getSectionLabel(section)}</span>
-                                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-muted-foreground">
-                                        {sectionFields.length}
-                                    </span>
-                                </button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => deleteSection(section)}
-                                    className="text-muted-foreground hover:text-red-400"
-                                >
-                                    <Trash className="w-4 h-4" />
-                                </Button>
-                            </div>
+                            <div key={section} className="glass-card rounded-xl border border-white/10 overflow-hidden">
+                                <div className="bg-white/5 p-4 flex justify-between items-center border-b border-white/10">
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleSection(section)}
+                                        className="flex items-center gap-2 text-left text-white font-bold"
+                                    >
+                                        <ChevronDown
+                                            className={`h-4 w-4 transition-transform ${isSectionCollapsed ? '-rotate-90' : 'rotate-0'}`}
+                                        />
+                                        <span>{getSectionLabel(section)}</span>
+                                        <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-muted-foreground">
+                                            {sectionFields.length}
+                                        </span>
+                                    </button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => deleteSection(section)}
+                                        className="text-muted-foreground hover:text-red-400"
+                                    >
+                                        <Trash className="w-4 h-4" />
+                                    </Button>
+                                </div>
 
-                            <div
-                                className={`p-4 space-y-4 bg-black/20 overflow-hidden transition-all duration-300 ease-out ${
-                                    isSectionCollapsed ? 'max-h-0 opacity-0 py-0' : 'max-h-[5000px] opacity-100'
-                                }`}
-                            >
-                                {fields
-                                    .map((field, index) => ({ ...field, originalIndex: index }))
-                                    .filter((field) => field.section === section)
-                                    .map((field) => {
-                                        const index = field.originalIndex;
-                                        const isFieldCollapsed = Boolean(collapsedFields[index]);
-                                        const isAdvancedCollapsed = Boolean(collapsedAdvancedFields[index]);
-                                        return (
-                                            <div
-                                                key={index}
-                                                className="group relative bg-card/80 hover:bg-card border border-white/5 hover:border-blue-500/50 rounded-xl p-4 transition-all duration-200"
-                                            >
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => toggleField(index)}
-                                                        className="flex items-center gap-2 text-left min-w-0"
-                                                    >
-                                                        <ChevronDown
-                                                            className={`h-4 w-4 transition-transform ${isFieldCollapsed ? '-rotate-90' : 'rotate-0'}`}
-                                                        />
-                                                        <span className="truncate text-sm font-semibold text-white">
-                                                            {field.label || t('admin.templateBuilder.untitledField')}
-                                                        </span>
-                                                        <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase text-muted-foreground">
-                                                            {field.type || 'TEXT'}
-                                                        </span>
-                                                    </button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-muted-foreground hover:text-red-400 hover:bg-red-950/20"
-                                                        onClick={() => removeField(index)}
-                                                    >
-                                                        <Trash className="w-4 h-4 mr-2" />
-                                                        {t('admin.templateBuilder.remove')}
-                                                    </Button>
-                                                </div>
-
+                                <div
+                                    className={`p-4 space-y-4 bg-black/20 overflow-hidden transition-all duration-300 ease-out ${isSectionCollapsed ? 'max-h-0 opacity-0 py-0' : 'max-h-[5000px] opacity-100'
+                                        }`}
+                                >
+                                    {fields
+                                        .map((field, index) => ({ ...field, originalIndex: index }))
+                                        .filter((field) => field.section === section)
+                                        .map((field) => {
+                                            const index = field.originalIndex;
+                                            const isFieldCollapsed = Boolean(collapsedFields[index]);
+                                            const isAdvancedCollapsed = Boolean(collapsedAdvancedFields[index]);
+                                            return (
                                                 <div
-                                                    className={`pl-2 mt-4 overflow-hidden border-t border-white/5 transition-all duration-300 ease-out ${
-                                                        isFieldCollapsed ? 'max-h-0 opacity-0 pt-0' : 'max-h-[4200px] opacity-100 pt-4'
-                                                    }`}
+                                                    key={index}
+                                                    className="group relative bg-card/80 hover:bg-card border border-white/5 hover:border-blue-500/50 rounded-xl p-4 transition-all duration-200"
                                                 >
-                                                    <div className="space-y-6">
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label className="text-xs uppercase text-muted-foreground">
-                                                                {t('admin.templateBuilder.fieldLabel')}
-                                                            </Label>
-                                                            <Input
-                                                                value={field.label}
-                                                                onChange={(event) =>
-                                                                    updateField(index, {
-                                                                        label: event.target.value,
-                                                                        key: event.target.value.toLowerCase().replace(/\s+/g, '_'),
-                                                                    })
-                                                                }
-                                                                className="bg-black/20 border-white/10"
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label className="text-xs uppercase text-muted-foreground">
-                                                                {t('admin.templateBuilder.fieldType')}
-                                                            </Label>
-                                                            <Select
-                                                                value={field.type || 'TEXT'}
-                                                                onValueChange={(value: any) => updateField(index, { type: value })}
-                                                            >
-                                                                <SelectTrigger className="bg-black/20 border-white/10">
-                                                                    <SelectValue />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    <SelectItem value="TEXT">{t('admin.templateBuilder.fieldTypes.textInput')}</SelectItem>
-                                                                    <SelectItem value="NUMBER">{t('admin.templateBuilder.fieldTypes.numberInput')}</SelectItem>
-                                                                    <SelectItem value="PRICE">{t('admin.templateBuilder.fieldTypes.price')}</SelectItem>
-                                                                    <SelectItem value="RICHTEXT">{t('admin.templateBuilder.fieldTypes.richText')}</SelectItem>
-                                                                    <SelectItem value="SELECT">{t('admin.templateBuilder.fieldTypes.select')}</SelectItem>
-                                                                    <SelectItem value="MULTISELECT">{t('admin.templateBuilder.fieldTypes.multiselect')}</SelectItem>
-                                                                    <SelectItem value="RADIO">{t('admin.templateBuilder.fieldTypes.radio')}</SelectItem>
-                                                                    <SelectItem value="CHECKBOX_GROUP">{t('admin.templateBuilder.fieldTypes.checkboxGroup')}</SelectItem>
-                                                                    <SelectItem value="BOOLEAN">{t('admin.templateBuilder.fieldTypes.boolean')}</SelectItem>
-                                                                    <SelectItem value="DATE">{t('admin.templateBuilder.fieldTypes.date')}</SelectItem>
-                                                                    <SelectItem value="YEAR_RANGE">{t('admin.templateBuilder.fieldTypes.yearRange')}</SelectItem>
-                                                                    <SelectItem value="COLOR">{t('admin.templateBuilder.fieldTypes.color')}</SelectItem>
-                                                                    <SelectItem value="LOCATION">{t('admin.templateBuilder.fieldTypes.location')}</SelectItem>
-                                                                    <SelectItem value="MEDIA">{t('admin.templateBuilder.fieldTypes.media')}</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label className="text-xs uppercase text-muted-foreground">
-                                                                {t('admin.templateBuilder.component')}
-                                                            </Label>
-                                                            <Select
-                                                                value={(field.component as string) || 'text'}
-                                                                onValueChange={(value: any) => updateField(index, { component: value })}
-                                                            >
-                                                                <SelectTrigger className="bg-black/20 border-white/10">
-                                                                    <SelectValue />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    <SelectItem value="text">{t('admin.templateBuilder.components.text')}</SelectItem>
-                                                                    <SelectItem value="number">{t('admin.templateBuilder.components.number')}</SelectItem>
-                                                                    <SelectItem value="select">{t('admin.templateBuilder.components.select')}</SelectItem>
-                                                                    <SelectItem value="checkbox">{t('admin.templateBuilder.components.checkbox')}</SelectItem>
-                                                                    <SelectItem value="radio">{t('admin.templateBuilder.components.radio')}</SelectItem>
-                                                                    <SelectItem value="textarea">{t('admin.templateBuilder.components.textarea')}</SelectItem>
-                                                                    <SelectItem value="date">{t('admin.templateBuilder.components.date')}</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label className="text-xs uppercase text-muted-foreground">
-                                                                {t('admin.templateBuilder.dataSource')}
-                                                            </Label>
-                                                            <Select
-                                                                value={(field.dataSource as string) || 'static'}
-                                                                onValueChange={(value: any) => updateField(index, { dataSource: value })}
-                                                            >
-                                                                <SelectTrigger className="bg-black/20 border-white/10">
-                                                                    <SelectValue />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    <SelectItem value="static">{t('admin.templateBuilder.dataSources.static')}</SelectItem>
-                                                                    <SelectItem value="api">API</SelectItem>
-                                                                    <SelectItem value="db">DB</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label className="text-xs uppercase text-muted-foreground">
-                                                                {t('admin.templateBuilder.placeholder')}
-                                                            </Label>
-                                                            <Input
-                                                                value={(field.placeholder as string) || ''}
-                                                                onChange={(event) => updateField(index, { placeholder: event.target.value })}
-                                                                className="bg-black/20 border-white/10"
-                                                            />
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="rounded-lg border border-white/10 bg-black/20">
+                                                    <div className="flex items-center justify-between gap-3">
                                                         <button
                                                             type="button"
-                                                            onClick={() => toggleAdvancedField(index)}
-                                                            className="w-full flex items-center justify-between px-3 py-2 text-left"
+                                                            onClick={() => toggleField(index)}
+                                                            className="flex items-center gap-2 text-left min-w-0"
                                                         >
-                                                            <span className="text-xs uppercase tracking-wide text-muted-foreground">
-                                                                {t('admin.templateBuilder.advancedSettings')}
-                                                            </span>
                                                             <ChevronDown
-                                                                className={`h-4 w-4 text-muted-foreground transition-transform ${
-                                                                    isAdvancedCollapsed ? '-rotate-90' : 'rotate-0'
-                                                                }`}
+                                                                className={`h-4 w-4 transition-transform ${isFieldCollapsed ? '-rotate-90' : 'rotate-0'}`}
                                                             />
+                                                            <span className="truncate text-sm font-semibold text-white">
+                                                                {field.label || t('admin.templateBuilder.untitledField')}
+                                                            </span>
+                                                            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase text-muted-foreground">
+                                                                {field.type || 'TEXT'}
+                                                            </span>
                                                         </button>
-                                                        <div
-                                                            className={`overflow-hidden transition-all duration-300 ease-out ${
-                                                                isAdvancedCollapsed ? 'max-h-0 opacity-0' : 'max-h-[2200px] opacity-100'
-                                                            }`}
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-muted-foreground hover:text-red-400 hover:bg-red-950/20"
+                                                            onClick={() => removeField(index)}
                                                         >
-                                                            <div className="space-y-4 px-3 pb-3 border-t border-white/10 pt-3">
-                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                    <div className="space-y-2">
-                                                                        <Label className="text-xs uppercase text-muted-foreground">
-                                                                            {t('admin.templateBuilder.dependsOn')}
-                                                                        </Label>
-                                                                        <div className="rounded-lg border border-white/10 p-2 max-h-28 overflow-y-auto">
-                                                                            {fields
-                                                                                .map((candidate, candidateIndex) => ({
-                                                                                    key: candidate.key,
-                                                                                    label: candidate.label,
-                                                                                    candidateIndex,
-                                                                                }))
-                                                                                .filter((candidate) => candidate.candidateIndex !== index && candidate.key)
-                                                                                .map((candidate) => {
-                                                                                    const dependsOn = (field.dependsOn as string[]) || [];
-                                                                                    const checked = dependsOn.includes(candidate.key as string);
-                                                                                    return (
-                                                                                        <label
-                                                                                            key={`${index}-${candidate.key}`}
-                                                                                            className="flex items-center gap-2 text-xs text-white/90 py-0.5"
-                                                                                        >
-                                                                                            <input
-                                                                                                type="checkbox"
-                                                                                                checked={checked}
-                                                                                                onChange={(event) => {
-                                                                                                    const next = new Set(dependsOn);
-                                                                                                    if (event.target.checked) next.add(candidate.key as string);
-                                                                                                    else next.delete(candidate.key as string);
-                                                                                                    updateField(index, { dependsOn: Array.from(next) });
-                                                                                                }}
-                                                                                            />
-                                                                                            <span>{candidate.label || candidate.key}</span>
-                                                                                        </label>
-                                                                                    );
-                                                                                })}
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        <Label className="text-xs uppercase text-muted-foreground">
-                                                                            {t('admin.templateBuilder.resetOnChange')}
-                                                                        </Label>
-                                                                        <div className="rounded-lg border border-white/10 p-2 max-h-28 overflow-y-auto">
-                                                                            {fields
-                                                                                .map((candidate, candidateIndex) => ({
-                                                                                    key: candidate.key,
-                                                                                    label: candidate.label,
-                                                                                    candidateIndex,
-                                                                                }))
-                                                                                .filter((candidate) => candidate.candidateIndex !== index && candidate.key)
-                                                                                .map((candidate) => {
-                                                                                    const resetOnChange = (field.resetOnChange as string[]) || [];
-                                                                                    const checked = resetOnChange.includes(candidate.key as string);
-                                                                                    return (
-                                                                                        <label
-                                                                                            key={`reset-${index}-${candidate.key}`}
-                                                                                            className="flex items-center gap-2 text-xs text-white/90 py-0.5"
-                                                                                        >
-                                                                                            <input
-                                                                                                type="checkbox"
-                                                                                                checked={checked}
-                                                                                                onChange={(event) => {
-                                                                                                    const next = new Set(resetOnChange);
-                                                                                                    if (event.target.checked) next.add(candidate.key as string);
-                                                                                                    else next.delete(candidate.key as string);
-                                                                                                    updateField(index, { resetOnChange: Array.from(next) });
-                                                                                                }}
-                                                                                            />
-                                                                                            <span>{candidate.label || candidate.key}</span>
-                                                                                        </label>
-                                                                                    );
-                                                                                })}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                {(field.dataSource === 'api' || field.dataSource === 'db') ? (
-                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                        <div className="space-y-2">
-                                                                            <Label className="text-xs uppercase text-muted-foreground">
-                                                                                {t('admin.templateBuilder.optionsEndpoint')}
-                                                                            </Label>
-                                                                            <Input
-                                                                                value={(field.optionsEndpoint as string) || ''}
-                                                                                onChange={(event) => updateField(index, { optionsEndpoint: event.target.value })}
-                                                                                placeholder="/options/models"
-                                                                                className="bg-black/20 border-white/10"
-                                                                            />
-                                                                        </div>
-                                                                        <div className="space-y-2">
-                                                                            <Label className="text-xs uppercase text-muted-foreground">
-                                                                                {t('admin.templateBuilder.optionsQuery')}
-                                                                            </Label>
-                                                                            <Input
-                                                                                value={field.optionsQuery ? JSON.stringify(field.optionsQuery) : ''}
-                                                                                onChange={(event) => {
-                                                                                    try {
-                                                                                        const value = event.target.value.trim();
-                                                                                        updateField(index, {
-                                                                                            optionsQuery: value ? JSON.parse(value) : undefined,
-                                                                                        });
-                                                                                    } catch {
-                                                                                        // keep current value if json is invalid during typing
-                                                                                    }
-                                                                                }}
-                                                                                placeholder='{"type":"modelsByBrand"}'
-                                                                                className="bg-black/20 border-white/10"
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-                                                                ) : null}
-
-                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                    <div className="space-y-2">
-                                                                        <Label className="text-xs uppercase text-muted-foreground">
-                                                                            {t('admin.templateBuilder.visibleIf')}
-                                                                        </Label>
-                                                                        <textarea
-                                                                            value={field.visibleIf ? JSON.stringify(field.visibleIf) : ''}
-                                                                            onChange={(event) => {
-                                                                                try {
-                                                                                    const value = event.target.value.trim();
-                                                                                    updateField(index, {
-                                                                                        visibleIf: value ? JSON.parse(value) : undefined,
-                                                                                    });
-                                                                                } catch {
-                                                                                    // noop for invalid json while typing
-                                                                                }
-                                                                            }}
-                                                                            rows={3}
-                                                                            className="w-full rounded-md bg-black/20 border border-white/10 p-2 text-xs"
-                                                                            placeholder={t('admin.templateBuilder.visibleIfPlaceholder')}
-                                                                        />
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        <Label className="text-xs uppercase text-muted-foreground">
-                                                                            {t('admin.templateBuilder.requiredIf')}
-                                                                        </Label>
-                                                                        <textarea
-                                                                            value={field.requiredIf ? JSON.stringify(field.requiredIf) : ''}
-                                                                            onChange={(event) => {
-                                                                                try {
-                                                                                    const value = event.target.value.trim();
-                                                                                    updateField(index, {
-                                                                                        requiredIf: value ? JSON.parse(value) : undefined,
-                                                                                    });
-                                                                                } catch {
-                                                                                    // noop for invalid json while typing
-                                                                                }
-                                                                            }}
-                                                                            rows={3}
-                                                                            className="w-full rounded-md bg-black/20 border border-white/10 p-2 text-xs"
-                                                                            placeholder={t('admin.templateBuilder.requiredIfPlaceholder')}
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                            <Trash className="w-4 h-4 mr-2" />
+                                                            {t('admin.templateBuilder.remove')}
+                                                        </Button>
                                                     </div>
 
-                                                    {['SELECT', 'MULTISELECT', 'RADIO', 'CHECKBOX_GROUP', 'COLOR'].includes(field.type || '') && (
-                                                        <div className="bg-black/20 p-4 rounded-lg space-y-3 border border-white/5">
-                                                            <div className="flex justify-between items-center">
-                                                                <Label className="text-xs uppercase text-blue-400">
-                                                                    {field.type === 'COLOR'
-                                                                        ? t('admin.templateBuilder.colorOptions')
-                                                                        : t('admin.templateBuilder.optionsConfiguration')}
-                                                                </Label>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="ghost"
-                                                                    onClick={() => addOption(index)}
-                                                                    className="h-6 text-xs hover:text-blue-400"
-                                                                >
-                                                                    <Plus className="w-3 h-3 mr-1" /> {t('admin.templateBuilder.addOption')}
-                                                                </Button>
+                                                    <div
+                                                        className={`pl-2 mt-4 overflow-hidden border-t border-white/5 transition-all duration-300 ease-out ${isFieldCollapsed ? 'max-h-0 opacity-0 pt-0' : 'max-h-[4200px] opacity-100 pt-4'
+                                                            }`}
+                                                    >
+                                                        <div className="space-y-6">
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-xs uppercase text-muted-foreground">
+                                                                        {t('admin.templateBuilder.fieldLabel')}
+                                                                    </Label>
+                                                                    <Input
+                                                                        value={field.label}
+                                                                        onChange={(event) =>
+                                                                            updateField(index, {
+                                                                                label: event.target.value,
+                                                                                key: event.target.value.toLowerCase().replace(/\s+/g, '_'),
+                                                                            })
+                                                                        }
+                                                                        className="bg-black/20 border-white/10"
+                                                                    />
+                                                                </div>
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-xs uppercase text-muted-foreground">
+                                                                        {t('admin.templateBuilder.fieldType')}
+                                                                    </Label>
+                                                                    <Select
+                                                                        value={field.type || 'TEXT'}
+                                                                        onValueChange={(value: any) => updateField(index, { type: value })}
+                                                                    >
+                                                                        <SelectTrigger className="bg-black/20 border-white/10">
+                                                                            <SelectValue />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            <SelectItem value="TEXT">{t('admin.templateBuilder.fieldTypes.textInput')}</SelectItem>
+                                                                            <SelectItem value="NUMBER">{t('admin.templateBuilder.fieldTypes.numberInput')}</SelectItem>
+                                                                            <SelectItem value="PRICE">{t('admin.templateBuilder.fieldTypes.price')}</SelectItem>
+                                                                            <SelectItem value="RICHTEXT">{t('admin.templateBuilder.fieldTypes.richText')}</SelectItem>
+                                                                            <SelectItem value="SELECT">{t('admin.templateBuilder.fieldTypes.select')}</SelectItem>
+                                                                            <SelectItem value="MULTISELECT">{t('admin.templateBuilder.fieldTypes.multiselect')}</SelectItem>
+                                                                            <SelectItem value="RADIO">{t('admin.templateBuilder.fieldTypes.radio')}</SelectItem>
+                                                                            <SelectItem value="CHECKBOX_GROUP">{t('admin.templateBuilder.fieldTypes.checkboxGroup')}</SelectItem>
+                                                                            <SelectItem value="BOOLEAN">{t('admin.templateBuilder.fieldTypes.boolean')}</SelectItem>
+                                                                            <SelectItem value="DATE">{t('admin.templateBuilder.fieldTypes.date')}</SelectItem>
+                                                                            <SelectItem value="YEAR_RANGE">{t('admin.templateBuilder.fieldTypes.yearRange')}</SelectItem>
+                                                                            <SelectItem value="COLOR">{t('admin.templateBuilder.fieldTypes.color')}</SelectItem>
+                                                                            <SelectItem value="LOCATION">{t('admin.templateBuilder.fieldTypes.location')}</SelectItem>
+                                                                            <SelectItem value="MEDIA">{t('admin.templateBuilder.fieldTypes.media')}</SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </div>
                                                             </div>
 
-                                                            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                                                                {field.options?.map((option, optIndex) => (
-                                                                    <div key={optIndex} className="flex gap-2 items-center">
-                                                                        {field.type === 'COLOR' ? (
-                                                                            <input
-                                                                                type="color"
-                                                                                value={option.value}
-                                                                                onChange={(event) => updateOption(index, optIndex, 'value', event.target.value)}
-                                                                                className="h-8 w-12 bg-transparent border-none cursor-pointer"
-                                                                            />
+                                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-xs uppercase text-muted-foreground">
+                                                                        {t('admin.templateBuilder.component')}
+                                                                    </Label>
+                                                                    <Select
+                                                                        value={(field.component as string) || 'text'}
+                                                                        onValueChange={(value: any) => updateField(index, { component: value })}
+                                                                    >
+                                                                        <SelectTrigger className="bg-black/20 border-white/10">
+                                                                            <SelectValue />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            <SelectItem value="text">{t('admin.templateBuilder.components.text')}</SelectItem>
+                                                                            <SelectItem value="number">{t('admin.templateBuilder.components.number')}</SelectItem>
+                                                                            <SelectItem value="select">{t('admin.templateBuilder.components.select')}</SelectItem>
+                                                                            <SelectItem value="checkbox">{t('admin.templateBuilder.components.checkbox')}</SelectItem>
+                                                                            <SelectItem value="radio">{t('admin.templateBuilder.components.radio')}</SelectItem>
+                                                                            <SelectItem value="textarea">{t('admin.templateBuilder.components.textarea')}</SelectItem>
+                                                                            <SelectItem value="date">{t('admin.templateBuilder.components.date')}</SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </div>
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-xs uppercase text-muted-foreground">
+                                                                        {t('admin.templateBuilder.dataSource')}
+                                                                    </Label>
+                                                                    <Select
+                                                                        value={(field.dataSource as string) || 'static'}
+                                                                        onValueChange={(value: any) => updateField(index, { dataSource: value })}
+                                                                    >
+                                                                        <SelectTrigger className="bg-black/20 border-white/10">
+                                                                            <SelectValue />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            <SelectItem value="static">{t('admin.templateBuilder.dataSources.static')}</SelectItem>
+                                                                            <SelectItem value="api">API</SelectItem>
+                                                                            <SelectItem value="db">DB</SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </div>
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-xs uppercase text-muted-foreground">
+                                                                        {t('admin.templateBuilder.placeholder')}
+                                                                    </Label>
+                                                                    <Input
+                                                                        value={(field.placeholder as string) || ''}
+                                                                        onChange={(event) => updateField(index, { placeholder: event.target.value })}
+                                                                        className="bg-black/20 border-white/10"
+                                                                    />
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="rounded-lg border border-white/10 bg-black/20">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => toggleAdvancedField(index)}
+                                                                    className="w-full flex items-center justify-between px-3 py-2 text-left"
+                                                                >
+                                                                    <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                                                                        {t('admin.templateBuilder.advancedSettings')}
+                                                                    </span>
+                                                                    <ChevronDown
+                                                                        className={`h-4 w-4 text-muted-foreground transition-transform ${isAdvancedCollapsed ? '-rotate-90' : 'rotate-0'
+                                                                            }`}
+                                                                    />
+                                                                </button>
+                                                                <div
+                                                                    className={`overflow-hidden transition-all duration-300 ease-out ${isAdvancedCollapsed ? 'max-h-0 opacity-0' : 'max-h-[2200px] opacity-100'
+                                                                        }`}
+                                                                >
+                                                                    <div className="space-y-4 px-3 pb-3 border-t border-white/10 pt-3">
+                                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                            <div className="space-y-2">
+                                                                                <Label className="text-xs uppercase text-muted-foreground">
+                                                                                    {t('admin.templateBuilder.dependsOn')}
+                                                                                </Label>
+                                                                                <div className="rounded-lg border border-white/10 p-2 max-h-28 overflow-y-auto">
+                                                                                    {fields
+                                                                                        .map((candidate, candidateIndex) => ({
+                                                                                            key: candidate.key,
+                                                                                            label: candidate.label,
+                                                                                            candidateIndex,
+                                                                                        }))
+                                                                                        .filter((candidate) => candidate.candidateIndex !== index && candidate.key)
+                                                                                        .map((candidate) => {
+                                                                                            const dependsOn = (field.dependsOn as string[]) || [];
+                                                                                            const checked = dependsOn.includes(candidate.key as string);
+                                                                                            return (
+                                                                                                <label
+                                                                                                    key={`${index}-${candidate.key}`}
+                                                                                                    className="flex items-center gap-2 text-xs text-white/90 py-0.5"
+                                                                                                >
+                                                                                                    <input
+                                                                                                        type="checkbox"
+                                                                                                        checked={checked}
+                                                                                                        onChange={(event) => {
+                                                                                                            const next = new Set(dependsOn);
+                                                                                                            if (event.target.checked) next.add(candidate.key as string);
+                                                                                                            else next.delete(candidate.key as string);
+                                                                                                            updateField(index, { dependsOn: Array.from(next) });
+                                                                                                        }}
+                                                                                                    />
+                                                                                                    <span>{candidate.label || candidate.key}</span>
+                                                                                                </label>
+                                                                                            );
+                                                                                        })}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="space-y-2">
+                                                                                <Label className="text-xs uppercase text-muted-foreground">
+                                                                                    {t('admin.templateBuilder.resetOnChange')}
+                                                                                </Label>
+                                                                                <div className="rounded-lg border border-white/10 p-2 max-h-28 overflow-y-auto">
+                                                                                    {fields
+                                                                                        .map((candidate, candidateIndex) => ({
+                                                                                            key: candidate.key,
+                                                                                            label: candidate.label,
+                                                                                            candidateIndex,
+                                                                                        }))
+                                                                                        .filter((candidate) => candidate.candidateIndex !== index && candidate.key)
+                                                                                        .map((candidate) => {
+                                                                                            const resetOnChange = (field.resetOnChange as string[]) || [];
+                                                                                            const checked = resetOnChange.includes(candidate.key as string);
+                                                                                            return (
+                                                                                                <label
+                                                                                                    key={`reset-${index}-${candidate.key}`}
+                                                                                                    className="flex items-center gap-2 text-xs text-white/90 py-0.5"
+                                                                                                >
+                                                                                                    <input
+                                                                                                        type="checkbox"
+                                                                                                        checked={checked}
+                                                                                                        onChange={(event) => {
+                                                                                                            const next = new Set(resetOnChange);
+                                                                                                            if (event.target.checked) next.add(candidate.key as string);
+                                                                                                            else next.delete(candidate.key as string);
+                                                                                                            updateField(index, { resetOnChange: Array.from(next) });
+                                                                                                        }}
+                                                                                                    />
+                                                                                                    <span>{candidate.label || candidate.key}</span>
+                                                                                                </label>
+                                                                                            );
+                                                                                        })}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {(field.dataSource === 'api' || field.dataSource === 'db') ? (
+                                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                                <div className="space-y-2">
+                                                                                    <Label className="text-xs uppercase text-muted-foreground">
+                                                                                        {t('admin.templateBuilder.optionsEndpoint')}
+                                                                                    </Label>
+                                                                                    <Input
+                                                                                        value={(field.optionsEndpoint as string) || ''}
+                                                                                        onChange={(event) => updateField(index, { optionsEndpoint: event.target.value })}
+                                                                                        placeholder="/options/models"
+                                                                                        className="bg-black/20 border-white/10"
+                                                                                    />
+                                                                                </div>
+                                                                                <div className="space-y-2">
+                                                                                    <Label className="text-xs uppercase text-muted-foreground">
+                                                                                        {t('admin.templateBuilder.optionsQuery')}
+                                                                                    </Label>
+                                                                                    <Input
+                                                                                        value={field.optionsQuery ? JSON.stringify(field.optionsQuery) : ''}
+                                                                                        onChange={(event) => {
+                                                                                            try {
+                                                                                                const value = event.target.value.trim();
+                                                                                                updateField(index, {
+                                                                                                    optionsQuery: value ? JSON.parse(value) : undefined,
+                                                                                                });
+                                                                                            } catch {
+                                                                                                // keep current value if json is invalid during typing
+                                                                                            }
+                                                                                        }}
+                                                                                        placeholder='{"type":"modelsByBrand"}'
+                                                                                        className="bg-black/20 border-white/10"
+                                                                                    />
+                                                                                </div>
+                                                                            </div>
                                                                         ) : null}
 
-                                                                            <Input
-                                                                                value={option.label}
-                                                                                onChange={(event) => updateOption(index, optIndex, 'label', event.target.value)}
-                                                                                placeholder={t('admin.templateBuilder.label')}
-                                                                                className="h-8 text-sm bg-black/20 border-white/10"
-                                                                            />
-                                                                            <Input
-                                                                                value={option.value}
-                                                                                onChange={(event) => updateOption(index, optIndex, 'value', event.target.value)}
-                                                                                placeholder={t('admin.templateBuilder.value')}
-                                                                                className="h-8 text-sm bg-black/20 border-white/10 font-mono text-xs"
-                                                                            />
+                                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                            <div className="space-y-2">
+                                                                                <Label className="text-xs uppercase text-muted-foreground">
+                                                                                    {t('admin.templateBuilder.visibleIf')}
+                                                                                </Label>
+                                                                                <textarea
+                                                                                    value={field.visibleIf ? JSON.stringify(field.visibleIf) : ''}
+                                                                                    onChange={(event) => {
+                                                                                        try {
+                                                                                            const value = event.target.value.trim();
+                                                                                            updateField(index, {
+                                                                                                visibleIf: value ? JSON.parse(value) : undefined,
+                                                                                            });
+                                                                                        } catch {
+                                                                                            // noop for invalid json while typing
+                                                                                        }
+                                                                                    }}
+                                                                                    rows={3}
+                                                                                    className="w-full rounded-md bg-black/20 border border-white/10 p-2 text-xs"
+                                                                                    placeholder={t('admin.templateBuilder.visibleIfPlaceholder')}
+                                                                                />
+                                                                            </div>
+                                                                            <div className="space-y-2">
+                                                                                <Label className="text-xs uppercase text-muted-foreground">
+                                                                                    {t('admin.templateBuilder.requiredIf')}
+                                                                                </Label>
+                                                                                <textarea
+                                                                                    value={field.requiredIf ? JSON.stringify(field.requiredIf) : ''}
+                                                                                    onChange={(event) => {
+                                                                                        try {
+                                                                                            const value = event.target.value.trim();
+                                                                                            updateField(index, {
+                                                                                                requiredIf: value ? JSON.parse(value) : undefined,
+                                                                                            });
+                                                                                        } catch {
+                                                                                            // noop for invalid json while typing
+                                                                                        }
+                                                                                    }}
+                                                                                    rows={3}
+                                                                                    className="w-full rounded-md bg-black/20 border border-white/10 p-2 text-xs"
+                                                                                    placeholder={t('admin.templateBuilder.requiredIfPlaceholder')}
+                                                                                />
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {['SELECT', 'MULTISELECT', 'RADIO', 'CHECKBOX_GROUP', 'COLOR'].includes(field.type || '') && (
+                                                                <div className="bg-black/20 p-4 rounded-lg space-y-3 border border-white/5">
+                                                                    <div className="flex justify-between items-center">
+                                                                        <Label className="text-xs uppercase text-blue-400">
+                                                                            {field.type === 'COLOR'
+                                                                                ? t('admin.templateBuilder.colorOptions')
+                                                                                : t('admin.templateBuilder.optionsConfiguration')}
+                                                                        </Label>
                                                                         <Button
-                                                                            size="icon"
+                                                                            size="sm"
                                                                             variant="ghost"
-                                                                            className="h-8 w-8 text-muted-foreground hover:text-red-400"
-                                                                            onClick={() => {
-                                                                                const newOptions = [...(field.options || [])];
-                                                                                newOptions.splice(optIndex, 1);
-                                                                                updateField(index, { options: newOptions });
-                                                                            }}
+                                                                            onClick={() => addOption(index)}
+                                                                            className="h-6 text-xs hover:text-blue-400"
                                                                         >
-                                                                            <Trash className="w-3 h-3" />
+                                                                            <Plus className="w-3 h-3 mr-1" /> {t('admin.templateBuilder.addOption')}
                                                                         </Button>
                                                                     </div>
-                                                                ))}
-                                                                {(!field.options || field.options.length === 0) && (
-                                                                    <div className="text-xs text-muted-foreground text-center py-2">
-                                                                        {t('admin.templateBuilder.noOptions')}
+
+                                                                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                                                                        {field.options?.map((option, optIndex) => (
+                                                                            <div key={optIndex} className="flex gap-2 items-center">
+                                                                                {field.type === 'COLOR' ? (
+                                                                                    <input
+                                                                                        type="color"
+                                                                                        value={option.value}
+                                                                                        onChange={(event) => updateOption(index, optIndex, 'value', event.target.value)}
+                                                                                        className="h-8 w-12 bg-transparent border-none cursor-pointer"
+                                                                                    />
+                                                                                ) : null}
+
+                                                                                <Input
+                                                                                    value={option.label}
+                                                                                    onChange={(event) => updateOption(index, optIndex, 'label', event.target.value)}
+                                                                                    placeholder={t('admin.templateBuilder.label')}
+                                                                                    className="h-8 text-sm bg-black/20 border-white/10"
+                                                                                />
+                                                                                <Input
+                                                                                    value={option.value}
+                                                                                    onChange={(event) => updateOption(index, optIndex, 'value', event.target.value)}
+                                                                                    placeholder={t('admin.templateBuilder.value')}
+                                                                                    className="h-8 text-sm bg-black/20 border-white/10 font-mono text-xs"
+                                                                                />
+                                                                                <Button
+                                                                                    size="icon"
+                                                                                    variant="ghost"
+                                                                                    className="h-8 w-8 text-muted-foreground hover:text-red-400"
+                                                                                    onClick={() => {
+                                                                                        const newOptions = [...(field.options || [])];
+                                                                                        newOptions.splice(optIndex, 1);
+                                                                                        updateField(index, { options: newOptions });
+                                                                                    }}
+                                                                                >
+                                                                                    <Trash className="w-3 h-3" />
+                                                                                </Button>
+                                                                            </div>
+                                                                        ))}
+                                                                        {(!field.options || field.options.length === 0) && (
+                                                                            <div className="text-xs text-muted-foreground text-center py-2">
+                                                                                {t('admin.templateBuilder.noOptions')}
+                                                                            </div>
+                                                                        )}
                                                                     </div>
-                                                                )}
+                                                                </div>
+                                                            )}
+
+                                                            <div className="flex items-center pt-2 border-t border-white/5">
+                                                                <label className="flex items-center gap-2 text-sm cursor-pointer select-none text-muted-foreground hover:text-white transition-colors">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={Boolean(field.isRequired)}
+                                                                        onChange={(event) => updateField(index, { isRequired: event.target.checked })}
+                                                                        className="w-4 h-4 rounded border-white/20 bg-black/20 text-blue-500 focus:ring-blue-500/20"
+                                                                    />
+                                                                    {t('admin.templateBuilder.requiredField')}
+                                                                </label>
                                                             </div>
                                                         </div>
-                                                    )}
-
-                                                    <div className="flex items-center pt-2 border-t border-white/5">
-                                                        <label className="flex items-center gap-2 text-sm cursor-pointer select-none text-muted-foreground hover:text-white transition-colors">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={Boolean(field.isRequired)}
-                                                                onChange={(event) => updateField(index, { isRequired: event.target.checked })}
-                                                                className="w-4 h-4 rounded border-white/20 bg-black/20 text-blue-500 focus:ring-blue-500/20"
-                                                            />
-                                                            {t('admin.templateBuilder.requiredField')}
-                                                        </label>
-                                                    </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
 
-                                <Button
-                                    onClick={() => addField(section)}
-                                    variant="outline"
-                                    className="w-full py-4 border-dashed border-white/10 hover:border-blue-500/50 hover:bg-blue-500/5 text-muted-foreground hover:text-blue-400 transition-all"
-                                >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    {t('admin.templateBuilder.addFieldToSection', {
-                                        section: getSectionLabel(section),
-                                    })}
-                                </Button>
+                                    <Button
+                                        onClick={() => addField(section)}
+                                        variant="outline"
+                                        className="w-full py-4 border-dashed border-white/10 hover:border-blue-500/50 hover:bg-blue-500/5 text-muted-foreground hover:text-blue-400 transition-all"
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        {t('admin.templateBuilder.addFieldToSection', {
+                                            section: getSectionLabel(section),
+                                        })}
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    );
+                        );
                     })}
 
                     <div className="flex justify-center pt-8">

@@ -6,6 +6,7 @@ import { Layers, ChevronRight } from 'lucide-react';
 import { useCategories, useMarketplaces } from '@/lib/queries';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSearchParams } from 'next/navigation';
+import { getCategoryDisplayName, getMarketplaceDisplayName } from '@/lib/display-labels';
 
 const MARKETPLACE_ORDER = ['autoline', 'machineryline', 'agroline'] as const;
 const CATEGORY_PREVIEW_LIMIT = 12;
@@ -98,7 +99,10 @@ export function CategoriesPageContent() {
   const filteredTopLevel = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return topLevel;
-    return topLevel.filter((category) => category.name.toLowerCase().includes(query));
+    return topLevel.filter((category) => {
+      const displayName = getCategoryDisplayName(category.name).toLowerCase();
+      return category.name.toLowerCase().includes(query) || displayName.includes(query);
+    });
   }, [topLevel, search]);
 
   const visibleTopLevel = useMemo(() => {
@@ -151,7 +155,7 @@ export function CategoriesPageContent() {
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
             >
-              {mp.name}
+              {getMarketplaceDisplayName(mp.name, mp.key)}
               {effectiveMarketplaceId === mp.id && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-bright rounded-full" />
               )}
@@ -182,13 +186,13 @@ export function CategoriesPageContent() {
             <div key={cat.id} className="glass-card card-hover p-6" data-aos="fade-up">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 rounded-xl bg-blue-bright/10 flex items-center justify-center">
-                  <span className="text-xl">{iconForCategory(cat.name)}</span>
+                  <span className="text-xl">{iconForCategory(getCategoryDisplayName(cat.name))}</span>
                 </div>
                 <Link
                   href={`/listings?marketplaceId=${effectiveMarketplaceId ?? ''}&categoryId=${cat.id}`}
                   className="font-heading font-bold text-lg text-[var(--text-primary)] hover:text-blue-bright transition-colors"
                 >
-                  {cat.name}
+                  {getCategoryDisplayName(cat.name)}
                 </Link>
               </div>
 
@@ -201,7 +205,7 @@ export function CategoriesPageContent() {
                       className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors py-1"
                     >
                       <ChevronRight size={14} />
-                      {child.name}
+                      {getCategoryDisplayName(child.name)}
                     </Link>
                   ))}
                 </div>

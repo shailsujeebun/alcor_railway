@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Check, X, Eye, Clock, Trash2 } from 'lucide-react';
 import { useListings, useApproveListing, useRejectListing, useRemoveListing } from '@/lib/queries';
 import type { Listing, ListingStatus } from '@/types/api';
+import { getCategoryDisplayName } from '@/lib/display-labels';
 
 const STATUS_TABS: { label: string; value: ListingStatus }[] = [
   { label: 'На модерації', value: 'SUBMITTED' },
@@ -121,7 +122,7 @@ export function ModerationQueue() {
                       <span>{listing.company.name}</span>
                     )}
                     {listing.category && (
-                      <span>{listing.category.name}</span>
+                      <span>{getCategoryDisplayName(listing.category.name)}</span>
                     )}
                     {listing.priceAmount && (
                       <span>

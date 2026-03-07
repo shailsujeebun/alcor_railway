@@ -3,6 +3,7 @@ import { MapPin, Building2, Calendar, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PriceDisplay } from '@/components/ui/price-display';
 import type { Listing } from '@/types/api';
+import { getCategoryDisplayName } from '@/lib/display-labels';
 
 const conditionLabels: Record<string, string> = {
   NEW: 'Новий',
@@ -61,7 +62,7 @@ export function ListingCard({ listing }: ListingCardProps) {
 
           <div className="flex flex-wrap items-center gap-2 mb-3">
             {listing.brand && <Badge variant="outline">{listing.brand.name}</Badge>}
-            {listing.category && <Badge>{listing.category.name}</Badge>}
+            {listing.category && <Badge>{getCategoryDisplayName(listing.category.name)}</Badge>}
           </div>
 
           <div className="mb-3">

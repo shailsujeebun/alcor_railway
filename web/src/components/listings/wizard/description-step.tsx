@@ -16,6 +16,7 @@ import {
   useCountries,
   useMarketplaces,
 } from '@/lib/queries';
+import { getCategoryDisplayName, getMarketplaceDisplayName } from '@/lib/display-labels';
 
 const CATEGORY_PREVIEW_LIMIT = 12;
 
@@ -127,9 +128,10 @@ export function DescriptionStep() {
   const filteredCategories = useMemo(() => {
     const query = categoryQuery.trim().toLowerCase();
     if (!query) return marketplaceCategories;
-    return marketplaceCategories.filter((category) =>
-      category.name.toLowerCase().includes(query),
-    );
+    return marketplaceCategories.filter((category) => {
+      const displayName = getCategoryDisplayName(category.name).toLowerCase();
+      return category.name.toLowerCase().includes(query) || displayName.includes(query);
+    });
   }, [marketplaceCategories, categoryQuery]);
 
   const visibleCategories = useMemo(() => {
@@ -325,7 +327,7 @@ export function DescriptionStep() {
                         : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                       }`}
                   >
-                    {marketplace.name}
+                    {getMarketplaceDisplayName(marketplace.name, marketplace.key)}
                   </button>
                 );
               })}
@@ -354,8 +356,8 @@ export function DescriptionStep() {
                         : 'border-[var(--border-color)] hover:border-blue-bright/40'
                       }`}
                   >
-                    <p className="text-xl mb-1">{getCategoryIcon(category.name)}</p>
-                    <p className="text-sm font-semibold text-[var(--text-primary)]">{category.name}</p>
+                    <p className="text-xl mb-1">{getCategoryIcon(getCategoryDisplayName(category.name))}</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">{getCategoryDisplayName(category.name)}</p>
                     {category.children && category.children.length > 0 && (
                       <p className="text-xs text-[var(--text-secondary)] mt-1">
                         {category.children.length} subcategories
@@ -406,7 +408,7 @@ export function DescriptionStep() {
                           : 'border-[var(--border-color)] hover:border-blue-bright/40'
                         }`}
                     >
-                      {subcategory.name}
+                      {getCategoryDisplayName(subcategory.name)}
                     </button>
                   );
                 })}

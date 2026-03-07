@@ -110,6 +110,17 @@ export function ContactStep() {
                 setError('Оберіть компанію або створіть нову.');
                 return;
             }
+            const hasEmail = Boolean(form.sellerEmail?.trim());
+            const hasPhone = Boolean(
+              form.sellerPhones
+                ?.split(',')
+                .map((entry) => entry.trim())
+                .filter(Boolean).length,
+            );
+            if (!hasEmail && !hasPhone) {
+                setError('Provide at least one contact method: phone or email.');
+                return;
+            }
             const mediaPayload = media.map((m, i) => ({
                 url: m.url,
                 key: m.key,

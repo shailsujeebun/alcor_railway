@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Clock, Building2, MapPin } from 'lucide-react';
 import { useViewHistory } from '@/lib/queries';
 import type { ViewHistoryItem } from '@/types/api';
+import { getCategoryDisplayName } from '@/lib/display-labels';
 
 export function ViewHistoryList() {
   const [page, setPage] = useState(1);
@@ -67,7 +68,7 @@ export function ViewHistoryList() {
                   {item.listing.title}
                 </h3>
                 <div className="flex items-center gap-3 text-sm text-[var(--text-secondary)] mt-1">
-                  {item.listing.category && <span>{item.listing.category.name}</span>}
+                  {item.listing.category && <span>{getCategoryDisplayName(item.listing.category.name)}</span>}
                   {item.listing.priceAmount && (
                     <span>{item.listing.priceAmount.toLocaleString()} {item.listing.priceCurrency}</span>
                   )}

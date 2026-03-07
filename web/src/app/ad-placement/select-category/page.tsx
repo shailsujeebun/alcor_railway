@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Search, ChevronRight, ChevronDown } from 'lucide-react';
 import { useCategories, useMarketplaces } from '@/lib/queries';
 import type { Category } from '@/types/api';
+import { getCategoryDisplayName, getMarketplaceDisplayName } from '@/lib/display-labels';
 
 // Helper to get marketplace icon by key
 function getMarketplaceIcon(key: string): string {
@@ -63,8 +64,14 @@ export default function SelectCategoryPage() {
     const matchesSearch = (cat: Category): boolean => {
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
-        if (cat.name.toLowerCase().includes(q)) return true;
-        if (cat.children?.some((child) => child.name.toLowerCase().includes(q))) return true;
+        if (
+          cat.name.toLowerCase().includes(q) ||
+          getCategoryDisplayName(cat.name).toLowerCase().includes(q)
+        ) return true;
+        if (cat.children?.some((child) =>
+          child.name.toLowerCase().includes(q) ||
+          getCategoryDisplayName(child.name).toLowerCase().includes(q)
+        )) return true;
         return false;
     };
 
@@ -99,7 +106,9 @@ export default function SelectCategoryPage() {
                         <Link href="/ad-placement" className="hover:text-[var(--text-primary)]">Розміщення оголошення</Link>
                         <span>/</span>
                         <span className="text-[var(--text-primary)]">
-                            {activeMarketplace ? activeMarketplace.name : 'Оберіть розділ'}
+                            {activeMarketplace
+                              ? getMarketplaceDisplayName(activeMarketplace.name, activeMarketplace.key)
+                              : 'Оберіть розділ'}
                         </span>
                     </div>
                 </div>
@@ -152,7 +161,7 @@ export default function SelectCategoryPage() {
                             >
                                 <span className="flex items-center gap-2">
                                     <span>{getMarketplaceIcon(mp.key)}</span>
-                                    {mp.name}
+                                    {getMarketplaceDisplayName(mp.name, mp.key)}
                                 </span>
                                 {effectiveMarketplaceId === mp.id && (
                                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-bright" />
@@ -186,11 +195,11 @@ export default function SelectCategoryPage() {
                                         className="w-full flex items-center gap-3 text-left group"
                                     >
                                         <div className="w-12 h-12 rounded-xl bg-blue-bright/10 flex items-center justify-center text-2xl flex-shrink-0">
-                                            {getCategoryIcon(category.name)}
+                                            {getCategoryIcon(getCategoryDisplayName(category.name))}
                                         </div>
                                         <div>
                                             <p className="font-heading font-bold text-[var(--text-primary)] group-hover:text-blue-bright transition-colors">
-                                                {category.name}
+                                                {getCategoryDisplayName(category.name)}
                                             </p>
                                             <p className="text-xs text-[var(--text-secondary)]">Розмістити оголошення →</p>
                                         </div>
@@ -203,11 +212,11 @@ export default function SelectCategoryPage() {
                                             className="w-full flex items-center gap-3 text-left group"
                                         >
                                             <div className="w-12 h-12 rounded-xl bg-blue-bright/10 flex items-center justify-center text-2xl flex-shrink-0">
-                                                {getCategoryIcon(category.name)}
+                                                {getCategoryIcon(getCategoryDisplayName(category.name))}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-heading font-bold text-[var(--text-primary)] group-hover:text-blue-bright transition-colors">
-                                                    {category.name}
+                                                    {getCategoryDisplayName(category.name)}
                                                 </p>
                                                 <p className="text-xs text-[var(--text-secondary)]">
                                                     {category.children?.length} підкатегорій
@@ -224,7 +233,14 @@ export default function SelectCategoryPage() {
                                         {expandedCategories.has(category.id) && (
                                             <div className="mt-3 ml-15 space-y-1 border-t border-[var(--border-color)] pt-3">
                                                 {category.children
-                                                    ?.filter((child) => !searchQuery || child.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                                                    ?.filter((child) => {
+                                                      if (!searchQuery) return true;
+                                                      const query = searchQuery.toLowerCase();
+                                                      return (
+                                                        child.name.toLowerCase().includes(query) ||
+                                                        getCategoryDisplayName(child.name).toLowerCase().includes(query)
+                                                      );
+                                                    })
                                                     .map((child) => (
                                                         <button
                                                             key={child.id}
@@ -232,7 +248,7 @@ export default function SelectCategoryPage() {
                                                             className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--text-secondary)] hover:text-blue-bright hover:bg-blue-bright/5 transition-colors text-left"
                                                         >
                                                             <ChevronRight size={14} className="flex-shrink-0" />
-                                                            {child.name}
+                                                            {getCategoryDisplayName(child.name)}
                                                         </button>
                                                     ))}
                                             </div>

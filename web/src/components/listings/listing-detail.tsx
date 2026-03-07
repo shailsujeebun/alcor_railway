@@ -25,6 +25,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FavoriteButton } from './favorite-button';
 import { ContactSellerButton } from './contact-seller-button';
+import { getCategoryDisplayName } from '@/lib/display-labels';
 
 const conditionLabels: Record<string, string> = {
   NEW: 'Новий',
@@ -261,7 +262,7 @@ export function ListingDetail({ id }: { id: string }) {
               )}
               {listing.listingType && <Badge>{listingTypeLabels[listing.listingType] ?? listing.listingType}</Badge>}
               {listing.brand && <Badge variant="outline">{listing.brand.name}</Badge>}
-              {listing.category && <Badge variant="outline">{listing.category.name}</Badge>}
+              {listing.category && <Badge variant="outline">{getCategoryDisplayName(listing.category.name)}</Badge>}
             </div>
             <div className="flex items-center gap-2">
               {listing.externalUrl && (

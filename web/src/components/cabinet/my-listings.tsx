@@ -16,6 +16,7 @@ import {
 import { useAuthStore } from '@/stores/auth-store';
 import type { Listing, ListingStatus } from '@/types/api';
 import { Modal } from '@/components/ui/modal';
+import { getCategoryDisplayName } from '@/lib/display-labels';
 
 const STATUS_TABS: { label: string; value: string }[] = [
   { label: 'Всі', value: '' },
@@ -142,11 +143,10 @@ export function MyListings() {
           <button
             key={tab.value}
             onClick={() => { setActiveTab(tab.value); setPage(1); }}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              activeTab === tab.value
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${activeTab === tab.value
                 ? 'gradient-cta text-white'
                 : 'glass-card text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-            }`}
+              }`}
           >
             {tab.label}
           </button>
@@ -193,7 +193,7 @@ export function MyListings() {
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
-                    {listing.category && <span>{listing.category.name}</span>}
+                    {listing.category && <span>{getCategoryDisplayName(listing.category.name)}</span>}
                     {listing.priceAmount && (
                       <span>{listing.priceAmount.toLocaleString()} {listing.priceCurrency}</span>
                     )}
@@ -288,11 +288,10 @@ export function MyListings() {
             <button
               key={p}
               onClick={() => setPage(p)}
-              className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
-                page === p
+              className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${page === p
                   ? 'gradient-cta text-white'
                   : 'glass-card text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-              }`}
+                }`}
             >
               {p}
             </button>

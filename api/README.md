@@ -107,3 +107,19 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
   - `pnpm run test` passing
   - `pnpm run test:security` passing
   - `pnpm run build` passing.
+
+## Project Update - 2026-03-05
+
+- Listing moderation/draft validation was aligned with the "important-only" required policy for dynamic attributes:
+  - required dynamic keys enforced in validation: `brand`, `model`, `year_of_manufacture_year` (and `year` alias), `condition`.
+- Submit-for-moderation contact validation was hardened:
+  - now requires at least one contact channel (email or phone), checking both direct listing fields and linked seller contact relation.
+- Motorized template defaults now support future validity years for technical inspection:
+  - `technical_inspection_year` switched to a future-inclusive year set (`current year + 15`).
+
+### Verification snapshot (2026-03-05)
+- `pnpm run test` passing
+- `pnpm run test:security` passing
+- `pnpm run test:e2e` passing
+- build-equivalent compile flow passing:
+  - `DATABASE_URL=postgresql://dummy pnpm exec prisma generate && pnpm exec nest build`
