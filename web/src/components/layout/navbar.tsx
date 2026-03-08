@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { MAIN_LANDING_URL } from '@/lib/landing';
 import { useAuthStore } from '@/stores/auth-store';
 import { logoutUser } from '@/lib/auth-api';
 import { MobileMenu } from './mobile-menu';
@@ -36,6 +37,7 @@ export function Navbar() {
     { href: '/categories', label: t('nav.categories') },
     ...(isAdminUser ? [{ href: '/admin', label: t('nav.admin') }] : []),
   ];
+  const homeLogoHref = MAIN_LANDING_URL;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -64,7 +66,7 @@ export function Navbar() {
     <>
       <header className="site-navbar sticky top-0 z-50 border-b border-[var(--border-color)] bg-[color:var(--bg-secondary)]/90 backdrop-blur-xl">
         <div className="container-main flex items-center justify-between h-18 min-h-[72px]">
-          <Link href="/" className="logo-link flex items-center">
+          <Link href={homeLogoHref} className="logo-link flex items-center">
             <Image
               src="/alcor-logo.png"
               alt={t('brand.logoAlt')}

@@ -4,16 +4,18 @@ import Link from 'next/link';
 import { Phone, Mail, MapPin } from 'lucide-react';
 import Image from 'next/image';
 import { useTranslation } from '../providers/translation-provider';
+import { MAIN_LANDING_URL } from '@/lib/landing';
 
 export function Footer() {
   const { t } = useTranslation();
+  const homeLogoHref = MAIN_LANDING_URL;
 
   return (
     <footer className="border-t border-[var(--border-color)]" style={{ background: 'var(--bg-secondary)' }}>
       <div className="container-main py-10 sm:py-12 lg:py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
           <div className="md:col-span-2 lg:col-span-5">
-            <div className="logo-link flex items-center gap-3 mb-4">
+            <Link href={homeLogoHref} className="logo-link flex items-center gap-3 mb-4">
               <Image
                 src="/alcor-logo.png"
                 alt={t('brand.logoAlt')}
@@ -22,7 +24,7 @@ export function Footer() {
                 className="logo-image h-10 w-auto"
               />
               <span className="logo-text font-heading font-bold text-xl">АЛЬКОР</span>
-            </div>
+            </Link>
             <p className="text-[var(--text-secondary)] text-sm leading-relaxed max-w-xl">
               {t('footer.description')}
             </p>
@@ -34,19 +36,19 @@ export function Footer() {
             </h4>
             <ul className="space-y-3">
               <li>
-                <Link href="/pricing" className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors">
+                <span className="text-sm text-[var(--text-secondary)]">
                   {t('footer.autoLeasing')}
-                </Link>
+                </span>
               </li>
               <li>
-                <Link href="/pricing" className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors">
+                <span className="text-sm text-[var(--text-secondary)]">
                   {t('footer.businessLoans')}
-                </Link>
+                </span>
               </li>
               <li>
-                <Link href="/pricing" className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors">
+                <span className="text-sm text-[var(--text-secondary)]">
                   {t('footer.factoring')}
-                </Link>
+                </span>
               </li>
             </ul>
           </div>

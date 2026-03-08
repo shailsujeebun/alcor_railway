@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react';
 import { useMarketplaces } from '@/lib/queries';
 import { getMarketplaceDisplayName } from '@/lib/display-labels';
 
-const MARKETPLACE_ORDER = ['autoline', 'machineryline', 'agroline'] as const;
+const MARKETPLACE_ORDER = ['agroline', 'autoline', 'machineryline'] as const;
 
 function marketplaceIcon(key: string): string {
   if (key === 'autoline') return '🚛';

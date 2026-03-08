@@ -8,8 +8,45 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSearchParams } from 'next/navigation';
 import { getCategoryDisplayName, getMarketplaceDisplayName } from '@/lib/display-labels';
 
-const MARKETPLACE_ORDER = ['autoline', 'machineryline', 'agroline'] as const;
+const MARKETPLACE_ORDER = ['agroline', 'autoline', 'machineryline'] as const;
 const CATEGORY_PREVIEW_LIMIT = 12;
+
+function shouldHideCategory(name: string): boolean {
+  const normalized = name.trim().toLowerCase();
+  const hiddenKeywords = [
+    'airport equipment',
+    'airport',
+    'campers',
+    'camper',
+    'air transport',
+    'water transport',
+    'spare part',
+    'service',
+    'tires and wheels',
+    'tyres and wheels',
+    'tires & wheels',
+    'tyres & wheels',
+    'alternative energy sources',
+    'raw material',
+    'tool',
+    'mining equipment',
+    'equipment',
+    'equipments',
+    'industrial equipment',
+  ];
+
+  return hiddenKeywords.some((keyword) => normalized.includes(keyword));
+}
+
+function dedupeByDisplayName<T extends { name: string }>(items: T[]): T[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = getCategoryDisplayName(item.name).trim().toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 function iconForCategory(name: string): string {
   const value = name.toLowerCase();
@@ -68,14 +105,11 @@ export function CategoriesPageContent() {
   const orderedMarketplaces = useMemo(() => {
     if (!marketplaces) return [];
     const byKey = new Map(marketplaces.map((marketplace) => [marketplace.key, marketplace]));
-    const preferred = MARKETPLACE_ORDER
+    return MARKETPLACE_ORDER
       .map((key) => byKey.get(key))
       .filter((marketplace): marketplace is NonNullable<typeof marketplace> =>
         Boolean(marketplace),
       );
-    const preferredIds = new Set(preferred.map((marketplace) => marketplace!.id));
-    const remainder = marketplaces.filter((marketplace) => !preferredIds.has(marketplace.id));
-    return [...preferred, ...remainder];
   }, [marketplaces]);
 
   useEffect(() => {
@@ -98,8 +132,11 @@ export function CategoriesPageContent() {
 
   const filteredTopLevel = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return topLevel;
-    return topLevel.filter((category) => {
+    const visibleTopLevel = dedupeByDisplayName(
+      topLevel.filter((category) => !shouldHideCategory(category.name)),
+    );
+    if (!query) return visibleTopLevel;
+    return visibleTopLevel.filter((category) => {
       const displayName = getCategoryDisplayName(category.name).toLowerCase();
       return category.name.toLowerCase().includes(query) || displayName.includes(query);
     });
@@ -198,7 +235,13 @@ export function CategoriesPageContent() {
 
               {cat.children && cat.children.length > 0 && (
                 <div className="space-y-2 ml-16">
-                  {cat.children.map((child) => (
+                  {cat.children
+                    .filter((child) => !shouldHideCategory(child.name))
+                    .filter((child, index, arr) => {
+                      const key = getCategoryDisplayName(child.name).trim().toLowerCase();
+                      return arr.findIndex((entry) => getCategoryDisplayName(entry.name).trim().toLowerCase() === key) === index;
+                    })
+                    .map((child) => (
                     <Link
                       key={child.id}
                       href={`/listings?marketplaceId=${effectiveMarketplaceId ?? ''}&categoryId=${child.id}`}

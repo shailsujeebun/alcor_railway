@@ -1,7 +1,6 @@
 import Link from 'next/link';
-import { MapPin, Package, ShieldCheck, Clock } from 'lucide-react';
+import { MapPin, Package, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { StarRating } from '@/components/ui/star-rating';
 import type { Company, CompanyMedia } from '@/types/api';
 
 interface CompanyCardProps {
@@ -35,30 +34,17 @@ export function CompanyCard({ company }: CompanyCardProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mb-3">
-          <StarRating rating={company.ratingAvg} size={14} />
-          <span className="text-xs text-[var(--text-secondary)]">
-            ({company.reviewsCount})
-          </span>
-        </div>
-
         <div className="flex flex-wrap gap-2 mb-3">
           {company.isVerified && <Badge variant="success"><ShieldCheck size={12} className="mr-1" /> Верифікований</Badge>}
           {company.isOfficialDealer && <Badge variant="default">Офіційний дилер</Badge>}
           {company.isManufacturer && <Badge variant="warning">Виробник</Badge>}
         </div>
 
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-[var(--text-secondary)] mt-auto items-start">
+        <div className="text-xs text-[var(--text-secondary)] mt-auto">
           <span className="flex items-center gap-1">
             <Package size={12} />
             В продажу: {company.listingsCount} оголошень
           </span>
-          {company.yearsOnPlatform != null && (
-            <span className="flex items-center gap-1">
-              <Clock size={12} />
-              {company.yearsOnPlatform} р. на платформі
-            </span>
-          )}
         </div>
       </div>
     </Link>

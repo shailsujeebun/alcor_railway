@@ -26,17 +26,17 @@ export function Hero() {
       <div className="container-main relative z-10 py-12 md:py-20">
         <div className="max-w-3xl mx-auto text-center" data-aos="fade-up">
           <div className="inline-block px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-semibold bg-blue-bright/10 text-blue-bright border border-blue-bright/20 mb-6 md:mb-8">
-            B2B Маркетплейс промислового обладнання
+            Marketplace of machinery and equipment.
           </div>
 
           <h1 className="font-heading font-extrabold text-3xl sm:text-4xl md:text-5xl lg:text-7xl leading-tight mb-4 md:mb-6">
-            Знайдіть потрібне{' '}
-            <span className="gradient-text">обладнання</span>
-            {' '}для вашого бізнесу
+            Find the necessary{' '}
+            <span className="gradient-text">machinery and equipment</span>
+            {' '}for your business
           </h1>
 
           <p className="text-base md:text-lg lg:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed">
-            Зв'яжіться з перевіреними постачальниками, порівняйте промислове обладнання та розвивайте свій бізнес на нашому надійному маркетплейсі.
+            Contact verified suppliers, compare industrial equipment and grow your business on our reliable marketplace.
           </p>
 
           {/* Search bar */}
