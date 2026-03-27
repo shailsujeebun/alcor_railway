@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Star } from 'lucide-react';
 import { useCreateReview } from '@/lib/queries';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/components/providers/translation-provider';
 
 interface ReviewFormProps {
   companyId: string;
@@ -11,6 +12,7 @@ interface ReviewFormProps {
 }
 
 export function ReviewForm({ companyId, onSuccess }: ReviewFormProps) {
+  const { t } = useTranslation();
   const [authorName, setAuthorName] = useState('');
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -37,19 +39,19 @@ export function ReviewForm({ companyId, onSuccess }: ReviewFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Ваше ім&apos;я *</label>
+        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">{t('companies.reviewForm.nameLabel')}</label>
         <input
           type="text"
           required
           value={authorName}
           onChange={(e) => setAuthorName(e.target.value)}
           className="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder:text-gray-dim focus:outline-none focus:ring-2 focus:ring-blue-bright/40"
-          placeholder="Іван Петренко"
+          placeholder={t('companies.reviewForm.namePlaceholder')}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Оцінка *</label>
+        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">{t('companies.reviewForm.ratingLabel')}</label>
         <div className="flex gap-1">
           {Array.from({ length: 5 }, (_, i) => (
             <button
@@ -75,24 +77,24 @@ export function ReviewForm({ companyId, onSuccess }: ReviewFormProps) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Заголовок</label>
+        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">{t('companies.reviewForm.titleLabel')}</label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder:text-gray-dim focus:outline-none focus:ring-2 focus:ring-blue-bright/40"
-          placeholder="Короткий опис"
+          placeholder={t('companies.reviewForm.titlePlaceholder')}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Відгук</label>
+        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">{t('companies.reviewForm.bodyLabel')}</label>
         <textarea
           rows={4}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           className="w-full px-4 py-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder:text-gray-dim focus:outline-none focus:ring-2 focus:ring-blue-bright/40 resize-none"
-          placeholder="Поділіться своїм досвідом..."
+          placeholder={t('companies.reviewForm.bodyPlaceholder')}
         />
       </div>
 
@@ -101,7 +103,7 @@ export function ReviewForm({ companyId, onSuccess }: ReviewFormProps) {
         disabled={isPending || !authorName.trim() || rating === 0}
         className="w-full gradient-cta text-white py-3 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
       >
-        {isPending ? 'Надсилання...' : 'Надіслати відгук'}
+        {isPending ? t('companies.reviewForm.submitting') : t('companies.reviewForm.submit')}
       </button>
     </form>
   );

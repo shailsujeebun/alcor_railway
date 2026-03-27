@@ -251,3 +251,27 @@ The API is failing to start due to two critical issues identified from the termi
   - `pnpm -C api build` blocked by missing `cross-env` binary
   - `pnpm -C web build` blocked by external Google Fonts fetch restrictions
   - `pnpm -C api test:e2e` blocked by sandbox port binding (`listen EPERM`).
+
+## 9. Update - 2026-03-27 (Marketplace Translation Coverage + Main-Site Linking)
+
+- Expanded dictionary-based translation coverage for the main marketplace user flow:
+  - landing sections
+  - company catalog filters/grid
+  - company detail tabs, badges, empty states, and review UI
+  - shared listing and company cards.
+- Added matching `en` and `uk` message keys so the language switch translates those core screens directly instead of depending on fallback DOM translation.
+- Aligned marketplace shell navigation with the main Alcor website:
+  - clicking the marketplace logo now returns to the main website
+  - footer service links now open the main-site leasing, lending, and factoring pages.
+- Made footer contacts interactive:
+  - address opens a map lookup
+  - phone uses `tel:`
+  - email uses `mailto:`.
+
+### Verification snapshot (2026-03-27)
+
+- Passing:
+  - `pnpm --dir web exec eslint` for updated translation/footer/navigation files
+  - `pnpm --dir web run i18n:guard`
+- Runtime:
+  - marketplace frontend responding on `http://localhost:3001`.

@@ -4,6 +4,7 @@ import { CompanyCard } from '@/components/cards/company-card';
 import { CompanyCardSkeleton } from '@/components/ui/skeleton';
 import { Pagination } from '@/components/ui/pagination';
 import { Building2 } from 'lucide-react';
+import { useTranslation } from '@/components/providers/translation-provider';
 import type { PaginatedResponse, Company } from '@/types/api';
 
 interface CompaniesGridProps {
@@ -14,11 +15,12 @@ interface CompaniesGridProps {
 }
 
 export function CompaniesGrid({ data, isLoading, page, onPageChange }: CompaniesGridProps) {
+  const { t } = useTranslation();
   return (
     <div>
       {data && (
         <div className="mb-6 text-sm text-[var(--text-secondary)]">
-          Показано {data.data.length} з {data.meta.total} компаній
+          {t('companies.shownCount', { shown: data.data.length, total: data.meta.total })}
         </div>
       )}
 
@@ -33,8 +35,8 @@ export function CompaniesGrid({ data, isLoading, page, onPageChange }: Companies
       {!isLoading && (!data?.data || data.data.length === 0) && (
         <div className="text-center py-20">
           <Building2 size={48} className="mx-auto text-blue-bright/20 mb-4" />
-          <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] mb-2">Компаній не знайдено</h3>
-          <p className="text-sm text-[var(--text-secondary)]">Спробуйте змінити фільтри.</p>
+          <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] mb-2">{t('companies.emptyTitle')}</h3>
+          <p className="text-sm text-[var(--text-secondary)]">{t('companies.emptyDescription')}</p>
         </div>
       )}
 

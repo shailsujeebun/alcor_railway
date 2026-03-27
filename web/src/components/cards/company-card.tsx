@@ -1,6 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import { MapPin, Package, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from '@/components/providers/translation-provider';
 import type { Company, CompanyMedia } from '@/types/api';
 
 interface CompanyCardProps {
@@ -9,6 +12,7 @@ interface CompanyCardProps {
 
 export function CompanyCard({ company }: CompanyCardProps) {
   const logo = company.media?.find((m: CompanyMedia) => m.kind === 'LOGO');
+  const { t } = useTranslation();
 
   return (
     <Link href={`/companies/${company.slug}`} className="block h-full">
@@ -35,15 +39,15 @@ export function CompanyCard({ company }: CompanyCardProps) {
         </div>
 
         <div className="flex flex-wrap gap-2 mb-3">
-          {company.isVerified && <Badge variant="success"><ShieldCheck size={12} className="mr-1" /> Верифікований</Badge>}
-          {company.isOfficialDealer && <Badge variant="default">Офіційний дилер</Badge>}
-          {company.isManufacturer && <Badge variant="warning">Виробник</Badge>}
+          {company.isVerified && <Badge variant="success"><ShieldCheck size={12} className="mr-1" /> {t('companies.verified')}</Badge>}
+          {company.isOfficialDealer && <Badge variant="default">{t('companies.officialDealer')}</Badge>}
+          {company.isManufacturer && <Badge variant="warning">{t('companies.manufacturer')}</Badge>}
         </div>
 
         <div className="text-xs text-[var(--text-secondary)] mt-auto">
           <span className="flex items-center gap-1">
             <Package size={12} />
-            В продажу: {company.listingsCount} оголошень
+            {t('companies.card.listingsForSale', { count: company.listingsCount })}
           </span>
         </div>
       </div>

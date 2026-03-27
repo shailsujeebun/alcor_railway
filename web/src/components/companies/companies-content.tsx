@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { useCompanies } from '@/lib/queries';
+import { useTranslation } from '@/components/providers/translation-provider';
 import { CompaniesFilters } from './companies-filters';
 import { CompaniesGrid } from './companies-grid';
 
@@ -30,6 +31,7 @@ const emptyFilters: FiltersState = {
 export function CompaniesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { t } = useTranslation();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const [filters, setFilters] = useState<FiltersState>(() => {
@@ -75,9 +77,9 @@ export function CompaniesContent() {
     <div className="container-main py-10">
       <div className="mb-8">
         <h1 className="font-heading font-extrabold text-3xl md:text-4xl text-[var(--text-primary)]">
-          Каталог <span className="gradient-text">компаній</span>
+          {t('companies.catalogTitlePrefix')} <span className="gradient-text">{t('companies.catalogTitleAccent')}</span>
         </h1>
-        <p className="mt-2 text-[var(--text-secondary)]">Знайдіть перевірених постачальників та виробників.</p>
+        <p className="mt-2 text-[var(--text-secondary)]">{t('companies.catalogDescription')}</p>
       </div>
 
       <button
@@ -85,7 +87,7 @@ export function CompaniesContent() {
         className="lg:hidden mb-6 glass-card px-4 py-2.5 text-sm font-medium flex items-center gap-2 text-[var(--text-primary)]"
       >
         <SlidersHorizontal size={16} />
-        Фільтри
+        {t('companies.filtersButton')}
       </button>
 
       <div className="flex flex-col lg:flex-row gap-8">
@@ -100,7 +102,7 @@ export function CompaniesContent() {
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileFiltersOpen(false)} />
             <div className="absolute left-0 top-0 h-full w-[85%] max-w-[360px] bg-[var(--bg-primary)] p-6 overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="font-heading font-bold text-lg">Фільтри</h3>
+                <h3 className="font-heading font-bold text-lg">{t('companies.filtersTitle')}</h3>
                 <button onClick={() => setMobileFiltersOpen(false)} className="p-2 text-[var(--text-secondary)]">
                   <X size={20} />
                 </button>

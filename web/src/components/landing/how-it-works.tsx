@@ -1,38 +1,42 @@
+'use client';
+
+import { useTranslation } from '@/components/providers/translation-provider';
 import { Search, GitCompare, MessageCircle, Handshake } from 'lucide-react';
 
-const steps = [
-  {
-    icon: Search,
-    title: 'Пошук обладнання',
-    description: 'Переглядайте тисячі оголошень у різних категоріях та знаходьте саме те, що вам потрібно.',
-  },
-  {
-    icon: GitCompare,
-    title: 'Порівняння постачальників',
-    description: 'Вивчайте профілі компаній, рейтинги та сертифікати, щоб знайти найкращу пропозицію.',
-  },
-  {
-    icon: MessageCircle,
-    title: 'Прямий контакт',
-    description: 'Зв\'яжіться з постачальниками напряму та обговоріть ваші вимоги.',
-  },
-  {
-    icon: Handshake,
-    title: 'Укладання угоди',
-    description: 'Узгодьте умови, організуйте логістику та розвивайте свій бізнес з упевненістю.',
-  },
-];
-
 export function HowItWorks() {
+  const { t } = useTranslation();
+  const steps = [
+    {
+      icon: Search,
+      title: t('landing.steps.searchTitle'),
+      description: t('landing.steps.searchDescription'),
+    },
+    {
+      icon: GitCompare,
+      title: t('landing.steps.compareTitle'),
+      description: t('landing.steps.compareDescription'),
+    },
+    {
+      icon: MessageCircle,
+      title: t('landing.steps.contactTitle'),
+      description: t('landing.steps.contactDescription'),
+    },
+    {
+      icon: Handshake,
+      title: t('landing.steps.dealTitle'),
+      description: t('landing.steps.dealDescription'),
+    },
+  ];
+
   return (
     <section className="section-padding" style={{ background: 'var(--bg-secondary)' }}>
       <div className="container-main">
         <div className="text-center mb-10 md:mb-16" data-aos="fade-up">
           <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold bg-orange/10 text-orange border border-orange/20 mb-4">
-            Процес
+            {t('landing.processBadge')}
           </span>
           <h2 className="font-heading font-extrabold text-2xl sm:text-3xl md:text-4xl text-[var(--text-primary)]">
-            Як це <span className="gradient-text">працює</span>
+            {t('landing.processTitlePrefix')} <span className="gradient-text">{t('landing.processTitleAccent')}</span>
           </h2>
         </div>
 

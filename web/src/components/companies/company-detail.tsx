@@ -13,12 +13,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ReviewList } from './review-list';
 import { ReviewForm } from './review-form';
 import { Modal } from '@/components/ui/modal';
+import { useTranslation } from '@/components/providers/translation-provider';
 import type { CompanyMedia, Listing } from '@/types/api';
 
 type Tab = 'listings' | 'reviews' | 'gallery';
 
 export function CompanyDetail({ slug }: { slug: string }) {
   const { data: company, isLoading, error } = useCompanyDetail(slug);
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>('listings');
   const [listingsPage, setListingsPage] = useState(1);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
@@ -47,8 +49,8 @@ export function CompanyDetail({ slug }: { slug: string }) {
     return (
       <div className="container-main py-20 text-center">
         <Building2 size={48} className="mx-auto text-blue-bright/20 mb-4" />
-        <h2 className="font-heading font-bold text-xl text-[var(--text-primary)]">Компанію не знайдено</h2>
-        <Link href="/companies" className="text-blue-bright mt-4 inline-block">Назад до компаній</Link>
+        <h2 className="font-heading font-bold text-xl text-[var(--text-primary)]">{t('companies.notFoundTitle')}</h2>
+        <Link href="/companies" className="text-blue-bright mt-4 inline-block">{t('companies.backToCompanies')}</Link>
       </div>
     );
   }
@@ -61,7 +63,7 @@ export function CompanyDetail({ slug }: { slug: string }) {
     <div className="container-main py-10">
       <Link href="/companies" className="inline-flex items-center gap-1 text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors mb-6">
         <ChevronLeft size={16} />
-        Назад до компаній
+        {t('companies.backToCompanies')}
       </Link>
 
       {/* Header */}
@@ -97,12 +99,15 @@ export function CompanyDetail({ slug }: { slug: string }) {
             <div className="flex items-center gap-2">
               <StarRating rating={company.ratingAvg} size={16} />
               <span className="text-sm text-[var(--text-secondary)]">
-                {company.ratingAvg.toFixed(1)} ({company.reviewsCount} відгуків)
+                {t('companies.reviewsCount', {
+                  rating: company.ratingAvg.toFixed(1),
+                  count: company.reviewsCount,
+                })}
               </span>
             </div>
-            {company.isVerified && <Badge variant="success"><ShieldCheck size={12} className="mr-1" /> Верифікований</Badge>}
-            {company.isOfficialDealer && <Badge>Офіційний дилер</Badge>}
-            {company.isManufacturer && <Badge variant="warning">Виробник</Badge>}
+            {company.isVerified && <Badge variant="success"><ShieldCheck size={12} className="mr-1" /> {t('companies.verified')}</Badge>}
+            {company.isOfficialDealer && <Badge>{t('companies.officialDealer')}</Badge>}
+            {company.isManufacturer && <Badge variant="warning">{t('companies.manufacturer')}</Badge>}
           </div>
 
           {company.ratingSource && (
@@ -113,13 +118,13 @@ export function CompanyDetail({ slug }: { slug: string }) {
             {company.yearsOnPlatform != null && (
               <span className="flex items-center gap-1">
                 <Clock size={14} />
-                {company.yearsOnPlatform} років на платформі
+                {t('companies.yearsOnPlatform', { count: company.yearsOnPlatform })}
               </span>
             )}
             {company.yearsOnMarket != null && (
               <span className="flex items-center gap-1">
                 <Building2 size={14} />
-                {company.yearsOnMarket} років на ринку
+                {t('companies.yearsOnMarket', { count: company.yearsOnMarket })}
               </span>
             )}
           </div>
@@ -150,7 +155,7 @@ export function CompanyDetail({ slug }: { slug: string }) {
           }`}
         >
           <Package size={16} className="inline mr-2" />
-          Оголошення ({company.listingsCount})
+          {t('companies.tabs.listings')} ({company.listingsCount})
           {activeTab === 'listings' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-bright rounded-full" />}
         </button>
         <button
@@ -160,7 +165,7 @@ export function CompanyDetail({ slug }: { slug: string }) {
           }`}
         >
           <Star size={16} className="inline mr-2" />
-          Відгуки ({company.reviewsCount})
+          {t('companies.tabs.reviews')} ({company.reviewsCount})
           {activeTab === 'reviews' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-bright rounded-full" />}
         </button>
         {galleryPhotos.length > 0 && (
@@ -171,7 +176,7 @@ export function CompanyDetail({ slug }: { slug: string }) {
             }`}
           >
             <ImageIcon size={16} className="inline mr-2" />
-            Галерея ({galleryPhotos.length})
+            {t('companies.tabs.gallery')} ({galleryPhotos.length})
             {activeTab === 'gallery' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-bright rounded-full" />}
           </button>
         )}
@@ -190,7 +195,7 @@ export function CompanyDetail({ slug }: { slug: string }) {
           {!listingsLoading && (!listingsData?.data || listingsData.data.length === 0) && (
             <div className="text-center py-16">
               <Package size={40} className="mx-auto text-blue-bright/20 mb-3" />
-              <p className="text-[var(--text-secondary)]">У цієї компанії ще немає оголошень.</p>
+              <p className="text-[var(--text-secondary)]">{t('companies.noListings')}</p>
             </div>
           )}
           {listingsData && listingsData.meta.totalPages > 1 && (
@@ -206,12 +211,12 @@ export function CompanyDetail({ slug }: { slug: string }) {
               onClick={() => setReviewModalOpen(true)}
               className="gradient-cta text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
             >
-              Написати відгук
+              {t('companies.writeReview')}
             </button>
           </div>
           <ReviewList reviews={reviewsData?.data ?? []} isLoading={reviewsLoading} />
 
-          <Modal open={reviewModalOpen} onClose={() => setReviewModalOpen(false)} title="Написати відгук">
+          <Modal open={reviewModalOpen} onClose={() => setReviewModalOpen(false)} title={t('companies.reviewModalTitle')}>
             <ReviewForm companyId={company.id} onSuccess={() => setReviewModalOpen(false)} />
           </Modal>
         </div>

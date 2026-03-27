@@ -70,3 +70,20 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - `pnpm run lint` passing
 - `pnpm exec tsc --noEmit` passing
 - `pnpm run i18n:guard` passing
+
+## Project Update - 2026-03-27
+
+- Expanded translation coverage for the core marketplace user flow:
+  - landing sections
+  - company catalog filters/grid
+  - company detail tabs, badges, and review UI
+  - shared listing and company cards.
+- Added missing message keys in `web/src/i18n/messages/en.ts` and `web/src/i18n/messages/uk.ts`.
+- Updated main-site routing behavior from the marketplace shell:
+  - logo now links back to the main Alcor website
+  - footer service links now open the main-site leasing, lending, and factoring pages
+  - footer address, phone, and email are clickable.
+
+### Validation
+- `pnpm --dir web exec eslint` passing for changed files
+- `pnpm --dir web run i18n:guard` passing

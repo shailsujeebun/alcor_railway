@@ -1,7 +1,10 @@
+'use client';
+
 import { StarRating } from '@/components/ui/star-rating';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/utils';
 import { MessageSquare } from 'lucide-react';
+import { useTranslation } from '@/components/providers/translation-provider';
 import type { CompanyReview } from '@/types/api';
 
 interface ReviewListProps {
@@ -10,6 +13,7 @@ interface ReviewListProps {
 }
 
 export function ReviewList({ reviews, isLoading }: ReviewListProps) {
+  const { t } = useTranslation();
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -28,7 +32,7 @@ export function ReviewList({ reviews, isLoading }: ReviewListProps) {
     return (
       <div className="text-center py-16">
         <MessageSquare size={40} className="mx-auto text-blue-bright/20 mb-3" />
-        <p className="text-[var(--text-secondary)]">Відгуків ще немає. Будьте першим!</p>
+        <p className="text-[var(--text-secondary)]">{t('companies.noReviews')}</p>
       </div>
     );
   }

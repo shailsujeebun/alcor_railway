@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useMarketplaces } from '@/lib/queries';
 import { getMarketplaceDisplayName } from '@/lib/display-labels';
+import { useTranslation } from '@/components/providers/translation-provider';
 
 const MARKETPLACE_ORDER = ['agroline', 'autoline', 'machineryline'] as const;
 
@@ -23,6 +24,7 @@ function marketplaceSubtitle(key: string): string {
 
 export function CategoriesGrid() {
   const { data: marketplaces = [] } = useMarketplaces();
+  const { t } = useTranslation();
 
   const ordered = MARKETPLACE_ORDER
     .map((key) => marketplaces.find((marketplace) => marketplace.key === key))
@@ -35,13 +37,13 @@ export function CategoriesGrid() {
       <div className="container-main">
         <div className="text-center mb-8 md:mb-12" data-aos="fade-up" suppressHydrationWarning>
           <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold bg-orange/10 text-orange border border-orange/20 mb-4" suppressHydrationWarning>
-            Категорії
+            {t('landing.categoriesBadge')}
           </span>
           <h2 className="font-heading font-extrabold text-2xl sm:text-3xl md:text-4xl text-[var(--text-primary)]" suppressHydrationWarning>
-            Перегляд за <span className="gradient-text">категоріями</span>
+            {t('landing.categoriesTitlePrefix')} <span className="gradient-text">{t('landing.categoriesTitleAccent')}</span>
           </h2>
           <p className="mt-3 text-[var(--text-secondary)]" suppressHydrationWarning>
-            Оберіть маркетплейс, щоб відкрити повний список категорій.
+            {t('landing.categoriesDescription')}
           </p>
         </div>
 
@@ -59,12 +61,12 @@ export function CategoriesGrid() {
                 {getMarketplaceDisplayName(marketplace.name, marketplace.key)}
               </h3>
               <p className="text-sm text-[var(--text-secondary)] mt-2">{marketplaceSubtitle(marketplace.key)}</p>
-              <p className="text-xs text-blue-bright mt-4">Open all categories</p>
+              <p className="text-xs text-blue-bright mt-4">{t('landing.categoriesOpenAll')}</p>
             </Link>
           ))}
           {ordered.length === 0 && (
             <div className="col-span-full text-center py-8 text-[var(--text-secondary)]">
-              Маркетплейси з'являться незабаром.
+              {t('landing.categoriesEmpty')}
             </div>
           )}
         </div>
@@ -74,7 +76,7 @@ export function CategoriesGrid() {
             href="/categories"
             className="inline-flex items-center gap-2 text-blue-bright hover:text-blue-light font-semibold transition-colors"
           >
-            Усі категорії
+            {t('landing.categoriesCta')}
             <ArrowRight size={16} />
           </Link>
         </div>
