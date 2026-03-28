@@ -5,22 +5,24 @@ import { ArrowRight } from 'lucide-react';
 import { useCompanies } from '@/lib/queries';
 import { CompanyCard } from '@/components/cards/company-card';
 import { CompanyCardSkeleton } from '@/components/ui/skeleton';
+import { useTranslation } from '@/components/providers/translation-provider';
 
 export function CompanyHighlights() {
   const { data, isLoading } = useCompanies({ page: '1', limit: '6' });
+  const { t } = useTranslation();
 
   return (
     <section className="section-padding">
       <div className="container-main">
         <div className="text-center mb-8 md:mb-12" data-aos="fade-up">
           <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold bg-blue-bright/10 text-blue-bright border border-blue-bright/20 mb-4">
-            Топ постачальники
+            {t('landing.suppliersBadge')}
           </span>
           <h2 className="font-heading font-extrabold text-2xl sm:text-3xl md:text-4xl text-[var(--text-primary)]">
-            Надійні <span className="gradient-text">компанії</span>
+            {t('landing.suppliersTitlePrefix')} <span className="gradient-text">{t('landing.suppliersTitleAccent')}</span>
           </h2>
           <p className="mt-3 text-[var(--text-secondary)] max-w-xl mx-auto text-sm sm:text-base">
-            Співпрацюйте з перевіреними компаніями та офіційними дилерами з усього світу.
+            {t('landing.suppliersDescription')}
           </p>
         </div>
 
@@ -32,7 +34,7 @@ export function CompanyHighlights() {
               ))}
           {!isLoading && (!data?.data || data.data.length === 0) && (
             <div className="col-span-full text-center py-12 md:py-16">
-              <p className="text-[var(--text-secondary)]">Компанії з'являться незабаром.</p>
+              <p className="text-[var(--text-secondary)]">{t('landing.suppliersEmpty')}</p>
             </div>
           )}
         </div>
@@ -42,7 +44,7 @@ export function CompanyHighlights() {
             href="/companies"
             className="inline-flex items-center gap-2 text-blue-bright hover:text-blue-light font-semibold transition-colors"
           >
-            Усі компанії
+            {t('landing.suppliersCta')}
             <ArrowRight size={16} />
           </Link>
         </div>

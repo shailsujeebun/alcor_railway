@@ -72,14 +72,6 @@ const AGROLINE_TREE: CategorySeedNode[] = [
       { slug: 'feeders', name: 'Feeders' },
     ],
   },
-  {
-    slug: 'transportation-machinery',
-    name: 'Transportation machinery',
-    children: [
-      { slug: 'tractor-trailers', name: 'Tractor trailers' },
-      { slug: 'grain-carts', name: 'Grain carts' },
-    ],
-  },
   { slug: 'forestry-equipment', name: 'Forestry equipment' },
   { slug: 'garden-machinery', name: 'Garden machinery' },
   { slug: 'vineyard-equipment', name: 'Vineyard equipment' },
@@ -164,6 +156,14 @@ const AUTOLINE_TREE: CategorySeedNode[] = [
   { slug: 'airport-equipment', name: 'Airport equipment' },
   { slug: 'railway-equipment', name: 'Railway equipment' },
   { slug: 'containers', name: 'Containers' },
+  {
+    slug: 'transportation-machinery',
+    name: 'Transportation machinery',
+    children: [
+      { slug: 'tractor-trailers', name: 'Tractor trailers' },
+      { slug: 'grain-carts', name: 'Grain carts' },
+    ],
+  },
   {
     slug: 'cars',
     name: 'Cars',

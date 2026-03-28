@@ -26,13 +26,13 @@ import {
 } from '../templates/template-schema';
 
 const VALID_TRANSITIONS: Record<ListingStatus, ListingStatus[]> = {
-  DRAFT: [ListingStatus.SUBMITTED],
-  SUBMITTED: [ListingStatus.PENDING_MODERATION, ListingStatus.DRAFT],
+  DRAFT: [ListingStatus.ACTIVE, ListingStatus.SUBMITTED],
+  SUBMITTED: [ListingStatus.ACTIVE, ListingStatus.DRAFT],
   PENDING_MODERATION: [ListingStatus.ACTIVE, ListingStatus.REJECTED],
   ACTIVE: [ListingStatus.PAUSED, ListingStatus.EXPIRED, ListingStatus.REMOVED],
   PAUSED: [ListingStatus.ACTIVE, ListingStatus.REMOVED],
-  EXPIRED: [ListingStatus.DRAFT],
-  REJECTED: [ListingStatus.DRAFT],
+  EXPIRED: [ListingStatus.ACTIVE, ListingStatus.DRAFT],
+  REJECTED: [ListingStatus.ACTIVE, ListingStatus.DRAFT],
   REMOVED: [],
 };
 
@@ -369,10 +369,7 @@ export class ListingsService {
         ? Object.fromEntries(attributes.map((a) => [a.key, a.value]))
         : undefined;
 
-    // Admin/Manager listings are auto-published; regular users start as DRAFT
-    const isPrivileged =
-      callerRole === UserRole.ADMIN || callerRole === UserRole.MANAGER;
-    const status = isPrivileged ? ListingStatus.ACTIVE : ListingStatus.DRAFT;
+    const status = ListingStatus.ACTIVE;
 
     // Fetch category to get marketplaceId
     let marketplaceId: bigint | undefined;
@@ -420,7 +417,7 @@ export class ListingsService {
           country: countryId ? { connect: { id: countryId } } : undefined,
           city: cityId ? { connect: { id: cityId } } : undefined,
           status,
-          publishedAt: isPrivileged ? new Date() : undefined,
+          publishedAt: new Date(),
           fact: {
             create: {
               priceAmount,
@@ -735,7 +732,7 @@ export class ListingsService {
 
     this.ensureListingMutationAccess(listing, actorUserId, actorRole);
 
-    this.validateTransition(listing.status, ListingStatus.SUBMITTED);
+    this.validateTransition(listing.status, ListingStatus.ACTIVE);
 
     // ─── Validation ──────────────────────────────────
     const errors: string[] = [];
@@ -799,8 +796,8 @@ export class ListingsService {
     return this.prisma.listing.update({
       where: { id },
       data: {
-        status: ListingStatus.SUBMITTED,
-        submittedAt: new Date(),
+        status: ListingStatus.ACTIVE,
+        publishedAt: listing.publishedAt ?? new Date(),
       },
       include: listingIncludes,
     });
@@ -819,8 +816,7 @@ export class ListingsService {
       where: { id },
       data: {
         status: ListingStatus.ACTIVE,
-        moderatedAt: new Date(),
-        publishedAt: new Date(),
+        publishedAt: listing.publishedAt ?? new Date(),
       },
       include: listingIncludes,
     });
@@ -856,7 +852,6 @@ export class ListingsService {
       data: {
         status: ListingStatus.REJECTED,
         moderationReason: reason,
-        moderatedAt: new Date(),
       },
       include: listingIncludes,
     });
@@ -913,8 +908,9 @@ export class ListingsService {
     return this.prisma.listing.update({
       where: { id },
       data: {
-        status: ListingStatus.DRAFT,
+        status: ListingStatus.ACTIVE,
         moderationReason: null,
+        publishedAt: listing.publishedAt ?? new Date(),
       },
       include: listingIncludes,
     });

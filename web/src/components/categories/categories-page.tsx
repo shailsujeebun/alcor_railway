@@ -6,47 +6,15 @@ import { Layers, ChevronRight } from 'lucide-react';
 import { useCategories, useMarketplaces } from '@/lib/queries';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSearchParams } from 'next/navigation';
-import { getCategoryDisplayName, getMarketplaceDisplayName } from '@/lib/display-labels';
+import {
+  dedupeCategoriesByDisplayName,
+  getCategoryDisplayName,
+  getMarketplaceDisplayName,
+  shouldHideCategory,
+} from '@/lib/display-labels';
 
 const MARKETPLACE_ORDER = ['agroline', 'autoline', 'machineryline'] as const;
 const CATEGORY_PREVIEW_LIMIT = 12;
-
-function shouldHideCategory(name: string): boolean {
-  const normalized = name.trim().toLowerCase();
-  const hiddenKeywords = [
-    'airport equipment',
-    'airport',
-    'campers',
-    'camper',
-    'air transport',
-    'water transport',
-    'spare part',
-    'service',
-    'tires and wheels',
-    'tyres and wheels',
-    'tires & wheels',
-    'tyres & wheels',
-    'alternative energy sources',
-    'raw material',
-    'tool',
-    'mining equipment',
-    'equipment',
-    'equipments',
-    'industrial equipment',
-  ];
-
-  return hiddenKeywords.some((keyword) => normalized.includes(keyword));
-}
-
-function dedupeByDisplayName<T extends { name: string }>(items: T[]): T[] {
-  const seen = new Set<string>();
-  return items.filter((item) => {
-    const key = getCategoryDisplayName(item.name).trim().toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
 
 function iconForCategory(name: string): string {
   const value = name.toLowerCase();
@@ -132,7 +100,7 @@ export function CategoriesPageContent() {
 
   const filteredTopLevel = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const visibleTopLevel = dedupeByDisplayName(
+    const visibleTopLevel = dedupeCategoriesByDisplayName(
       topLevel.filter((category) => !shouldHideCategory(category.name)),
     );
     if (!query) return visibleTopLevel;

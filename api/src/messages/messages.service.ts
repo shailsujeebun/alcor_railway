@@ -2,8 +2,9 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
-import { NotificationType } from '@prisma/client';
+import { NotificationType, UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginatedResponseDto } from '../common';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -41,13 +42,73 @@ export class MessagesService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
+  private async resolveAdminRecipientId() {
+    const alcorAdminUser = await this.prisma.user.findFirst({
+      where: {
+        email: 'admin@alcor.com',
+        role: UserRole.ADMIN,
+        status: UserStatus.ACTIVE,
+      },
+      select: { id: true },
+    });
+
+    if (alcorAdminUser) return alcorAdminUser.id;
+
+    const adminUser = await this.prisma.user.findFirst({
+      where: {
+        role: UserRole.ADMIN,
+        status: UserStatus.ACTIVE,
+      },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true },
+    });
+
+    if (adminUser) return adminUser.id;
+
+    const managerUser = await this.prisma.user.findFirst({
+      where: {
+        role: UserRole.MANAGER,
+        status: UserStatus.ACTIVE,
+      },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true },
+    });
+
+    if (managerUser) return managerUser.id;
+
+    throw new NotFoundException('No admin recipient available');
+  }
+
   async startConversation(
     buyerId: string,
     listingId: string,
-    sellerId: string,
+    _sellerId: string | undefined,
     body: string,
   ) {
     const id = BigInt(listingId);
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        ownerUserId: true,
+      },
+    });
+
+    if (!listing) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    if (listing.ownerUserId && listing.ownerUserId === buyerId) {
+      throw new BadRequestException(
+        'You cannot send an inquiry for your own listing',
+      );
+    }
+
+    const sellerId = await this.resolveAdminRecipientId();
+    if (sellerId === buyerId) {
+      throw new BadRequestException('You cannot start a conversation with yourself');
+    }
+
     // Check if conversation already exists
     let conversation = await this.prisma.conversation.findUnique({
       where: {
@@ -74,6 +135,14 @@ export class MessagesService {
       where: { id: conversation.id },
       data: { lastMessageAt: new Date() },
     });
+
+    await this.notificationsService.create(
+      sellerId,
+      NotificationType.NEW_MESSAGE,
+      'Нове повідомлення по оголошенню',
+      body.length > 100 ? body.slice(0, 100) + '...' : body,
+      `/cabinet/messages/${conversation.id}`,
+    );
 
     return this.prisma.conversation.findUnique({
       where: { id: conversation.id },
@@ -181,7 +250,7 @@ export class MessagesService {
       conversation.buyerId === senderId
         ? conversation.sellerId
         : conversation.buyerId;
-    this.notificationsService.create(
+    await this.notificationsService.create(
       recipientId,
       NotificationType.NEW_MESSAGE,
       'Нове повідомлення',

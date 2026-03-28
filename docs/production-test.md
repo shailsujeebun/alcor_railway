@@ -177,3 +177,8 @@ This is the best approach because it catches issues early, then validates real-w
 - Release interpretation:
   - do not treat this as a complete Gate 0 pass
   - rerun full Gate 0 in CI/staging with unrestricted network/port binding before production promotion.
+
+## Documentation Refresh - 2026-03-28
+
+Reviewed during the `new_improvements` branch documentation pass.
+For the latest implementation state, see `REBUILD_CHANGELOG.md` and `docs/project_status.md`.

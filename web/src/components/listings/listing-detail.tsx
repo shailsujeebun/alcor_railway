@@ -15,7 +15,6 @@ import {
   MessageSquare,
   Phone,
   Star,
-  Send,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PriceDisplay } from '@/components/ui/price-display';
@@ -218,7 +217,7 @@ export function ListingDetail({ id }: { id: string }) {
 
   if (isLoading) {
     return (
-      <div className="container-main pt-24 md:pt-28 pb-10 space-y-6">
+      <div className="container-main py-10 space-y-6">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-[420px] w-full" />
         <Skeleton className="h-80 w-full" />
@@ -228,7 +227,7 @@ export function ListingDetail({ id }: { id: string }) {
 
   if (error || !listing) {
     return (
-      <div className="container-main pt-24 md:pt-28 pb-20 text-center">
+      <div className="container-main py-20 text-center">
         <Package size={48} className="mx-auto text-blue-bright/20 mb-4" />
         <h2 className="font-heading font-bold text-xl text-[var(--text-primary)]">Оголошення не знайдено</h2>
         <Link href="/listings" className="text-blue-bright mt-4 inline-block">
@@ -239,8 +238,8 @@ export function ListingDetail({ id }: { id: string }) {
   }
 
   return (
-    <div className="container-main pt-24 md:pt-28 pb-8 md:pb-10">
-      <div className="relative overflow-hidden rounded-[28px] border border-white/8 bg-gradient-to-b from-[#0c1a33] via-[#071426] to-[#050b14] p-4 md:p-6">
+    <div className="container-main py-10 md:py-12">
+      <div className="listing-detail-shell relative overflow-hidden rounded-[28px] p-4 md:p-6">
         <div className="pointer-events-none absolute -left-24 -top-24 h-60 w-60 rounded-full bg-blue-500/15 blur-3xl" />
         <div className="pointer-events-none absolute -right-24 top-1/3 h-72 w-72 rounded-full bg-orange-500/10 blur-3xl" />
 
@@ -280,10 +279,10 @@ export function ListingDetail({ id }: { id: string }) {
             </div>
           </div>
 
-          <h1 className="mb-5 text-2xl font-extrabold leading-tight text-white md:text-3xl">{listing.title}</h1>
+          <h1 className="listing-detail-title mb-5 text-2xl font-extrabold leading-tight md:text-3xl">{listing.title}</h1>
 
           <div className="grid gap-4 xl:grid-cols-[270px_minmax(0,1fr)_320px]">
-            <section className="rounded-2xl border border-white/12 bg-[rgba(6,16,32,0.88)] p-4 backdrop-blur-sm animate-[fade-up_0.5s_ease-out_forwards]">
+            <section className="listing-detail-panel rounded-2xl p-4 backdrop-blur-sm animate-[fade-up_0.5s_ease-out_forwards]">
               <PriceDisplay
                 amount={listing.priceAmount}
                 currency={listing.priceCurrency}
@@ -291,26 +290,26 @@ export function ListingDetail({ id }: { id: string }) {
                 className="text-[28px] font-extrabold"
               />
 
-              <button
-                type="button"
-                className="mt-4 w-full rounded-xl bg-gradient-to-r from-[#f59e0b] to-[#f97316] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(249,115,22,0.3)] hover:translate-y-[-1px]"
-              >
-                Contact the seller
-              </button>
+              <ContactSellerButton
+                listingId={listing.id}
+                listingOwnerId={listing.ownerUserId ?? undefined}
+                label="Зв'язатися з Alcor"
+                className="mt-4 block w-full rounded-xl bg-gradient-to-r from-[#f59e0b] to-[#f97316] px-4 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_30px_rgba(249,115,22,0.3)] transition-transform hover:translate-y-[-1px]"
+              />
 
               <dl className="mt-4 divide-y divide-white/10 text-sm">
                 {summaryRows.map((row) => (
                   <div key={row.label} className="flex items-start justify-between gap-3 py-2.5">
                     <dt className="text-[var(--text-secondary)]">{row.label}</dt>
-                    <dd className="max-w-[58%] text-right font-medium text-white">{row.value}</dd>
+                    <dd className="listing-detail-strong max-w-[58%] text-right font-medium">{row.value}</dd>
                   </div>
                 ))}
               </dl>
             </section>
 
-            <section className="rounded-2xl border border-white/12 bg-[rgba(8,20,38,0.8)] p-3 backdrop-blur-sm animate-[fade-up_0.65s_ease-out_forwards]">
+            <section className="listing-detail-panel rounded-2xl p-3 backdrop-blur-sm animate-[fade-up_0.65s_ease-out_forwards]">
               {mainImage ? (
-                <div className="overflow-hidden rounded-xl border border-white/10 bg-black/20">
+                <div className="listing-detail-media-frame overflow-hidden rounded-xl">
                   <img
                     key={mainImage}
                     src={mainImage}
@@ -319,7 +318,7 @@ export function ListingDetail({ id }: { id: string }) {
                   />
                 </div>
               ) : (
-                <div className="flex h-[420px] items-center justify-center rounded-xl border border-white/10 bg-black/20">
+                <div className="listing-detail-media-frame flex h-[420px] items-center justify-center rounded-xl">
                   <Building2 size={64} className="text-blue-bright/30" />
                 </div>
               )}
@@ -348,17 +347,17 @@ export function ListingDetail({ id }: { id: string }) {
               )}
             </section>
 
-            <aside className="rounded-2xl border border-white/12 bg-[rgba(6,16,32,0.9)] p-4 backdrop-blur-sm animate-[fade-up_0.8s_ease-out_forwards]">
-              <h3 className="text-base font-bold text-white">Seller&apos;s contacts</h3>
+            <aside className="listing-detail-panel rounded-2xl p-4 backdrop-blur-sm animate-[fade-up_0.8s_ease-out_forwards]">
+              <h3 className="text-base font-bold text-[var(--text-primary)]">Seller&apos;s contacts</h3>
 
               {listing.company ? (
                 <>
-                  <div className="mt-3 flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                  <div className="listing-detail-subpanel mt-3 flex items-center gap-3 rounded-xl p-3">
                     <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-400 text-sm font-extrabold text-white">
                       {listing.company.name.charAt(0)}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-white">{listing.company.name}</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">{listing.company.name}</p>
                       <p className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
                         <MapPin size={11} />
                         {[listing.company.city?.name, listing.company.country?.name].filter(Boolean).join(', ') || '—'}
@@ -380,7 +379,7 @@ export function ListingDetail({ id }: { id: string }) {
                   </div>
 
                   {sellerPhone && (
-                    <p className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-white">
+                    <p className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--text-primary)]">
                       <Phone size={14} className="text-blue-300" />
                       {sellerPhone}
                     </p>
@@ -388,7 +387,7 @@ export function ListingDetail({ id }: { id: string }) {
 
                   <Link
                     href={`/companies/${listing.company.slug}`}
-                    className="mt-3 block w-full rounded-xl border border-blue-300/30 bg-blue-500/15 px-3 py-2 text-center text-sm font-semibold text-blue-100 hover:bg-blue-500/25"
+                    className="listing-detail-secondary-btn mt-3 block w-full rounded-xl px-3 py-2 text-center text-sm font-semibold"
                   >
                     View company profile
                   </Link>
@@ -397,77 +396,54 @@ export function ListingDetail({ id }: { id: string }) {
                 <p className="mt-2 text-sm text-[var(--text-secondary)]">Інформація про продавця недоступна.</p>
               )}
 
-              <ContactSellerButton listingId={listing.id} sellerId={listing.ownerUserId ?? ''} />
-
-              <div className="mt-3 rounded-xl border border-white/10 bg-[rgba(17,35,60,0.45)] p-3">
-                <p className="mb-2 text-sm font-semibold text-white">Send message</p>
-                <div className="space-y-2">
-                  <input
-                    placeholder="Your name"
-                    className="w-full rounded-lg border border-white/15 bg-black/20 px-3 py-2 text-sm text-white placeholder:text-slate-400"
-                  />
-                  <input
-                    placeholder="Email"
-                    className="w-full rounded-lg border border-white/15 bg-black/20 px-3 py-2 text-sm text-white placeholder:text-slate-400"
-                  />
-                  <textarea
-                    placeholder="I am interested in your ad"
-                    rows={3}
-                    className="w-full resize-none rounded-lg border border-white/15 bg-black/20 px-3 py-2 text-sm text-white placeholder:text-slate-400"
-                  />
-                  <button
-                    type="button"
-                    className="inline-flex w-full items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-emerald-500 to-green-500 px-3 py-2 text-sm font-semibold text-white hover:brightness-110"
-                  >
-                    <Send size={14} />
-                    Send
-                  </button>
-                </div>
-              </div>
+              <ContactSellerButton
+                listingId={listing.id}
+                listingOwnerId={listing.ownerUserId ?? undefined}
+              />
             </aside>
           </div>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-6">
-              <section className="rounded-2xl border border-white/12 bg-[rgba(7,18,34,0.84)] p-5 backdrop-blur-sm animate-[fade-up_0.9s_ease-out_forwards]">
-                <h3 className="mb-3 text-base font-bold text-white">Details</h3>
+              <section className="listing-detail-panel rounded-2xl p-5 backdrop-blur-sm animate-[fade-up_0.9s_ease-out_forwards]">
+                <h3 className="mb-3 text-base font-bold text-[var(--text-primary)]">Details</h3>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {(listing.country || listing.city) && (
-                    <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2 text-sm">
+                    <div className="listing-detail-subpanel flex items-center gap-2 rounded-xl px-3 py-2 text-sm">
                       <MapPin size={14} className="text-blue-300" />
                       <span className="text-[var(--text-secondary)]">Location:</span>
-                      <span className="font-medium text-white">{locationLabel}</span>
+                      <span className="listing-detail-strong font-medium">{locationLabel}</span>
                     </div>
                   )}
                   {listing.year && (
-                    <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2 text-sm">
+                    <div className="listing-detail-subpanel flex items-center gap-2 rounded-xl px-3 py-2 text-sm">
                       <Calendar size={14} className="text-blue-300" />
                       <span className="text-[var(--text-secondary)]">Year:</span>
-                      <span className="font-medium text-white">{listing.year}</span>
+                      <span className="listing-detail-strong font-medium">{listing.year}</span>
                     </div>
                   )}
                   {listing.hoursValue != null && (
-                    <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2 text-sm">
+                    <div className="listing-detail-subpanel flex items-center gap-2 rounded-xl px-3 py-2 text-sm">
                       <Clock size={14} className="text-blue-300" />
                       <span className="text-[var(--text-secondary)]">Hours:</span>
-                      <span className="font-medium text-white">
+                      <span className="listing-detail-strong font-medium">
                         {listing.hoursValue} {listing.hoursUnit ?? 'м/г'}
                       </span>
                     </div>
                   )}
                   {listing.euroClass && (
-                    <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2 text-sm">
+                    <div className="listing-detail-subpanel flex items-center gap-2 rounded-xl px-3 py-2 text-sm">
                       <Package size={14} className="text-blue-300" />
                       <span className="text-[var(--text-secondary)]">Євро клас:</span>
-                      <span className="font-medium text-white">{listing.euroClass}</span>
+                      <span className="listing-detail-strong font-medium">{listing.euroClass}</span>
                     </div>
                   )}
                 </div>
               </section>
 
               {attributeSections.length > 0 && (
-                <section className="rounded-2xl border border-white/12 bg-[rgba(7,18,34,0.84)] p-4 md:p-5 backdrop-blur-sm animate-[fade-up_1.05s_ease-out_forwards]">
-                  <h3 className="mb-3 text-base font-bold text-white">Characteristics</h3>
+                <section className="listing-detail-panel rounded-2xl p-4 md:p-5 backdrop-blur-sm animate-[fade-up_1.05s_ease-out_forwards]">
+                  <h3 className="mb-3 text-base font-bold text-[var(--text-primary)]">Characteristics</h3>
                   <div className="space-y-2.5">
                     {attributeSections.map(([sectionName, items], sectionIndex) => {
                       const isOpen = openAttributeSection === sectionName;
@@ -475,10 +451,10 @@ export function ListingDetail({ id }: { id: string }) {
                       return (
                         <section
                           key={sectionName}
-                          className={`overflow-hidden rounded-xl border transition-all duration-400 ${
+                          className={`listing-detail-accordion overflow-hidden rounded-xl border transition-all duration-400 ${
                             isOpen
-                              ? 'border-blue-300/40 bg-[rgba(14,30,52,0.92)] shadow-[0_10px_36px_rgba(59,130,246,0.2)]'
-                              : 'border-white/12 bg-[rgba(6,14,28,0.88)] hover:border-orange-300/35 hover:bg-[rgba(11,22,40,0.95)]'
+                              ? 'listing-detail-accordion-open'
+                              : 'listing-detail-accordion-closed'
                           }`}
                           style={{ transitionDelay: `${sectionIndex * 45}ms` }}
                         >
@@ -489,7 +465,7 @@ export function ListingDetail({ id }: { id: string }) {
                             }
                             className="flex w-full items-center justify-between px-4 py-3"
                           >
-                            <span className="text-sm font-semibold text-white">{sectionName}</span>
+                            <span className="text-sm font-semibold text-[var(--text-primary)]">{sectionName}</span>
                             <ChevronDown
                               className={`h-4 w-4 text-slate-300 transition-transform duration-300 ${
                                 isOpen ? 'rotate-180 text-orange-300' : 'rotate-0'
@@ -503,16 +479,16 @@ export function ListingDetail({ id }: { id: string }) {
                             }`}
                           >
                             <div className="overflow-hidden">
-                              <div className="grid gap-2 border-t border-white/10 p-3 sm:grid-cols-2">
+                              <div className="grid gap-2 border-t border-[var(--border-color)] p-3 sm:grid-cols-2">
                                 {items.map((attr: any) => (
                                   <div
                                     key={attr.id}
-                                    className="group flex items-center justify-between gap-2 rounded-lg border border-white/6 bg-black/15 px-3 py-2 text-sm transition-all hover:border-orange-300/40 hover:bg-black/25"
+                                    className="listing-detail-attribute group flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm transition-all"
                                   >
-                                    <span className="text-[var(--text-secondary)] group-hover:text-slate-100">
+                                    <span className="text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">
                                       {attr.displayKey}
                                     </span>
-                                    <span className="text-right font-medium text-white">{attr.displayValue}</span>
+                                    <span className="listing-detail-strong text-right font-medium">{attr.displayValue}</span>
                                   </div>
                                 ))}
                               </div>
@@ -526,8 +502,8 @@ export function ListingDetail({ id }: { id: string }) {
               )}
 
               {(cleanedDescription || listing.externalUrl) && (
-                <section className="rounded-2xl border border-white/12 bg-[rgba(7,18,34,0.84)] p-5 backdrop-blur-sm animate-[fade-up_1.18s_ease-out_forwards]">
-                  <h3 className="mb-3 text-base font-bold text-white">More details</h3>
+                <section className="listing-detail-panel rounded-2xl p-5 backdrop-blur-sm animate-[fade-up_1.18s_ease-out_forwards]">
+                  <h3 className="mb-3 text-base font-bold text-[var(--text-primary)]">More details</h3>
                   {cleanedDescription && (
                     <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-secondary)]">{cleanedDescription}</p>
                   )}
@@ -547,24 +523,24 @@ export function ListingDetail({ id }: { id: string }) {
             </div>
 
             <aside className="space-y-4">
-              <section className="rounded-2xl border border-white/12 bg-[rgba(7,18,34,0.84)] p-5 backdrop-blur-sm animate-[fade-up_1.25s_ease-out_forwards]">
-                <h3 className="text-base font-bold text-white">Purchase tips</h3>
+              <section className="listing-detail-panel rounded-2xl p-5 backdrop-blur-sm animate-[fade-up_1.25s_ease-out_forwards]">
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Purchase tips</h3>
                 <p className="mt-2 text-sm text-[var(--text-secondary)]">
                   Перед купівлею перевірте серійний номер, історію сервісу та відповідність технічних параметрів документам.
                 </p>
               </section>
 
-              <section className="rounded-2xl border border-white/12 bg-[rgba(7,18,34,0.84)] p-5 backdrop-blur-sm animate-[fade-up_1.32s_ease-out_forwards]">
-                <h3 className="text-base font-bold text-white">Safety tips</h3>
+              <section className="listing-detail-panel rounded-2xl p-5 backdrop-blur-sm animate-[fade-up_1.32s_ease-out_forwards]">
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Safety tips</h3>
                 <p className="mt-2 text-sm text-[var(--text-secondary)]">
                   Використовуйте захищені способи оплати та погоджуйте огляд техніки в присутності відповідального представника.
                 </p>
               </section>
 
               {listing.company && (
-                <section className="rounded-2xl border border-white/12 bg-[rgba(7,18,34,0.84)] p-5 backdrop-blur-sm animate-[fade-up_1.4s_ease-out_forwards]">
-                  <h3 className="mb-2 text-base font-bold text-white">Seller snapshot</h3>
-                  <p className="text-sm font-semibold text-white">{listing.company.name}</p>
+                <section className="listing-detail-panel rounded-2xl p-5 backdrop-blur-sm animate-[fade-up_1.4s_ease-out_forwards]">
+                  <h3 className="mb-2 text-base font-bold text-[var(--text-primary)]">Seller snapshot</h3>
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">{listing.company.name}</p>
                   <div className="mt-2 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
                     <StarRating rating={listing.company.ratingAvg} size={14} />
                     <span>{listing.company.reviewsCount} відгуків</span>

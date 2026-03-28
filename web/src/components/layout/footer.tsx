@@ -9,6 +9,16 @@ import { MAIN_LANDING_URL } from '@/lib/landing';
 export function Footer() {
   const { t } = useTranslation();
   const homeLogoHref = MAIN_LANDING_URL;
+  const landingBaseUrl = (MAIN_LANDING_URL && MAIN_LANDING_URL !== '/' ? MAIN_LANDING_URL : 'http://localhost:4174').replace(/\/$/, '');
+  const address = t('footer.address');
+  const phone = '+38 (068) 319-98-00';
+  const email = 'alkorfk@gmail.com';
+  const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  const serviceLinks = [
+    { href: `${landingBaseUrl}/pages/leasing-details.html`, label: t('footer.autoLeasing') },
+    { href: `${landingBaseUrl}/pages/credit.html`, label: t('footer.businessLoans') },
+    { href: `${landingBaseUrl}/pages/factoring.html`, label: t('footer.factoring') },
+  ];
 
   return (
     <footer className="border-t border-[var(--border-color)]" style={{ background: 'var(--bg-secondary)' }}>
@@ -38,21 +48,16 @@ export function Footer() {
               {t('footer.servicesTitle')}
             </h4>
             <ul className="space-y-3">
-              <li>
-                <span className="text-sm text-[var(--text-secondary)]">
-                  {t('footer.autoLeasing')}
-                </span>
-              </li>
-              <li>
-                <span className="text-sm text-[var(--text-secondary)]">
-                  {t('footer.businessLoans')}
-                </span>
-              </li>
-              <li>
-                <span className="text-sm text-[var(--text-secondary)]">
-                  {t('footer.factoring')}
-                </span>
-              </li>
+              {serviceLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -94,17 +99,34 @@ export function Footer() {
               {t('footer.contactsTitle')}
             </h4>
             <ul className="space-y-3">
-              <li className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
-                <MapPin size={14} className="text-blue-bright flex-shrink-0 mt-0.5" />
-                <span>{t('footer.address')}</span>
+              <li>
+                <a
+                  href={mapsHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-start gap-2 text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors"
+                >
+                  <MapPin size={14} className="text-blue-bright flex-shrink-0 mt-0.5" />
+                  <span>{address}</span>
+                </a>
               </li>
-              <li className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                <Phone size={14} className="text-blue-bright flex-shrink-0" />
-                <span>+38 (068) 319-98-00</span>
+              <li>
+                <a
+                  href="tel:+380683199800"
+                  className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors"
+                >
+                  <Phone size={14} className="text-blue-bright flex-shrink-0" />
+                  <span>{phone}</span>
+                </a>
               </li>
-              <li className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                <Mail size={14} className="text-blue-bright flex-shrink-0" />
-                <span>alkorfk@gmail.com</span>
+              <li>
+                <a
+                  href={`mailto:${email}`}
+                  className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors"
+                >
+                  <Mail size={14} className="text-blue-bright flex-shrink-0" />
+                  <span>{email}</span>
+                </a>
               </li>
             </ul>
           </div>

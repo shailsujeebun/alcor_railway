@@ -657,3 +657,94 @@ Passing:
 
 Environment-limited:
 - `web`: `pnpm run build` blocked by Google Fonts fetch restrictions in sandbox.
+
+## 11. Update - 2026-03-28 (Marketplace Cleanup, Direct Publish, Admin Routing)
+
+### 11.1 Global category cleanup
+Files:
+- `web/src/lib/display-labels.ts`
+- `web/src/components/categories/categories-page.tsx`
+- `web/src/components/listings/listings-filters.tsx`
+- `web/src/app/ad-placement/select-category/page.tsx`
+- `web/src/components/listings/wizard/description-step.tsx`
+
+What changed:
+- Centralized hidden-category filtering so removed categories no longer reappear in categories, filters, or ad-placement flows.
+- Kept display-label normalization and dedupe logic aligned across category-facing screens.
+
+Why:
+- Prevents deleted categories from resurfacing in isolated UI paths.
+
+### 11.2 Marketplace taxonomy / seed alignment
+Files:
+- `api/prisma/seed-all/core.ts`
+- `api/prisma/seed-all/companies-listings.ts`
+
+What changed:
+- Moved `Transportation machinery` from Agro market to Auto market.
+- Refreshed local seeded listings/statuses to match the new publish flow.
+
+Why:
+- Keeps seeded data and live UI taxonomy consistent.
+
+### 11.3 Direct publish workflow
+Files:
+- `api/src/listings/listings.service.ts`
+- `web/src/components/cabinet/my-listings.tsx`
+
+What changed:
+- New listings now publish directly as `ACTIVE`.
+- Submit/resubmit actions now activate listings instead of parking them in moderation-only states.
+
+Why:
+- Matches the requested “users can place ads freely” workflow.
+
+### 11.4 Admin-only inquiry routing
+Files:
+- `api/src/messages/dto/create-message.dto.ts`
+- `api/src/messages/messages.service.ts`
+- `web/src/components/listings/contact-seller-button.tsx`
+- `web/src/components/listings/listing-detail.tsx`
+- `web/src/lib/queries.ts`
+- `web/src/types/api.ts`
+
+What changed:
+- Listing contact actions now open a working modal and route inquiries to Alcor admin.
+- Self-contact on owned listings is blocked.
+- First-message inquiries now create admin notifications.
+- Notification queries refresh per-user and are not shared across stale auth state.
+
+Why:
+- Enforces admin-mediated lead handling while keeping message history persisted.
+
+### 11.5 Frontend cleanup and polish
+Files:
+- `web/src/app/ad-placement/page.tsx`
+- `web/src/app/cabinet/layout.tsx`
+- `web/src/app/admin/categories/page.tsx`
+- `web/src/app/admin/users/page.tsx`
+- `web/src/app/globals.css`
+- `web/src/app/layout.tsx`
+- `web/src/components/layout/top-bar.tsx`
+- `web/src/components/listings/listing-detail.tsx`
+- `web/src/i18n/messages/en.ts`
+- `web/src/i18n/messages/uk.ts`
+- deleted: `web/src/app/cabinet/subscription/page.tsx`
+- deleted: `web/src/app/pro-account/page.tsx`
+
+What changed:
+- Removed pro/subscription UI surfaces and stale labels.
+- Increased global spacing between main content and header/footer.
+- Made listing detail surfaces theme-aware in light mode.
+- Matched the marketplace top bar to the main Alcor site pattern.
+- Localized/fixed admin category page copy.
+
+Why:
+- Brings the marketplace UX in line with the current product scope and brand.
+
+### 11.6 Local runtime note
+
+- Main site preview: `http://localhost:8000`
+- Marketplace web: `http://localhost:3001`
+- Marketplace API: `http://localhost:3000`
+- Remaining infra gap: OpenSearch still needs `OPENSEARCH_INITIAL_ADMIN_PASSWORD` in `docker-compose.yml`.

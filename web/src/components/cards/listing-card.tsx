@@ -1,21 +1,12 @@
+'use client';
+
 import Link from 'next/link';
 import { MapPin, Building2, Calendar, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PriceDisplay } from '@/components/ui/price-display';
 import type { Listing } from '@/types/api';
 import { getCategoryDisplayName } from '@/lib/display-labels';
-
-const conditionLabels: Record<string, string> = {
-  NEW: 'Новий',
-  USED: 'Б/в',
-  DEMO: 'Демонстраційний',
-};
-
-const listingTypeLabels: Record<string, string> = {
-  SALE: 'Продаж',
-  RENT: 'Оренда',
-  FROM_MANUFACTURER: 'Від виробника',
-};
+import { useTranslation } from '@/components/providers/translation-provider';
 
 interface ListingCardProps {
   listing: Listing;
@@ -23,6 +14,7 @@ interface ListingCardProps {
 
 export function ListingCard({ listing }: ListingCardProps) {
   const thumbnail = listing.media?.[0]?.url;
+  const { t } = useTranslation();
 
   return (
     <Link href={`/listings/${listing.id}`} className="block">
@@ -43,12 +35,12 @@ export function ListingCard({ listing }: ListingCardProps) {
           <div className="absolute top-3 left-3 flex gap-1.5">
             {listing.condition && (
               <Badge variant={listing.condition === 'NEW' ? 'success' : 'warning'}>
-                {conditionLabels[listing.condition] ?? listing.condition}
+                {t(`listingCard.condition.${listing.condition}`) ?? listing.condition}
               </Badge>
             )}
             {listing.listingType && (
               <Badge variant="default">
-                {listingTypeLabels[listing.listingType] ?? listing.listingType}
+                {t(`listingCard.listingType.${listing.listingType}`) ?? listing.listingType}
               </Badge>
             )}
           </div>

@@ -3,6 +3,7 @@
 import { SearchInput } from '@/components/ui/search-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCountries, useCities, useActivityTypes, useBrands } from '@/lib/queries';
+import { useTranslation } from '@/components/providers/translation-provider';
 
 interface FiltersState {
   search: string;
@@ -25,6 +26,7 @@ export function CompaniesFilters({ filters, onFilterChange, onClear }: Companies
   const { data: citiesData } = useCities(filters.countryId || undefined);
   const { data: activityTypes } = useActivityTypes();
   const { data: brands } = useBrands();
+  const { t } = useTranslation();
 
   const hasFilters = Object.values(filters).some(Boolean);
 
@@ -59,7 +61,7 @@ export function CompaniesFilters({ filters, onFilterChange, onClear }: Companies
         <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">Фільтри</h3>
         {hasFilters && (
           <button onClick={onClear} className="text-xs text-blue-bright hover:text-blue-light transition-colors">
-            Очистити всі
+            {t('companies.filtersClear')}
           </button>
         )}
       </div>
@@ -67,71 +69,71 @@ export function CompaniesFilters({ filters, onFilterChange, onClear }: Companies
       <SearchInput
         value={filters.search}
         onChange={(v) => onFilterChange('search', v)}
-        placeholder="Пошук компаній..."
+        placeholder={t('companies.searchPlaceholder')}
       />
 
       <div>
-        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Вид діяльності</label>
+        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('companies.activityTypeLabel')}</label>
         <FilterSelect
           value={filters.activityTypeId}
           onChange={(v) => onFilterChange('activityTypeId', v)}
-          placeholder="Усі види діяльності"
+          placeholder={t('companies.activityTypePlaceholder')}
           options={(activityTypes ?? []).map((at) => ({ value: at.id, label: at.name }))}
         />
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Марка</label>
+        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('companies.brandLabel')}</label>
         <FilterSelect
           value={filters.brandId}
           onChange={(v) => onFilterChange('brandId', v)}
-          placeholder="Усі марки"
+          placeholder={t('companies.brandPlaceholder')}
           options={(brands ?? []).map((b) => ({ value: b.id, label: b.name }))}
         />
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Країна</label>
+        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('companies.countryLabel')}</label>
         <FilterSelect
           value={filters.countryId}
           onChange={(v) => {
             onFilterChange('countryId', v);
             onFilterChange('cityId', '');
           }}
-          placeholder="Усі країни"
+          placeholder={t('companies.countryPlaceholder')}
           options={(countries ?? []).map((c) => ({ value: c.id, label: c.name }))}
         />
       </div>
 
       {filters.countryId && (
         <div>
-          <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Місто</label>
+          <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('companies.cityLabel')}</label>
           <FilterSelect
             value={filters.cityId}
             onChange={(v) => onFilterChange('cityId', v)}
-            placeholder="Усі міста"
+            placeholder={t('companies.cityPlaceholder')}
             options={(citiesData?.data ?? []).map((c) => ({ value: c.id, label: c.name }))}
           />
         </div>
       )}
 
       <div>
-        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Верифікація</label>
+        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('companies.verificationLabel')}</label>
         <FilterSelect
           value={filters.isVerified}
           onChange={(v) => onFilterChange('isVerified', v)}
-          placeholder="Усі компанії"
-          options={[{ value: 'true', label: 'Лише верифіковані' }]}
+          placeholder={t('companies.verificationPlaceholder')}
+          options={[{ value: 'true', label: t('companies.verificationOnly') }]}
         />
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Офіційний дилер</label>
+        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('companies.dealerLabel')}</label>
         <FilterSelect
           value={filters.isOfficialDealer}
           onChange={(v) => onFilterChange('isOfficialDealer', v)}
-          placeholder="Усі компанії"
-          options={[{ value: 'true', label: 'Лише офіційні дилери' }]}
+          placeholder={t('companies.dealerPlaceholder')}
+          options={[{ value: 'true', label: t('companies.dealerOnly') }]}
         />
       </div>
     </div>

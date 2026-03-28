@@ -94,7 +94,7 @@ function CategoryItem({
                         size="icon"
                         className="h-8 w-8 hover:bg-blue-500/10 hover:text-blue-500"
                         onClick={() => onAddSub(Number(category.id))}
-                        title="Додати підкатегорію"
+                        title="Add Subcategory"
                     >
                         <Plus className="w-4 h-4" />
                     </Button>
@@ -103,7 +103,7 @@ function CategoryItem({
                         size="icon"
                         className="h-8 w-8 hover:bg-yellow-500/10 hover:text-yellow-500"
                         onClick={() => onEdit(category)}
-                        title="Редагувати"
+                        title="Edit"
                     >
                         <Edit2 className="w-4 h-4" />
                     </Button>
@@ -112,7 +112,7 @@ function CategoryItem({
                         size="icon"
                         className="h-8 w-8 hover:bg-red-500/10 hover:text-red-500"
                         onClick={() => onDelete(Number(category.id))}
-                        title="Видалити"
+                        title="Delete"
                     >
                         <Trash2 className="w-4 h-4" />
                     </Button>
@@ -201,18 +201,18 @@ export default function AdminCategoriesPage() {
             queryClient.invalidateQueries({ queryKey: ['categories'] });
         } catch (error) {
             console.error('Failed to save category', error);
-            alert('Не вдалося зберегти категорію');
+            alert('Failed to save category');
         }
     }
 
     async function handleDelete(id: number) {
-        if (!confirm('Ви впевнені? Категорія та всі підкатегорії будуть видалені.')) return;
+        if (!confirm('Are you sure? This will delete the category and all subcategories.')) return;
         try {
             await deleteAdminCategory(id);
             queryClient.invalidateQueries({ queryKey: ['categories'] });
         } catch (error) {
             console.error(error);
-            alert('Не вдалося видалити категорію. Можливо, у ній є оголошення.');
+            alert(error instanceof Error ? error.message : 'Cannot delete category.');
         }
     }
 
@@ -261,14 +261,14 @@ export default function AdminCategoriesPage() {
         cat.marketplaceId === selectedMarketplace
     ) || [];
 
-    if (isLoading && !marketplaces) return <div className="p-8 text-center">Завантаження категорій...</div>;
+    if (isLoading && !marketplaces) return <div className="p-8 text-center">Loading categories...</div>;
 
     return (
         <div className="container-main pt-20 pb-12">
             <div className="flex justify-between items-end mb-8">
                 <div>
                     <h1 className="text-3xl font-heading font-bold text-white mb-2">Керування категоріями</h1>
-                    <p className="text-muted-foreground">Організуйте структуру маркетплейсу</p>
+                    <p className="text-muted-foreground">Організуйте структуру свого ринку</p>
                 </div>
 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -297,21 +297,21 @@ export default function AdminCategoriesPage() {
                                     onChange={(e) =>
                                         setFormData({ ...formData, name: e.target.value })
                                     }
-                                    placeholder="напр., Трактори"
+                                    placeholder="Наприклад: Трактори"
                                     required
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="slug">Слаг (URL)</Label>
+                                <Label htmlFor="slug">Slug</Label>
                                 <Input
                                     id="slug"
                                     value={formData.slug}
                                     onChange={(e) =>
                                         setFormData({ ...formData, slug: e.target.value })
                                     }
-                                    placeholder="напр., tractors"
+                                    placeholder="Наприклад: tractors"
                                 />
-                                <p className="text-xs text-muted-foreground mt-1">Залиште порожнім для автогенерації з назви.</p>
+                                <p className="text-xs text-muted-foreground mt-1">Залиште порожнім, щоб згенерувати автоматично з назви.</p>
                             </div>
                             <div className="flex items-center gap-2 rounded-md border border-white/10 px-3 py-2">
                                 <input
@@ -323,12 +323,12 @@ export default function AdminCategoriesPage() {
                                     }
                                 />
                                 <Label htmlFor="hasEngine" className="cursor-pointer">
-                                    Має двигун (використовує fallback-шаблон для моторизованої техніки)
+                                    Має двигун
                                 </Label>
                             </div>
                             {formData.parentId && (
                                 <div className="text-sm text-muted-foreground">
-                                    Створюється підкатегорія під ID: {formData.parentId}
+                                    Створення підкатегорії для ID: {formData.parentId}
                                 </div>
                             )}
                             <Button type="submit" className="w-full">
@@ -370,7 +370,7 @@ export default function AdminCategoriesPage() {
                         </div>
                         <h3 className="text-lg font-medium text-white mb-1">
                             {selectedMarketplace
-                                ? 'Категорій поки немає'
+                                ? 'Категорій ще немає'
                                 : 'Оберіть маркетплейс'}
                         </h3>
                         {selectedMarketplace && (

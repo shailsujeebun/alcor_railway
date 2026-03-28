@@ -6,7 +6,11 @@ import { useRouter } from 'next/navigation';
 import { Search, ChevronRight, ChevronDown } from 'lucide-react';
 import { useCategories, useMarketplaces } from '@/lib/queries';
 import type { Category } from '@/types/api';
-import { getCategoryDisplayName, getMarketplaceDisplayName } from '@/lib/display-labels';
+import {
+  filterVisibleCategoryTree,
+  getCategoryDisplayName,
+  getMarketplaceDisplayName,
+} from '@/lib/display-labels';
 
 // Helper to get marketplace icon by key
 function getMarketplaceIcon(key: string): string {
@@ -58,7 +62,10 @@ export default function SelectCategoryPage() {
     const activeMarketplace = marketplaces?.find((m) => m.id === effectiveMarketplaceId);
 
     // Get top-level categories
-    const topLevelCategories = categories?.filter((c) => !c.parentId) ?? [];
+    const topLevelCategories = useMemo(
+      () => filterVisibleCategoryTree((categories?.filter((c) => !c.parentId) ?? []) as Category[]),
+      [categories],
+    );
 
     // Filter by search query (search in all levels)
     const matchesSearch = (cat: Category): boolean => {

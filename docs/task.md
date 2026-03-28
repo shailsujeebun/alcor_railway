@@ -136,3 +136,25 @@
 - 2026-03-01: `api` build blocked in local shell (`cross-env` missing)
 - 2026-03-01: `web` build blocked in sandbox (Google Fonts network fetch unavailable)
 - 2026-03-01: `api` e2e blocked in sandbox (port bind `EPERM`)
+
+## Update - 2026-03-27 (Marketplace Translation + Footer/Main-Site Routing)
+- Migrated more visible marketplace UI from hardcoded text to dictionary-based translation:
+  - landing sections
+  - company catalog
+  - company detail
+  - review form/list
+  - shared listing/company cards.
+- Added missing `en`/`uk` translation keys for those surfaces.
+- Updated marketplace footer:
+  - service links now open the main-site leasing, lending, and factoring pages
+  - address, phone, and email are clickable.
+- Updated shared marketplace landing target so logo clicks return users to the main Alcor website.
+
+## Test Status (Latest)
+- 2026-03-27: `pnpm --dir web exec eslint` passing for changed files
+- 2026-03-27: `pnpm --dir web run i18n:guard` passing
+
+## Documentation Refresh - 2026-03-28
+
+Reviewed during the `new_improvements` branch documentation pass.
+For the latest implementation state, see `REBUILD_CHANGELOG.md` and `docs/project_status.md`.

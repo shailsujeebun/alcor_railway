@@ -12,7 +12,6 @@ import {
   Clock,
   MessageSquare,
   HelpCircle,
-  Crown,
   Bell,
   Search,
 } from 'lucide-react';
@@ -30,7 +29,6 @@ const sidebarLinks = [
   { href: '/cabinet/saved-searches', labelKey: 'cabinet.sidebar.savedSearches', icon: Search },
   { href: '/cabinet/notifications', labelKey: 'cabinet.sidebar.notifications', icon: Bell },
   { href: '/cabinet/support', labelKey: 'cabinet.sidebar.support', icon: HelpCircle },
-  { href: '/cabinet/subscription', labelKey: 'cabinet.sidebar.subscription', icon: Crown },
   { href: '/cabinet/settings', labelKey: 'cabinet.sidebar.settings', icon: Settings },
 ];
 

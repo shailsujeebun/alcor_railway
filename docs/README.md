@@ -294,3 +294,28 @@ For more information, please refer to the detailed documentation files listed ab
   - `api` compile path: `DATABASE_URL=postgresql://dummy pnpm exec prisma generate && pnpm exec nest build`
 - Environment-limited in this sandbox:
   - `web`: `pnpm run build` blocked by Google Fonts fetch restrictions.
+
+## Update - 2026-03-27 (Translation Coverage + Main Website Linking)
+
+- Expanded key-based translation coverage for the marketplace home and company flows:
+  - featured listings
+  - categories
+  - supplier highlights
+  - process steps
+  - company catalog filters/results
+  - company detail/reviews
+  - shared listing/company cards.
+- Added the missing translation message keys in both locales so the EN/UA switch translates those core screens directly instead of relying on fallback translation.
+- Connected marketplace chrome back to the main Alcor site:
+  - logo clicks now return to the main website
+  - footer service links now open the main-site leasing, lending, and factoring pages
+  - footer address, phone, and email are clickable.
+
+### Validation
+- `pnpm --dir web exec eslint` passing for changed files
+- `pnpm --dir web run i18n:guard` passing
+
+## Documentation Refresh - 2026-03-28
+
+The docs set was reviewed during the `new_improvements` branch documentation pass.
+For the latest implementation state, see `REBUILD_CHANGELOG.md` and `docs/project_status.md`.
