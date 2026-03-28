@@ -287,7 +287,7 @@ export async function seedCompaniesAndListings(
     brandName: 'MAN',
     countryId: input.geo.plId,
     cityId: input.geo.warsawId,
-    status: 'SUBMITTED',
+    status: 'ACTIVE',
     price: '52000',
     year: 2019,
     mileage: 720000,
@@ -304,11 +304,12 @@ export async function seedCompaniesAndListings(
     brandName: 'BMW',
     countryId: input.geo.plId,
     cityId: input.geo.warsawId,
-    status: 'DRAFT',
+    status: 'ACTIVE',
     price: '62000',
     year: 2022,
     mileage: 48000,
     condition: 'USED',
+    publishedOffsetDays: 2,
   });
 
   return {

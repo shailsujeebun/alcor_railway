@@ -16,7 +16,11 @@ import {
   useCountries,
   useMarketplaces,
 } from '@/lib/queries';
-import { getCategoryDisplayName, getMarketplaceDisplayName } from '@/lib/display-labels';
+import {
+  filterVisibleCategoryTree,
+  getCategoryDisplayName,
+  getMarketplaceDisplayName,
+} from '@/lib/display-labels';
 
 const CATEGORY_PREVIEW_LIMIT = 12;
 
@@ -101,10 +105,12 @@ export function DescriptionStep() {
 
   const marketplaceCategories = useMemo(
     () =>
-      categories.filter(
-        (category) =>
-          category.marketplaceId === selectedMarketplaceId &&
-          (category.parentId === null || category.parentId === undefined),
+      filterVisibleCategoryTree(
+        categories.filter(
+          (category) =>
+            category.marketplaceId === selectedMarketplaceId &&
+            (category.parentId === null || category.parentId === undefined),
+        ),
       ),
     [categories, selectedMarketplaceId],
   );
@@ -120,7 +126,9 @@ export function DescriptionStep() {
     const fromTree = selectedCategoryNode?.children ?? [];
     if (fromTree.length > 0) return fromTree;
 
-    return categories.filter((category) => category.parentId === selectedCategoryId);
+    return filterVisibleCategoryTree(
+      categories.filter((category) => category.parentId === selectedCategoryId),
+    );
   }, [categories, selectedCategoryId, selectedCategoryNode]);
 
   const hasSubcategories = subCategories.length > 0;

@@ -43,3 +43,8 @@ This policy defines what text is allowed to be sent to external translation prov
 - Added persistent "create new option" flows and APIs for `brand`, `model`, `subcategory`, `country`, and `city`, so new values are saved once and reused by all users.
 - Added options/cascade runtime behavior: parent-change child reset, dependency-based option loading, and dependency-state caching.
 - Completed validation checks and build/test verification; local infrastructure (Postgres/Redis/MinIO) confirmed working for this flow.
+
+## Documentation Refresh - 2026-03-28
+
+Reviewed during the `new_improvements` branch documentation pass.
+For the latest implementation state, see `REBUILD_CHANGELOG.md` and `docs/project_status.md`.

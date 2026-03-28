@@ -87,3 +87,23 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ### Validation
 - `pnpm --dir web exec eslint` passing for changed files
 - `pnpm --dir web run i18n:guard` passing
+
+## Project Update - 2026-03-28
+
+- Applied marketplace cleanup and consistency fixes:
+  - removed deleted categories from all user-facing category selectors
+  - removed pro/subscription UI and stale frontend plan/subscription calls
+  - aligned listing detail light mode with the rest of the site
+  - increased spacing between content blocks and the global header/footer.
+- Updated listing inquiry UX:
+  - all listing contact actions now target Alcor admin
+  - dead seller-contact buttons were replaced with a working Alcor message modal
+  - logged-out users now get a clear auth prompt instead of a non-responsive action.
+- Updated marketplace shell behavior:
+  - top contact bar now mirrors the main Alcor website
+  - local logo routing points back to the main site preview.
+
+### Local dev notes
+- marketplace web: `http://localhost:3001`
+- expected local env override: `NEXT_PUBLIC_MAIN_LANDING_URL=http://localhost:8000`
+- full branch status: `REBUILD_CHANGELOG.md` and `docs/project_status.md`

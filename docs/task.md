@@ -153,3 +153,8 @@
 ## Test Status (Latest)
 - 2026-03-27: `pnpm --dir web exec eslint` passing for changed files
 - 2026-03-27: `pnpm --dir web run i18n:guard` passing
+
+## Documentation Refresh - 2026-03-28
+
+Reviewed during the `new_improvements` branch documentation pass.
+For the latest implementation state, see `REBUILD_CHANGELOG.md` and `docs/project_status.md`.

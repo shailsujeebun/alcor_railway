@@ -212,7 +212,7 @@ export default function AdminCategoriesPage() {
             queryClient.invalidateQueries({ queryKey: ['categories'] });
         } catch (error) {
             console.error(error);
-            alert('Cannot delete category. It may have listings.');
+            alert(error instanceof Error ? error.message : 'Cannot delete category.');
         }
     }
 
@@ -267,8 +267,8 @@ export default function AdminCategoriesPage() {
         <div className="container-main pt-20 pb-12">
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h1 className="text-3xl font-heading font-bold text-white mb-2">Manage Categories</h1>
-                    <p className="text-muted-foreground">Organize your marketplace structure</p>
+                    <h1 className="text-3xl font-heading font-bold text-white mb-2">Керування категоріями</h1>
+                    <p className="text-muted-foreground">Організуйте структуру свого ринку</p>
                 </div>
 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -279,25 +279,25 @@ export default function AdminCategoriesPage() {
                             className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-900/20"
                         >
                             <Plus className="w-4 h-4 mr-2" />
-                            Add Marketplace
+                            Додати категорію
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>
-                                {editingId ? 'Edit Category' : 'Create New Category'}
+                                {editingId ? 'Редагувати категорію' : 'Створити нову категорію'}
                             </DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <Label htmlFor="name">Name</Label>
+                                <Label htmlFor="name">Назва</Label>
                                 <Input
                                     id="name"
                                     value={formData.name}
                                     onChange={(e) =>
                                         setFormData({ ...formData, name: e.target.value })
                                     }
-                                    placeholder="e.g., Tractors"
+                                    placeholder="Наприклад: Трактори"
                                     required
                                 />
                             </div>
@@ -309,9 +309,9 @@ export default function AdminCategoriesPage() {
                                     onChange={(e) =>
                                         setFormData({ ...formData, slug: e.target.value })
                                     }
-                                    placeholder="e.g., tractors"
+                                    placeholder="Наприклад: tractors"
                                 />
-                                <p className="text-xs text-muted-foreground mt-1">Leave empty to auto-generate from name.</p>
+                                <p className="text-xs text-muted-foreground mt-1">Залиште порожнім, щоб згенерувати автоматично з назви.</p>
                             </div>
                             <div className="flex items-center gap-2 rounded-md border border-white/10 px-3 py-2">
                                 <input
@@ -323,16 +323,16 @@ export default function AdminCategoriesPage() {
                                     }
                                 />
                                 <Label htmlFor="hasEngine" className="cursor-pointer">
-                                    Has engine (uses motorized template fallback)
+                                    Має двигун
                                 </Label>
                             </div>
                             {formData.parentId && (
                                 <div className="text-sm text-muted-foreground">
-                                    Creating subcategory under ID: {formData.parentId}
+                                    Створення підкатегорії для ID: {formData.parentId}
                                 </div>
                             )}
                             <Button type="submit" className="w-full">
-                                {editingId ? 'Update' : 'Create'}
+                                {editingId ? 'Оновити' : 'Створити'}
                             </Button>
                         </form>
                     </DialogContent>
@@ -370,12 +370,12 @@ export default function AdminCategoriesPage() {
                         </div>
                         <h3 className="text-lg font-medium text-white mb-1">
                             {selectedMarketplace
-                                ? 'No categories yet'
-                                : 'Select a marketplace'}
+                                ? 'Категорій ще немає'
+                                : 'Оберіть маркетплейс'}
                         </h3>
                         {selectedMarketplace && (
                             <p className="text-sm text-muted-foreground max-w-sm">
-                                This marketplace doesn't have any categories properly set up. Add your first root category to get started.
+                                Для цього маркетплейсу ще не налаштовано категорії. Додайте першу кореневу категорію.
                             </p>
                         )}
                     </div>

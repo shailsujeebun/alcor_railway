@@ -167,7 +167,7 @@ export const DEFAULT_MOTORIZED_BLOCK_FIELDS = [
   },
   {
     key: 'condition',
-    label: 'Condition',
+    label: 'Стан',
     type: 'RADIO',
     component: 'radio',
     group: 'Basic characteristics',
@@ -193,7 +193,7 @@ export const DEFAULT_MOTORIZED_BLOCK_FIELDS = [
     order: 1120,
     dataSource: 'static',
     staticOptions: [
-      { value: 'runs', label: 'Runs and drives' },
+      { value: 'runs', label: 'Drives' },
       { value: 'needs_service', label: 'Needs service' },
       { value: 'after_accident', label: 'After accident' },
       { value: 'fresh_import', label: 'Fresh import' },

@@ -18,7 +18,6 @@ import { getCategoryDisplayName } from '@/lib/display-labels';
 const STATUS_TABS: { label: string; value: string }[] = [
   { label: 'Всі', value: '' },
   { label: 'Чернетки', value: 'DRAFT' },
-  { label: 'Подані', value: 'SUBMITTED' },
   { label: 'Активні', value: 'ACTIVE' },
   { label: 'Призупинені', value: 'PAUSED' },
   { label: 'Відхилені', value: 'REJECTED' },
@@ -175,7 +174,7 @@ export function MyListings() {
                       onClick={() => submitMutation.mutate(listing.id)}
                       disabled={isAnyPending}
                       className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors disabled:opacity-50"
-                      title="Подати на модерацію"
+                      title="Опублікувати"
                     >
                       <Send size={16} />
                     </button>
@@ -211,7 +210,7 @@ export function MyListings() {
                       onClick={() => resubmitMutation.mutate(listing.id)}
                       disabled={isAnyPending}
                       className="p-2 rounded-lg bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 transition-colors disabled:opacity-50"
-                      title="Повторно подати"
+                      title="Опублікувати знову"
                     >
                       <RotateCcw size={16} />
                     </button>

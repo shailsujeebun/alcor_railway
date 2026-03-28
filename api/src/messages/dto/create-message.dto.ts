@@ -6,7 +6,7 @@ export class CreateConversationDto {
   listingId: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   sellerId: string;
 
   @IsString()

@@ -418,3 +418,8 @@ CREATE TABLE listing_wizard_state (
 - Verification snapshot:
   - pass: `api` unit tests, `api/web` TypeScript checks, `web` lint
   - environment-blocked: `api build` (`cross-env` missing), `web build` (Google Fonts fetch blocked), `api e2e` (sandbox port bind `EPERM`).
+
+## Documentation Refresh - 2026-03-28
+
+Reviewed during the `new_improvements` branch documentation pass.
+For the latest implementation state, see `REBUILD_CHANGELOG.md` and `docs/project_status.md`.

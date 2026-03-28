@@ -123,3 +123,27 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 - `pnpm run test:e2e` passing
 - build-equivalent compile flow passing:
   - `DATABASE_URL=postgresql://dummy pnpm exec prisma generate && pnpm exec nest build`
+
+## Project Update - 2026-03-28
+
+- Updated seed/runtime marketplace behavior:
+  - moved `Transportation machinery` from Agro market to Auto market
+  - refreshed local seed data to match the visible marketplace taxonomy.
+- Simplified listing publication workflow:
+  - new listings now publish directly as `ACTIVE`
+  - submit/resubmit paths activate listings immediately.
+- Fixed admin category deletion:
+  - subtree delete now clears dependent template and brand-category links
+  - deletion is blocked only when listings still exist in that subtree.
+- Updated inquiry routing:
+  - listing inquiry conversations now resolve to Alcor admin first (`admin@alcor.com`)
+  - first-message inquiries generate `NEW_MESSAGE` notifications for admin
+  - messages, conversations, and notifications remain persisted in PostgreSQL.
+- Template wording updates:
+  - `Runs and drives` -> `Drives`
+  - `Condition` -> `Стан`.
+
+### Local runtime note
+- API dev server: `http://localhost:3000`
+- OpenSearch still requires `OPENSEARCH_INITIAL_ADMIN_PASSWORD` in `docker-compose.yml` for a clean local start.
+- full branch status: `REBUILD_CHANGELOG.md` and `docs/project_status.md`

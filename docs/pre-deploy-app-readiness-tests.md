@@ -150,3 +150,8 @@ A release is considered ready only when all gates below are marked `PASS`.
 - Implication for Gate 0:
   - quality baseline is partially evidenced locally
   - full Gate 0 pass still requires running `api build`, `web build`, and `api test:e2e` in a non-restricted CI/staging environment.
+
+## Documentation Refresh - 2026-03-28
+
+Reviewed during the `new_improvements` branch documentation pass.
+For the latest implementation state, see `REBUILD_CHANGELOG.md` and `docs/project_status.md`.

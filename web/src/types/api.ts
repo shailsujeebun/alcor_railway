@@ -355,7 +355,7 @@ export interface ChatMessage {
 
 export interface CreateConversationPayload {
   listingId: string;
-  sellerId: string;
+  sellerId?: string;
   body: string;
 }
 
@@ -430,39 +430,6 @@ export interface SavedSearch {
   name: string;
   filters: Record<string, string>;
   createdAt: string;
-}
-
-// ─── Plans & Billing ──────────────────────────────
-
-export type PlanInterval = 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
-export type SubscriptionStatusType = 'ACTIVE' | 'PAUSED' | 'CANCELLED' | 'EXPIRED';
-
-export interface Plan {
-  id: string;
-  slug: string;
-  name: string;
-  description: string | null;
-  priceAmount: number;
-  priceCurrency: string;
-  interval: PlanInterval;
-  features: string[];
-  limits: Record<string, number>;
-  isActive: boolean;
-  sortOrder: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Subscription {
-  id: string;
-  userId: string;
-  planId: string;
-  plan: Plan;
-  status: SubscriptionStatusType;
-  startDate: string;
-  endDate: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface AdminTemplate {

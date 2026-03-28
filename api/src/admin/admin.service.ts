@@ -89,8 +89,50 @@ export class AdminService {
   }
 
   async deleteCategory(id: number) {
-    return this.prisma.category.delete({
-      where: { id },
+    const categoryId = BigInt(id);
+
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.category.findUnique({
+        where: { id: categoryId },
+        select: { id: true },
+      });
+
+      if (!existing) {
+        throw new NotFoundException('Category not found');
+      }
+
+      const subtreeIds = [categoryId, ...(await this.getDescendantCategoryIds(tx, categoryId))];
+
+      const listingsCount = await tx.listing.count({
+        where: {
+          categoryId: { in: subtreeIds },
+        },
+      });
+
+      if (listingsCount > 0) {
+        throw new BadRequestException(
+          'Cannot delete category because it or its subcategories still contain listings.',
+        );
+      }
+
+      await tx.formTemplate.deleteMany({
+        where: { categoryId: { in: subtreeIds } },
+      });
+
+      await tx.brandCategory.deleteMany({
+        where: { categoryId: { in: subtreeIds } },
+      });
+
+      await tx.model.updateMany({
+        where: { categoryId: { in: subtreeIds } },
+        data: { categoryId: null },
+      });
+
+      await tx.category.deleteMany({
+        where: { id: { in: subtreeIds } },
+      });
+
+      return { deletedIds: subtreeIds.map((value) => value.toString()) };
     });
   }
 

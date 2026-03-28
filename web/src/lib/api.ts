@@ -528,14 +528,6 @@ export const createSavedSearch = (data: { name: string; filters: Record<string, 
 export const deleteSavedSearch = (id: string) =>
   fetchApi<void>(`/saved-searches/${id}`, { method: 'DELETE' });
 
-// ─── Plans & Subscriptions ─────────────────────────
-
-export const getPlans = () =>
-  fetchApi<import('@/types/api').Plan[]>('/plans');
-
-export const getMySubscription = () =>
-  fetchApi<import('@/types/api').Subscription | null>('/subscriptions/me');
-
 // Reference data
 export const getMarketplaces = () => fetchApi<Marketplace[]>('/marketplaces');
 export const getCategories = (marketplaceId?: string) =>

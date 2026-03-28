@@ -149,7 +149,6 @@ export const ukMessages = {
       savedSearches: 'Збережені пошуки',
       notifications: 'Сповіщення',
       support: 'Підтримка',
-      subscription: 'Підписка',
       settings: 'Налаштування',
     },
   },

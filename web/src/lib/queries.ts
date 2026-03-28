@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as api from './api';
+import { useAuthStore } from '@/stores/auth-store';
 import type {
   CreateConversationPayload,
   CreateCompanyPayload,
@@ -591,18 +592,25 @@ export function useUpdateTicket() {
 // ─── Notifications ────────────────────────────────
 
 export function useNotifications(page = 1) {
+  const userId = useAuthStore((state) => state.user?.id ?? null);
   const params = new URLSearchParams({ page: String(page), limit: '20' });
   return useQuery({
-    queryKey: ['notifications', page],
+    queryKey: ['notifications', userId, page],
     queryFn: () => api.getNotifications(params),
+    enabled: !!userId,
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
   });
 }
 
 export function useNotificationUnreadCount() {
+  const userId = useAuthStore((state) => state.user?.id ?? null);
   return useQuery({
-    queryKey: ['notification-unread-count'],
+    queryKey: ['notification-unread-count', userId],
     queryFn: api.getNotificationUnreadCount,
-    refetchInterval: 30000,
+    enabled: !!userId,
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -655,25 +663,6 @@ export function useDeleteSavedSearch() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['saved-searches'] });
     },
-  });
-}
-
-// ─── Plans & Subscriptions ─────────────────────────
-
-
-
-export function usePlans() {
-  return useQuery({
-    queryKey: ['plans'],
-    queryFn: api.getPlans,
-    staleTime: 5 * 60 * 1000,
-  });
-}
-
-export function useMySubscription() {
-  return useQuery({
-    queryKey: ['my-subscription'],
-    queryFn: api.getMySubscription,
   });
 }
 

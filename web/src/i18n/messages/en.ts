@@ -149,7 +149,6 @@ export const enMessages = {
       savedSearches: 'Saved searches',
       notifications: 'Notifications',
       support: 'Support',
-      subscription: 'Subscription',
       settings: 'Settings',
     },
   },

@@ -7,7 +7,7 @@ import type { User, UserRole, UserStatus } from '@/types/api';
 
 const ROLE_LABELS: Record<UserRole, string> = {
   USER: 'Користувач',
-  PRO_SELLER: 'PRO-продавець',
+  PRO_SELLER: 'Продавець',
   MANAGER: 'Менеджер',
   ADMIN: 'Адміністратор',
 };

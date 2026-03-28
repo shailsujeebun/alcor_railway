@@ -4,6 +4,12 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMarketplaces, useCategories, useBrands, useCountries, useCities, useCreateSavedSearch } from '@/lib/queries';
 import { useAuthStore } from '@/stores/auth-store';
+import {
+  dedupeCategoriesByDisplayName,
+  getCategoryDisplayName,
+  getMarketplaceDisplayName,
+  shouldHideCategory,
+} from '@/lib/display-labels';
 
 interface FiltersState {
   marketplaceId: string;
@@ -40,10 +46,12 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
   const [saveName, setSaveName] = useState('');
   const [showSave, setShowSave] = useState(false);
 
-  const flatCategories = categories?.flatMap((c) => [
-    c,
-    ...(c.children ?? []),
-  ]) ?? [];
+  const flatCategories = dedupeCategoriesByDisplayName(
+    (categories?.flatMap((c) => [
+      c,
+      ...(c.children ?? []),
+    ]) ?? []).filter((category) => !shouldHideCategory(category.name)),
+  );
 
   const hasFilters = Object.values(filters).some(Boolean);
 
@@ -91,7 +99,10 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
             value={filters.marketplaceId}
             onChange={(v) => onFilterChange('marketplaceId', v)}
             placeholder="Усі майданчики"
-            options={marketplaces.map((m) => ({ value: m.id, label: m.name }))}
+            options={marketplaces.map((m) => ({
+              value: m.id,
+              label: getMarketplaceDisplayName(m.name, m.key),
+            }))}
           />
         </div>
       )}
@@ -126,7 +137,9 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
           placeholder="Усі категорії"
           options={flatCategories.map((c) => ({
             value: c.id,
-            label: c.parentId ? `  ${c.name}` : c.name,
+            label: c.parentId
+              ? `  ${getCategoryDisplayName(c.name)}`
+              : getCategoryDisplayName(c.name),
           }))}
         />
       </div>
