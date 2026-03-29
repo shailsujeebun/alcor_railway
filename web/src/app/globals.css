@@ -519,7 +519,7 @@ select:focus-visible {
 
 .site-main-shell {
   padding-top: 40px;
-  padding-bottom: 48px;
+  padding-bottom: 0;
 }
 
 @media (max-width: 1024px) {
@@ -529,7 +529,7 @@ select:focus-visible {
 
   .site-main-shell {
     padding-top: 32px;
-    padding-bottom: 40px;
+    padding-bottom: 0;
   }
 }
 
@@ -540,7 +540,7 @@ select:focus-visible {
 
   .site-main-shell {
     padding-top: 24px;
-    padding-bottom: 32px;
+    padding-bottom: 0;
   }
 }
 
@@ -551,7 +551,7 @@ select:focus-visible {
 
   .site-main-shell {
     padding-top: 20px;
-    padding-bottom: 28px;
+    padding-bottom: 0;
   }
 }
 

@@ -9,7 +9,7 @@ import { MAIN_LANDING_URL } from '@/lib/landing';
 export function Footer() {
   const { t } = useTranslation();
   const homeLogoHref = MAIN_LANDING_URL;
-  const landingBaseUrl = (MAIN_LANDING_URL && MAIN_LANDING_URL !== '/' ? MAIN_LANDING_URL : 'http://localhost:4174').replace(/\/$/, '');
+  const landingBaseUrl = (MAIN_LANDING_URL && MAIN_LANDING_URL !== '/' ? MAIN_LANDING_URL : 'http://localhost:8000').replace(/\/$/, '');
   const address = t('footer.address');
   const phone = '+38 (068) 319-98-00';
   const email = 'alkorfk@gmail.com';
@@ -21,11 +21,8 @@ export function Footer() {
   ];
 
   return (
-    <footer className="border-t border-[var(--border-color)]" style={{ background: 'var(--bg-secondary)' }}>
-      <div
-        className="container-main pb-10 sm:pb-12 lg:pb-14"
-        style={{ paddingTop: '8.5rem' }}
-      >
+    <footer style={{ background: 'var(--bg-secondary)' }}>
+      <div className="container-main py-10 sm:py-12 lg:py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
           <div className="md:col-span-2 lg:col-span-5">
             <Link href={homeLogoHref} className="logo-link flex items-center gap-3 mb-4">

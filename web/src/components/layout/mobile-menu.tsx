@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { X, LogIn, LogOut, Shield } from 'lucide-react';
+import { X, LogIn, LogOut, Shield, Moon, Sun } from 'lucide-react';
 import type { User } from '@/types/api';
+import { useTheme } from '@/components/providers/theme-provider';
 import { useTranslation } from '../providers/translation-provider';
 
 interface MobileMenuProps {
@@ -17,6 +18,7 @@ interface MobileMenuProps {
 export function MobileMenu({ open, onClose, links, isAuthenticated, user, onLogout }: MobileMenuProps) {
   const isAdminUser = user?.role === 'ADMIN' || user?.role === 'MANAGER';
   const { t } = useTranslation();
+  const { theme, toggleTheme } = useTheme();
 
   if (!open) return null;
 
@@ -59,6 +61,16 @@ export function MobileMenu({ open, onClose, links, isAuthenticated, user, onLogo
             </Link>
           ))}
         </nav>
+
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-label={t('topBar.toggleTheme')}
+          className="mt-4 flex items-center justify-between rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] px-4 py-3 text-[var(--text-secondary)] transition-all hover:bg-[var(--border-color)] hover:text-[var(--text-primary)]"
+        >
+          <span className="font-medium">{t('topBar.toggleTheme')}</span>
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
 
         <div className="mt-auto space-y-3">
           {isAuthenticated ? (
