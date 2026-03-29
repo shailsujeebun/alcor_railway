@@ -10,12 +10,15 @@ import {
   ChevronDown,
   LayoutDashboard,
   Shield,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { MAIN_LANDING_URL } from '@/lib/landing';
 import { useAuthStore } from '@/stores/auth-store';
 import { logoutUser } from '@/lib/auth-api';
+import { useTheme } from '@/components/providers/theme-provider';
 import { MobileMenu } from './mobile-menu';
 import { NotificationBell } from './notification-bell';
 import { useTranslation } from '../providers/translation-provider';
@@ -28,6 +31,7 @@ export function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, isAuthenticated, isLoading, accessToken, logout } = useAuthStore();
   const { t } = useTranslation();
+  const { theme, toggleTheme } = useTheme();
   const isAdminUser = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
   const navLinks = [
@@ -98,6 +102,15 @@ export function Navbar() {
           </nav>
 
           <div className="hidden md:flex items-center gap-4 ml-auto">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={t('topBar.toggleTheme')}
+              title={t('topBar.toggleTheme')}
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
             {isLoading ? (
               <div className="w-8 h-8 rounded-full bg-[var(--border-color)] animate-pulse" />
             ) : isAuthenticated && user ? (
