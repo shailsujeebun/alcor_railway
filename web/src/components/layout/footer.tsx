@@ -9,7 +9,7 @@ import { MAIN_LANDING_URL } from '@/lib/landing';
 export function Footer() {
   const { t } = useTranslation();
   const homeLogoHref = MAIN_LANDING_URL;
-  const landingBaseUrl = (MAIN_LANDING_URL && MAIN_LANDING_URL !== '/' ? MAIN_LANDING_URL : 'http://localhost:8000').replace(/\/$/, '');
+  const landingBaseUrl = (MAIN_LANDING_URL && MAIN_LANDING_URL !== '/' ? MAIN_LANDING_URL : 'https://gleaming-bublanina-28d8bf.netlify.app/').replace(/\/$/, '');
   const address = t('footer.address');
   const phone = '+38 (068) 319-98-00';
   const email = 'alkorfk@gmail.com';
