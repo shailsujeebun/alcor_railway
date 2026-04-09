@@ -1,0 +1,21 @@
+﻿diff --cc web/src/components/layout/footer.tsx
+index 1f03243,3efa979..0000000
+--- a/web/src/components/layout/footer.tsx
++++ b/web/src/components/layout/footer.tsx
+@@@ -21,11 -21,8 +21,16 @@@ export function Footer() 
+    ];
+  
+    return (
+++<<<<<<< HEAD
+ +    <footer className="border-t border-[var(--border-color)]" style={{ background: 'var(--bg-secondary)' }}>
+ +      <div
+ +        className="container-main pb-10 sm:pb-12 lg:pb-14"
+ +        style={{ paddingTop: '8.5rem' }}
+ +      >
+++=======
++     <footer style={{ background: 'var(--bg-secondary)' }}>
++       <div className="container-main py-10 sm:py-12 lg:py-14">
+++>>>>>>> new_improvements
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
+            <div className="md:col-span-2 lg:col-span-5">
+              <Link href={homeLogoHref} className="logo-link flex items-center gap-3 mb-4">

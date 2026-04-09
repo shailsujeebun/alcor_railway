@@ -1,0 +1,60 @@
+﻿
+> api@0.0.1 build D:\Work\alcor\NEW-ALCOR\Alcor_Marketplace\api
+> cross-env DATABASE_URL="postgresql://dummy" pnpm exec prisma generate && nest build
+
+node.exe : Loaded Prisma 
+config from 
+prisma.config.ts.
+At C:\Users\shail\AppData\
+Roaming\npm\pnpm.ps1:24 
+char:5
++     & "node$exe"  "$base
+dir/node_modules/pnpm/bin/
+pnpm.cjs" $args
++     ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (L  
+  oaded Prisma c...isma   
+ .config.ts.:String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+
+Prisma schema loaded from 
+prisma\schema.prisma.
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö
+ÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓ
+öÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö
+ÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓ
+öÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé  Update available 
+7.3.0 -> 7.6.0            
+            Γöé
+Γöé  Run the following to 
+update                    
+        Γöé
+Γöé    npm i --save-dev 
+prisma@latest             
+          Γöé
+Γöé    npm i 
+@prisma/client@latest     
+                     Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö
+ÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓ
+öÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö
+ÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓ
+öÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+
+Γ£ö Generated Prisma Client (v7.3.0) to .\node_modules\.pnpm\@prisma+client@7.3.0_prisma_8fea616f875a5c837c207a718a73e7f1\node_modules\@prisma\client in 191ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+

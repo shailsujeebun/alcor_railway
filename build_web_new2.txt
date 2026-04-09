@@ -1,0 +1,71 @@
+﻿
+> web@0.1.0 build D:\Work\alcor\NEW-ALCOR\Alcor_Marketplace\web
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 3.6s
+  Running TypeScript ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/44) ...
+  Generating static pages using 11 workers (11/44) 
+  Generating static pages using 11 workers (22/44) 
+  Generating static pages using 11 workers (33/44) 
+Γ£ô Generating static pages using 11 workers (44/44) in 613.2ms
+  Finalizing page optimization ...
+
+Route (app)
+Γöî Γùï /
+Γö£ Γùï /_not-found
+Γö£ Γùï /about
+Γö£ Γùï /ad-placement
+Γö£ Γùï /ad-placement/details
+Γö£ Γùï /ad-placement/select-category
+Γö£ Γùï /admin
+Γö£ Γùï /admin/categories
+Γö£ Γùï /admin/companies
+Γö£ Γùï /admin/dealer-leads
+Γö£ Γùï /admin/listings/new
+Γö£ Γùï /admin/marketplaces
+Γö£ Γùï /admin/messages
+Γö£ Γùï /admin/moderation
+Γö£ Γùï /admin/templates
+Γö£ Γùï /admin/templates/builder
+Γö£ Γùï /admin/tickets
+Γö£ Γùï /admin/users
+Γö£ ╞Æ /api/translate
+Γö£ Γùï /cabinet
+Γö£ Γùï /cabinet/favorites
+Γö£ Γùï /cabinet/history
+Γö£ Γùï /cabinet/listings
+Γö£ ╞Æ /cabinet/listings/[id]/edit
+Γö£ Γùï /cabinet/listings/new
+Γö£ Γùï /cabinet/messages
+Γö£ ╞Æ /cabinet/messages/[id]
+Γö£ Γùï /cabinet/notifications
+Γö£ Γùï /cabinet/saved-searches
+Γö£ Γùï /cabinet/settings
+Γö£ Γùï /cabinet/support
+Γö£ ╞Æ /cabinet/support/[id]
+Γö£ Γùï /cabinet/support/new
+Γö£ Γùï /categories
+Γö£ Γùï /companies
+Γö£ ╞Æ /companies/[slug]
+Γö£ Γùï /dealer-registration
+Γö£ Γùï /forgot-password
+Γö£ Γùï /help
+Γö£ Γùï /listings
+Γö£ ╞Æ /listings/[id]
+Γö£ Γùï /login
+Γö£ Γùï /privacy
+Γö£ Γùï /register
+Γö£ Γùï /reset-password
+Γö£ Γùï /terms
+Γöö Γùï /verify-email
+
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+
