@@ -10,6 +10,21 @@ type CategorySeedNode = {
   children?: CategorySeedNode[];
 };
 
+type TemplateFieldSeed = {
+  fieldKey: string;
+  label: string;
+  fieldType: string;
+  required?: boolean;
+  sortOrder: number;
+  section: string;
+  validations?: Prisma.InputJsonValue;
+  options?: Array<{
+    value: string;
+    label: string;
+    sortOrder: number;
+  }>;
+};
+
 const MARKETPLACE_DEFINITIONS = [
   { key: 'agroline', name: 'Agroline', isActive: true },
   { key: 'autoline', name: 'Autoline', isActive: true },
@@ -43,6 +58,7 @@ const AGROLINE_TREE: CategorySeedNode[] = [
   {
     slug: 'combine-headers',
     name: 'Combine headers',
+    hasEngine: false,
     children: [
       { slug: 'grain-headers', name: 'Grain headers' },
       { slug: 'corn-headers', name: 'Corn headers' },
@@ -80,7 +96,6 @@ const AGROLINE_TREE: CategorySeedNode[] = [
   { slug: 'animal-husbandry', name: 'Animal husbandry' },
   { slug: 'agricultural-products', name: 'Agricultural products' },
   { slug: 'packaging-and-containers', name: 'Packaging and containers' },
-  { slug: 'farm-lands-and-buildings', name: 'Farm lands and buildings' },
   { slug: 'other-farm-equipment', name: 'Other farm equipment' },
   { slug: 'agroline-spare-parts', name: 'Spare parts', hasEngine: false },
   { slug: 'agroline-equipment', name: 'Equipment', hasEngine: false },
@@ -230,6 +245,71 @@ const MARKETPLACE_TAXONOMY = [
   MACHINERYLINE_TREE,
 ] as const;
 
+const AGRO_WORKBOOK_BRANDS = [
+  'John Deere',
+  'Case IH',
+  'New Holland',
+  'Claas',
+  'Massey Ferguson',
+  'Fendt',
+  'Deutz-Fahr',
+  'Kubota',
+  'Valtra',
+  'SAME',
+  'Steyr',
+  'Zetor',
+  'Versatile',
+  'Lovol',
+  'Mahindra',
+  'Ростсельмаш',
+  'Horsch',
+  'Vaderstad',
+  'Amazone',
+  'Lemken',
+  'Kuhn',
+  'Great Plains',
+  'Kverneland',
+  'Bednar',
+  'Pottinger',
+  'Gaspardo',
+  'Berthoud',
+  'Hardi',
+  'Krone',
+  'Херсонський машинобудівний завод',
+  'Уманьферммаш',
+  'Лозівські машини',
+  'Ельворті',
+  'Богуславська с/г техніка',
+  'БілоцерківМАЗ',
+  'Оріхівсільмаш',
+  'Восход',
+  'JCB',
+  'Manitou',
+  'Dieci',
+  'Merlo',
+  'Weidemann',
+  'Schaffer',
+  'YTO',
+  'Zoomlion',
+  'Dongfeng',
+  'Foton',
+  'ArmaTrac',
+  'Basak',
+  'Deutz',
+  'Yanmar',
+  'Perkins',
+  'Cummins',
+] as const;
+
+const NON_AGRO_BRANDS = [
+  'Caterpillar',
+  'Komatsu',
+  'MAN',
+  'Mercedes-Benz',
+  'Toyota',
+  'BMW',
+] as const;
+
 function collectLeafSlugs(nodes: readonly CategorySeedNode[]): string[] {
   const leaves: string[] = [];
   for (const node of nodes) {
@@ -245,6 +325,719 @@ function collectLeafSlugs(nodes: readonly CategorySeedNode[]): string[] {
 const ALL_LEAF_CATEGORY_SLUGS = MARKETPLACE_TAXONOMY.flatMap((tree) =>
   collectLeafSlugs(tree),
 );
+
+const COMBINE_HEADER_TEMPLATE_TARGET_SLUGS = [
+  'combine-headers',
+  'combines',
+  ...ALL_LEAF_CATEGORY_SLUGS,
+];
+
+const COMBINE_HEADER_TEMPLATE_SLUGS = new Set([
+  'combine-headers',
+  'grain-headers',
+  'corn-headers',
+  'sunflower-headers',
+]);
+
+const GARDEN_MACHINERY_TEMPLATE_SLUGS = new Set(['garden-machinery']);
+const COMBINES_TEMPLATE_SLUGS = new Set([
+  'combines',
+  'grain-harvesters',
+  'forage-harvesters',
+  'beet-harvesters',
+]);
+
+const TEMPLATE_MONTH_OPTIONS = [
+  { value: '01', label: 'January', sortOrder: 1 },
+  { value: '02', label: 'February', sortOrder: 2 },
+  { value: '03', label: 'March', sortOrder: 3 },
+  { value: '04', label: 'April', sortOrder: 4 },
+  { value: '05', label: 'May', sortOrder: 5 },
+  { value: '06', label: 'June', sortOrder: 6 },
+  { value: '07', label: 'July', sortOrder: 7 },
+  { value: '08', label: 'August', sortOrder: 8 },
+  { value: '09', label: 'September', sortOrder: 9 },
+  { value: '10', label: 'October', sortOrder: 10 },
+  { value: '11', label: 'November', sortOrder: 11 },
+  { value: '12', label: 'December', sortOrder: 12 },
+];
+
+function createYearOptions() {
+  const currentYear = new Date().getUTCFullYear();
+  return Array.from({ length: 80 }, (_, index) => {
+    const year = currentYear - index;
+    return {
+      value: String(year),
+      label: String(year),
+      sortOrder: index + 1,
+    };
+  });
+}
+
+const TEMPLATE_YEAR_OPTIONS = createYearOptions();
+
+const COMBINE_HEADER_TEMPLATE_FIELDS: TemplateFieldSeed[] = [
+  { fieldKey: 'brand', label: 'Brand', fieldType: 'SELECT', required: true, sortOrder: 10, section: 'Basic characteristics' },
+  { fieldKey: 'model', label: 'Model', fieldType: 'SELECT', sortOrder: 20, section: 'Basic characteristics' },
+  { fieldKey: 'year_of_manufacture_year', label: 'Year of manufacture (year)', fieldType: 'SELECT', sortOrder: 30, section: 'Basic characteristics', options: TEMPLATE_YEAR_OPTIONS },
+  { fieldKey: 'year_of_manufacture_month', label: 'Year of manufacture (month)', fieldType: 'SELECT', sortOrder: 40, section: 'Basic characteristics', options: TEMPLATE_MONTH_OPTIONS },
+  { fieldKey: 'first_registration_year', label: 'First registration (year)', fieldType: 'SELECT', sortOrder: 50, section: 'Basic characteristics', options: TEMPLATE_YEAR_OPTIONS },
+  { fieldKey: 'first_registration_month', label: 'First registration (month)', fieldType: 'SELECT', sortOrder: 60, section: 'Basic characteristics', options: TEMPLATE_MONTH_OPTIONS },
+  { fieldKey: 'vin', label: 'VIN', fieldType: 'TEXT', sortOrder: 70, section: 'Basic characteristics', validations: { minLength: 17, maxLength: 17 } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'condition',
+    label: 'Condition',
+    fieldType: 'RADIO',
+    required: true,
+    sortOrder: 80,
+    section: 'Basic characteristics',
+    options: [
+      { value: 'NEW', label: 'New', sortOrder: 1 },
+      { value: 'USED', label: 'Used', sortOrder: 2 },
+      { value: 'WITH_DEFECT', label: 'With a defect', sortOrder: 3 },
+      { value: 'REMANUFACTURED', label: 'Remanufactured', sortOrder: 4 },
+      { value: 'CRASHED', label: 'Crashed', sortOrder: 5 },
+      { value: 'DEMO', label: 'Demonstration', sortOrder: 6 },
+      { value: 'FOR_PARTS', label: 'For parts', sortOrder: 7 },
+    ],
+  },
+  { fieldKey: 'running_hours', label: 'Running hours', fieldType: 'NUMBER', sortOrder: 90, section: 'Basic characteristics', validations: { min: 0, max: 200000, unit: 'm/h' } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'colour',
+    label: 'Colour',
+    fieldType: 'COLOR',
+    sortOrder: 100,
+    section: 'Basic characteristics',
+    options: [
+      { value: '#FFFFFF', label: 'White', sortOrder: 1 },
+      { value: '#F5F5DC', label: 'Beige', sortOrder: 2 },
+      { value: '#D1D5DB', label: 'Light grey', sortOrder: 3 },
+      { value: '#9CA3AF', label: 'Grey', sortOrder: 4 },
+      { value: '#A16207', label: 'Brown', sortOrder: 5 },
+      { value: '#F97316', label: 'Orange', sortOrder: 6 },
+      { value: '#FACC15', label: 'Yellow', sortOrder: 7 },
+      { value: '#FFEA00', label: 'Bright yellow', sortOrder: 8 },
+      { value: '#15803D', label: 'Green', sortOrder: 9 },
+      { value: '#38CFCF', label: 'Turquoise', sortOrder: 10 },
+      { value: '#0EA5E9', label: 'Sky blue', sortOrder: 11 },
+      { value: '#1D4ED8', label: 'Blue', sortOrder: 12 },
+      { value: '#C084FC', label: 'Purple', sortOrder: 13 },
+      { value: '#7C3AED', label: 'Violet', sortOrder: 14 },
+      { value: '#B91C1C', label: 'Dark red', sortOrder: 15 },
+      { value: '#FF0000', label: 'Red', sortOrder: 16 },
+      { value: '#57534E', label: 'Olive', sortOrder: 17 },
+      { value: '#1F2937', label: 'Black', sortOrder: 18 },
+    ],
+  },
+  { fieldKey: 'working_width', label: 'Working width', fieldType: 'NUMBER', sortOrder: 110, section: 'Basic characteristics', validations: { min: 0, max: 50, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'mowing_height', label: 'Mowing height', fieldType: 'NUMBER', sortOrder: 120, section: 'Basic characteristics', validations: { min: 0, max: 5000, unit: 'mm' } as Prisma.InputJsonValue },
+  { fieldKey: 'number_of_rows', label: 'Number of rows', fieldType: 'NUMBER', sortOrder: 130, section: 'Basic characteristics', validations: { min: 0, max: 64 } as Prisma.InputJsonValue },
+  { fieldKey: 'row_spacing', label: 'Row spacing', fieldType: 'NUMBER', sortOrder: 140, section: 'Basic characteristics', validations: { min: 0, max: 5000, unit: 'mm' } as Prisma.InputJsonValue },
+  { fieldKey: 'capacity_tph', label: 'Capacity (t/h)', fieldType: 'NUMBER', sortOrder: 150, section: 'Basic characteristics', validations: { min: 0, max: 500 } as Prisma.InputJsonValue },
+  { fieldKey: 'capacity_ha_hour', label: 'Capacity (ha/hour)', fieldType: 'NUMBER', sortOrder: 160, section: 'Basic characteristics', validations: { min: 0, max: 500 } as Prisma.InputJsonValue },
+  { fieldKey: 'operating_speed', label: 'Operating speed', fieldType: 'NUMBER', sortOrder: 170, section: 'Basic characteristics', validations: { min: 0, max: 120, unit: 'km/h' } as Prisma.InputJsonValue },
+  { fieldKey: 'combine_header_trailer', label: 'Combine header trailer', fieldType: 'BOOLEAN', sortOrder: 180, section: 'Basic characteristics' },
+  { fieldKey: 'vehicle_mark', label: 'Vehicle mark', fieldType: 'TEXT', sortOrder: 190, section: 'Basic characteristics' },
+  { fieldKey: 'vehicle_model', label: 'Vehicle model', fieldType: 'TEXT', sortOrder: 200, section: 'Basic characteristics' },
+  { fieldKey: 'overall_length', label: 'Overall dimensions length', fieldType: 'NUMBER', sortOrder: 210, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'overall_width', label: 'Overall dimensions width', fieldType: 'NUMBER', sortOrder: 220, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'overall_height', label: 'Overall dimensions height', fieldType: 'NUMBER', sortOrder: 230, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'transport_length', label: 'Transport dimensions length', fieldType: 'NUMBER', sortOrder: 240, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'transport_width', label: 'Transport dimensions width', fieldType: 'NUMBER', sortOrder: 250, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'transport_height', label: 'Transport dimensions height', fieldType: 'NUMBER', sortOrder: 260, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'net_weight', label: 'Net weight', fieldType: 'NUMBER', sortOrder: 270, section: 'Basic characteristics', validations: { min: 0, max: 200000, unit: 'kg' } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'more_details',
+    label: 'Description',
+    fieldType: 'RICHTEXT',
+    sortOrder: 300,
+    section: 'More details',
+    validations: {
+      placeholder:
+        'Indicate additional characteristics or special features of your combine header.',
+    } as Prisma.InputJsonValue,
+  },
+  {
+    fieldKey: 'advert_type',
+    label: 'Advert type',
+    fieldType: 'RADIO',
+    sortOrder: 400,
+    section: 'Ad parameters',
+    options: [
+      { value: 'SALE', label: 'Sale', sortOrder: 1 },
+      { value: 'RENT', label: 'Rent', sortOrder: 2 },
+      { value: 'SALE_RENT', label: 'Sale / Rent', sortOrder: 3 },
+    ],
+  },
+  { fieldKey: 'price', label: 'Price', fieldType: 'NUMBER', sortOrder: 410, section: 'Ad parameters', validations: { min: 0, max: 1000000000 } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'currency',
+    label: 'Currency',
+    fieldType: 'SELECT',
+    sortOrder: 420,
+    section: 'Ad parameters',
+    options: [
+      { value: 'EUR', label: 'EUR', sortOrder: 1 },
+      { value: 'USD', label: 'USD', sortOrder: 2 },
+      { value: 'GBP', label: 'GBP', sortOrder: 3 },
+      { value: 'UAH', label: 'UAH', sortOrder: 4 },
+    ],
+  },
+  {
+    fieldKey: 'vat_type',
+    label: 'VAT',
+    fieldType: 'RADIO',
+    sortOrder: 430,
+    section: 'Ad parameters',
+    options: [
+      { value: 'EXCLUDING', label: 'excluding VAT', sortOrder: 1 },
+      { value: 'INCLUDING', label: 'including VAT', sortOrder: 2 },
+    ],
+  },
+  { fieldKey: 'reserved', label: 'Reserved', fieldType: 'BOOLEAN', sortOrder: 440, section: 'Ad parameters' },
+  { fieldKey: 'leasing_possible', label: 'Leasing is possible', fieldType: 'BOOLEAN', sortOrder: 450, section: 'Ad parameters' },
+  { fieldKey: 'purchase_on_credit_possible', label: 'Purchase on credit is possible', fieldType: 'BOOLEAN', sortOrder: 460, section: 'Ad parameters' },
+  { fieldKey: 'purchase_by_installments_possible', label: 'Purchase by installments is possible', fieldType: 'BOOLEAN', sortOrder: 470, section: 'Ad parameters' },
+  {
+    fieldKey: 'warranty',
+    label: 'Warranty',
+    fieldType: 'SELECT',
+    sortOrder: 480,
+    section: 'Ad parameters',
+    options: [
+      { value: 'NONE', label: 'No warranty', sortOrder: 1 },
+      { value: '3_MONTHS', label: '3 months', sortOrder: 2 },
+      { value: '6_MONTHS', label: '6 months', sortOrder: 3 },
+      { value: '12_MONTHS', label: '12 months', sortOrder: 4 },
+      { value: '24_MONTHS', label: '24 months', sortOrder: 5 },
+    ],
+  },
+  { fieldKey: 'seller_stock_id', label: 'Seller stock ID', fieldType: 'TEXT', sortOrder: 490, section: 'Ad parameters' },
+];
+
+const GARDEN_MACHINERY_TEMPLATE_FIELDS: TemplateFieldSeed[] = [
+  { fieldKey: 'brand', label: 'Brand', fieldType: 'SELECT', required: true, sortOrder: 10, section: 'Basic characteristics' },
+  { fieldKey: 'model', label: 'Model', fieldType: 'SELECT', sortOrder: 20, section: 'Basic characteristics' },
+  { fieldKey: 'year_of_manufacture_year', label: 'Year of manufacture (year)', fieldType: 'SELECT', sortOrder: 30, section: 'Basic characteristics', options: TEMPLATE_YEAR_OPTIONS },
+  { fieldKey: 'year_of_manufacture_month', label: 'Year of manufacture (month)', fieldType: 'SELECT', sortOrder: 40, section: 'Basic characteristics', options: TEMPLATE_MONTH_OPTIONS },
+  { fieldKey: 'first_registration_year', label: 'First registration (year)', fieldType: 'SELECT', sortOrder: 50, section: 'Basic characteristics', options: TEMPLATE_YEAR_OPTIONS },
+  { fieldKey: 'first_registration_month', label: 'First registration (month)', fieldType: 'SELECT', sortOrder: 60, section: 'Basic characteristics', options: TEMPLATE_MONTH_OPTIONS },
+  {
+    fieldKey: 'condition',
+    label: 'Condition',
+    fieldType: 'RADIO',
+    required: true,
+    sortOrder: 70,
+    section: 'Basic characteristics',
+    options: [
+      { value: 'NEW', label: 'New', sortOrder: 1 },
+      { value: 'USED', label: 'Used', sortOrder: 2 },
+      { value: 'WITH_DEFECT', label: 'With a defect', sortOrder: 3 },
+      { value: 'REMANUFACTURED', label: 'Remanufactured', sortOrder: 4 },
+      { value: 'CRASHED', label: 'Crashed', sortOrder: 5 },
+      { value: 'DEMO', label: 'Demonstration', sortOrder: 6 },
+      { value: 'FOR_PARTS', label: 'For parts', sortOrder: 7 },
+    ],
+  },
+  {
+    fieldKey: 'colour',
+    label: 'Colour',
+    fieldType: 'COLOR',
+    sortOrder: 80,
+    section: 'Basic characteristics',
+    options: [
+      { value: '#FFFFFF', label: 'White', sortOrder: 1 },
+      { value: '#F5F5DC', label: 'Beige', sortOrder: 2 },
+      { value: '#D1D5DB', label: 'Light grey', sortOrder: 3 },
+      { value: '#9CA3AF', label: 'Grey', sortOrder: 4 },
+      { value: '#A16207', label: 'Brown', sortOrder: 5 },
+      { value: '#F97316', label: 'Orange', sortOrder: 6 },
+      { value: '#FACC15', label: 'Yellow', sortOrder: 7 },
+      { value: '#FFEA00', label: 'Bright yellow', sortOrder: 8 },
+      { value: '#15803D', label: 'Green', sortOrder: 9 },
+      { value: '#38CFCF', label: 'Turquoise', sortOrder: 10 },
+      { value: '#0EA5E9', label: 'Sky blue', sortOrder: 11 },
+      { value: '#1D4ED8', label: 'Blue', sortOrder: 12 },
+      { value: '#C084FC', label: 'Purple', sortOrder: 13 },
+      { value: '#7C3AED', label: 'Violet', sortOrder: 14 },
+      { value: '#B91C1C', label: 'Dark red', sortOrder: 15 },
+      { value: '#FF0000', label: 'Red', sortOrder: 16 },
+      { value: '#57534E', label: 'Olive', sortOrder: 17 },
+      { value: '#1F2937', label: 'Black', sortOrder: 18 },
+    ],
+  },
+  { fieldKey: 'running_hours', label: 'Running hours', fieldType: 'NUMBER', sortOrder: 90, section: 'Basic characteristics', validations: { min: 0, max: 200000, unit: 'm/h' } as Prisma.InputJsonValue },
+  { fieldKey: 'working_width', label: 'Working width', fieldType: 'NUMBER', sortOrder: 100, section: 'Basic characteristics', validations: { min: 0, max: 20000, unit: 'mm' } as Prisma.InputJsonValue },
+  { fieldKey: 'current_frequency', label: 'Current frequency', fieldType: 'NUMBER', sortOrder: 110, section: 'Basic characteristics', validations: { min: 0, max: 1000, unit: 'Hz' } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'voltage',
+    label: 'Voltage',
+    fieldType: 'SELECT',
+    sortOrder: 120,
+    section: 'Basic characteristics',
+    options: [
+      { value: '12V', label: '12 V', sortOrder: 1 },
+      { value: '24V', label: '24 V', sortOrder: 2 },
+      { value: '48V', label: '48 V', sortOrder: 3 },
+      { value: '110V', label: '110 V', sortOrder: 4 },
+      { value: '220V', label: '220 V', sortOrder: 5 },
+      { value: '230V', label: '230 V', sortOrder: 6 },
+      { value: '380V', label: '380 V', sortOrder: 7 },
+      { value: '400V', label: '400 V', sortOrder: 8 },
+    ],
+  },
+  { fieldKey: 'overall_length', label: 'Overall dimensions length', fieldType: 'NUMBER', sortOrder: 130, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'overall_width', label: 'Overall dimensions width', fieldType: 'NUMBER', sortOrder: 140, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'overall_height', label: 'Overall dimensions height', fieldType: 'NUMBER', sortOrder: 150, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'net_weight', label: 'Net weight', fieldType: 'NUMBER', sortOrder: 160, section: 'Basic characteristics', validations: { min: 0, max: 200000, unit: 'kg' } as Prisma.InputJsonValue },
+  { fieldKey: 'power', label: 'Power', fieldType: 'NUMBER', sortOrder: 200, section: 'Engine, gearbox', validations: { min: 0, max: 10000 } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'power_unit',
+    label: 'Power unit',
+    fieldType: 'RADIO',
+    sortOrder: 210,
+    section: 'Engine, gearbox',
+    options: [
+      { value: 'HP', label: 'HP', sortOrder: 1 },
+      { value: 'KW', label: 'kW', sortOrder: 2 },
+    ],
+  },
+  {
+    fieldKey: 'battery_brand',
+    label: 'Battery brand',
+    fieldType: 'RADIO',
+    sortOrder: 220,
+    section: 'Engine, gearbox',
+    options: [
+      { value: 'ALTEK', label: 'Altek', sortOrder: 1 },
+      { value: 'SOLARX', label: 'SolarX', sortOrder: 2 },
+      { value: 'BB_BATTERY', label: 'B.B. Battery', sortOrder: 3 },
+      { value: 'SUNLIGHT', label: 'Sunlight', sortOrder: 4 },
+      { value: 'CHALLENGER', label: 'Challenger', sortOrder: 5 },
+      { value: 'TAB', label: 'TAB', sortOrder: 6 },
+      { value: 'MERLION', label: 'Merlion', sortOrder: 7 },
+      { value: 'VENTURA', label: 'Ventura', sortOrder: 8 },
+      { value: 'ORBUS', label: 'Orbus', sortOrder: 9 },
+      { value: 'YUASA', label: 'Yuasa', sortOrder: 10 },
+    ],
+  },
+  { fieldKey: 'battery_capacity', label: 'Battery capacity', fieldType: 'NUMBER', sortOrder: 230, section: 'Engine, gearbox', validations: { min: 0, max: 100000, unit: 'kW·h' } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'more_details',
+    label: 'Description',
+    fieldType: 'RICHTEXT',
+    sortOrder: 300,
+    section: 'More details',
+    validations: {
+      placeholder:
+        'Indicate additional characteristics or special features of your garden machinery.',
+    } as Prisma.InputJsonValue,
+  },
+  {
+    fieldKey: 'advert_type',
+    label: 'Advert type',
+    fieldType: 'RADIO',
+    sortOrder: 400,
+    section: 'Ad parameters',
+    options: [
+      { value: 'SALE', label: 'Sale', sortOrder: 1 },
+      { value: 'RENT', label: 'Rent', sortOrder: 2 },
+      { value: 'SALE_RENT', label: 'Sale / Rent', sortOrder: 3 },
+    ],
+  },
+  { fieldKey: 'price', label: 'Price', fieldType: 'NUMBER', sortOrder: 410, section: 'Ad parameters', validations: { min: 0, max: 1000000000 } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'currency',
+    label: 'Currency',
+    fieldType: 'SELECT',
+    sortOrder: 420,
+    section: 'Ad parameters',
+    options: [
+      { value: 'EUR', label: 'EUR', sortOrder: 1 },
+      { value: 'USD', label: 'USD', sortOrder: 2 },
+      { value: 'GBP', label: 'GBP', sortOrder: 3 },
+      { value: 'UAH', label: 'UAH', sortOrder: 4 },
+    ],
+  },
+  {
+    fieldKey: 'vat_type',
+    label: 'VAT',
+    fieldType: 'RADIO',
+    sortOrder: 430,
+    section: 'Ad parameters',
+    options: [
+      { value: 'EXCLUDING', label: 'excluding VAT', sortOrder: 1 },
+      { value: 'INCLUDING', label: 'including VAT', sortOrder: 2 },
+    ],
+  },
+  { fieldKey: 'reserved', label: 'Reserved', fieldType: 'BOOLEAN', sortOrder: 440, section: 'Ad parameters' },
+  { fieldKey: 'leasing_possible', label: 'Leasing is possible', fieldType: 'BOOLEAN', sortOrder: 450, section: 'Ad parameters' },
+  { fieldKey: 'purchase_on_credit_possible', label: 'Purchase on credit is possible', fieldType: 'BOOLEAN', sortOrder: 460, section: 'Ad parameters' },
+  { fieldKey: 'purchase_by_installments_possible', label: 'Purchase by installments is possible', fieldType: 'BOOLEAN', sortOrder: 470, section: 'Ad parameters' },
+  {
+    fieldKey: 'warranty',
+    label: 'Warranty',
+    fieldType: 'SELECT',
+    sortOrder: 480,
+    section: 'Ad parameters',
+    options: [
+      { value: 'NONE', label: 'No warranty', sortOrder: 1 },
+      { value: '3_MONTHS', label: '3 months', sortOrder: 2 },
+      { value: '6_MONTHS', label: '6 months', sortOrder: 3 },
+      { value: '12_MONTHS', label: '12 months', sortOrder: 4 },
+      { value: '24_MONTHS', label: '24 months', sortOrder: 5 },
+    ],
+  },
+  { fieldKey: 'seller_stock_id', label: 'Seller stock ID', fieldType: 'TEXT', sortOrder: 490, section: 'Ad parameters' },
+];
+
+const COMBINES_TEMPLATE_FIELDS: TemplateFieldSeed[] = [
+  { fieldKey: 'brand', label: 'Brand', fieldType: 'SELECT', required: true, sortOrder: 10, section: 'Basic characteristics' },
+  { fieldKey: 'model', label: 'Model', fieldType: 'SELECT', sortOrder: 20, section: 'Basic characteristics' },
+  { fieldKey: 'mini', label: 'Mini', fieldType: 'BOOLEAN', sortOrder: 25, section: 'Basic characteristics' },
+  { fieldKey: 'year_of_manufacture_year', label: 'Year of manufacture (year)', fieldType: 'SELECT', sortOrder: 30, section: 'Basic characteristics', options: TEMPLATE_YEAR_OPTIONS },
+  { fieldKey: 'year_of_manufacture_month', label: 'Year of manufacture (month)', fieldType: 'SELECT', sortOrder: 40, section: 'Basic characteristics', options: TEMPLATE_MONTH_OPTIONS },
+  { fieldKey: 'first_registration_year', label: 'First registration (year)', fieldType: 'SELECT', sortOrder: 50, section: 'Basic characteristics', options: TEMPLATE_YEAR_OPTIONS },
+  { fieldKey: 'first_registration_month', label: 'First registration (month)', fieldType: 'SELECT', sortOrder: 60, section: 'Basic characteristics', options: TEMPLATE_MONTH_OPTIONS },
+  { fieldKey: 'vin', label: 'VIN', fieldType: 'TEXT', sortOrder: 70, section: 'Basic characteristics', validations: { minLength: 17, maxLength: 17 } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'condition',
+    label: 'Condition',
+    fieldType: 'RADIO',
+    required: true,
+    sortOrder: 80,
+    section: 'Basic characteristics',
+    options: [
+      { value: 'NEW', label: 'New', sortOrder: 1 },
+      { value: 'USED', label: 'Used', sortOrder: 2 },
+      { value: 'WITH_DEFECT', label: 'With a defect', sortOrder: 3 },
+      { value: 'REMANUFACTURED', label: 'Remanufactured', sortOrder: 4 },
+      { value: 'CRASHED', label: 'Crashed', sortOrder: 5 },
+      { value: 'DEMO', label: 'Demonstration', sortOrder: 6 },
+      { value: 'FOR_PARTS', label: 'For parts', sortOrder: 7 },
+    ],
+  },
+  { fieldKey: 'running_hours', label: 'Running hours', fieldType: 'NUMBER', sortOrder: 90, section: 'Basic characteristics', validations: { min: 0, max: 200000, unit: 'm/h' } as Prisma.InputJsonValue },
+  { fieldKey: 'colour', label: 'Colour', fieldType: 'COLOR', sortOrder: 100, section: 'Basic characteristics', options: [
+      { value: '#15803D', label: 'Green', sortOrder: 1 },
+      { value: '#FF0000', label: 'Red', sortOrder: 2 },
+      { value: '#FACC15', label: 'Yellow', sortOrder: 3 },
+      { value: '#FFFFFF', label: 'White', sortOrder: 4 },
+      { value: '#1D4ED8', label: 'Blue', sortOrder: 5 },
+      { value: '#1F2937', label: 'Black', sortOrder: 6 },
+    ] },
+  { fieldKey: 'working_width', label: 'Working width', fieldType: 'NUMBER', sortOrder: 110, section: 'Basic characteristics', validations: { min: 0, max: 50, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'number_of_rows', label: 'Number of rows', fieldType: 'NUMBER', sortOrder: 120, section: 'Basic characteristics', validations: { min: 0, max: 64 } as Prisma.InputJsonValue },
+  { fieldKey: 'row_spacing', label: 'Row spacing', fieldType: 'NUMBER', sortOrder: 130, section: 'Basic characteristics', validations: { min: 0, max: 5000, unit: 'mm' } as Prisma.InputJsonValue },
+  { fieldKey: 'volume_of_the_tank', label: 'Volume of the tank', fieldType: 'NUMBER', sortOrder: 140, section: 'Basic characteristics', validations: { min: 0, max: 1000, unit: 'm3' } as Prisma.InputJsonValue },
+  { fieldKey: 'capacity_tph', label: 'Capacity', fieldType: 'NUMBER', sortOrder: 150, section: 'Basic characteristics', validations: { min: 0, max: 500, unit: 't/h' } as Prisma.InputJsonValue },
+  { fieldKey: 'operating_speed', label: 'Operating speed', fieldType: 'NUMBER', sortOrder: 160, section: 'Basic characteristics', validations: { min: 0, max: 120, unit: 'km/h' } as Prisma.InputJsonValue },
+  { fieldKey: 'speed', label: 'Speed', fieldType: 'NUMBER', sortOrder: 170, section: 'Basic characteristics', validations: { min: 0, max: 120, unit: 'km/h' } as Prisma.InputJsonValue },
+  { fieldKey: 'cabin_heater', label: 'Cabin heater', fieldType: 'BOOLEAN', sortOrder: 180, section: 'Basic characteristics' },
+  { fieldKey: 'overall_length', label: 'Overall dimensions length', fieldType: 'NUMBER', sortOrder: 190, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'overall_width', label: 'Overall dimensions width', fieldType: 'NUMBER', sortOrder: 200, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'overall_height', label: 'Overall dimensions height', fieldType: 'NUMBER', sortOrder: 210, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'transport_length', label: 'Transport dimensions length', fieldType: 'NUMBER', sortOrder: 220, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'transport_width', label: 'Transport dimensions width', fieldType: 'NUMBER', sortOrder: 230, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'transport_height', label: 'Transport dimensions height', fieldType: 'NUMBER', sortOrder: 240, section: 'Basic characteristics', validations: { min: 0, max: 100, unit: 'm' } as Prisma.InputJsonValue },
+  { fieldKey: 'net_weight', label: 'Net weight', fieldType: 'NUMBER', sortOrder: 250, section: 'Basic characteristics', validations: { min: 0, max: 200000, unit: 'kg' } as Prisma.InputJsonValue },
+  { fieldKey: 'gross_weight', label: 'Gross weight', fieldType: 'NUMBER', sortOrder: 260, section: 'Basic characteristics', validations: { min: 0, max: 200000, unit: 'kg' } as Prisma.InputJsonValue },
+  { fieldKey: 'central_lubrication', label: 'Central lubrication', fieldType: 'BOOLEAN', sortOrder: 270, section: 'Basic characteristics' },
+  {
+    fieldKey: 'engine_mark',
+    label: 'Engine mark',
+    fieldType: 'SELECT',
+    sortOrder: 300,
+    section: 'Engine, gearbox',
+    options: [
+      { value: 'Cummins', label: 'Cummins', sortOrder: 1 },
+      { value: 'Deutz', label: 'Deutz', sortOrder: 2 },
+      { value: 'John Deere', label: 'John Deere', sortOrder: 3 },
+      { value: 'Mercedes-Benz', label: 'Mercedes-Benz', sortOrder: 4 },
+      { value: 'Perkins', label: 'Perkins', sortOrder: 5 },
+      { value: 'Volvo', label: 'Volvo', sortOrder: 6 },
+    ],
+  },
+  { fieldKey: 'engine_model', label: 'Engine model', fieldType: 'TEXT', sortOrder: 310, section: 'Engine, gearbox' },
+  {
+    fieldKey: 'fuel',
+    label: 'Fuel',
+    fieldType: 'SELECT',
+    sortOrder: 320,
+    section: 'Engine, gearbox',
+    options: [
+      { value: 'DIESEL', label: 'Diesel', sortOrder: 1 },
+      { value: 'PETROL', label: 'Petrol', sortOrder: 2 },
+      { value: 'HYBRID', label: 'Hybrid', sortOrder: 3 },
+      { value: 'ELECTRIC', label: 'Electric', sortOrder: 4 },
+    ],
+  },
+  { fieldKey: 'turbo', label: 'Turbo', fieldType: 'BOOLEAN', sortOrder: 330, section: 'Engine, gearbox' },
+  { fieldKey: 'intercooler', label: 'Intercooler', fieldType: 'BOOLEAN', sortOrder: 340, section: 'Engine, gearbox' },
+  { fieldKey: 'power', label: 'Power', fieldType: 'NUMBER', sortOrder: 350, section: 'Engine, gearbox', validations: { min: 0, max: 2000 } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'power_unit',
+    label: 'Power unit',
+    fieldType: 'RADIO',
+    sortOrder: 360,
+    section: 'Engine, gearbox',
+    options: [
+      { value: 'HP', label: 'HP', sortOrder: 1 },
+      { value: 'KW', label: 'kW', sortOrder: 2 },
+    ],
+  },
+  {
+    fieldKey: 'engine_type',
+    label: 'Engine type',
+    fieldType: 'RADIO',
+    sortOrder: 370,
+    section: 'Engine, gearbox',
+    options: [
+      { value: 'IN_LINE', label: 'In-line', sortOrder: 1 },
+      { value: 'V_TYPE', label: 'V-type', sortOrder: 2 },
+    ],
+  },
+  { fieldKey: 'engine_volume', label: 'Engine volume', fieldType: 'NUMBER', sortOrder: 380, section: 'Engine, gearbox', validations: { min: 0, max: 50000, unit: 'cm3' } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'number_of_cylinders',
+    label: 'Number of cylinders',
+    fieldType: 'SELECT',
+    sortOrder: 390,
+    section: 'Engine, gearbox',
+    options: [
+      { value: '3', label: '3', sortOrder: 1 },
+      { value: '4', label: '4', sortOrder: 2 },
+      { value: '5', label: '5', sortOrder: 3 },
+      { value: '6', label: '6', sortOrder: 4 },
+      { value: '8', label: '8', sortOrder: 5 },
+      { value: '12', label: '12', sortOrder: 6 },
+    ],
+  },
+  { fieldKey: 'number_of_valves', label: 'Number of valves', fieldType: 'NUMBER', sortOrder: 400, section: 'Engine, gearbox', validations: { min: 0, max: 64 } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'euro',
+    label: 'Euro',
+    fieldType: 'RADIO',
+    sortOrder: 410,
+    section: 'Engine, gearbox',
+    options: [
+      { value: 'EURO_1', label: 'Euro 1', sortOrder: 1 },
+      { value: 'EURO_2', label: 'Euro 2', sortOrder: 2 },
+      { value: 'EURO_3', label: 'Euro 3', sortOrder: 3 },
+      { value: 'EURO_4', label: 'Euro 4', sortOrder: 4 },
+      { value: 'EURO_5', label: 'Euro 5', sortOrder: 5 },
+      { value: 'EURO_6', label: 'Euro 6', sortOrder: 6 },
+      { value: 'EURO_7', label: 'Euro 7', sortOrder: 7 },
+    ],
+  },
+  { fieldKey: 'particulate_filter', label: 'Particulate filter', fieldType: 'BOOLEAN', sortOrder: 420, section: 'Engine, gearbox' },
+  { fieldKey: 'eev', label: 'EEV', fieldType: 'BOOLEAN', sortOrder: 430, section: 'Engine, gearbox' },
+  { fieldKey: 'fuel_consumption', label: 'Fuel consumption', fieldType: 'NUMBER', sortOrder: 440, section: 'Engine, gearbox', validations: { min: 0, max: 500 } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'fuel_consumption_unit',
+    label: 'Fuel consumption unit',
+    fieldType: 'RADIO',
+    sortOrder: 450,
+    section: 'Engine, gearbox',
+    options: [
+      { value: 'L_100KM', label: 'l/100km', sortOrder: 1 },
+      { value: 'L_H', label: 'l/h', sortOrder: 2 },
+    ],
+  },
+  {
+    fieldKey: 'gearbox_type',
+    label: 'Gearbox type',
+    fieldType: 'SELECT',
+    sortOrder: 460,
+    section: 'Engine, gearbox',
+    options: [
+      { value: 'MANUAL', label: 'Manual', sortOrder: 1 },
+      { value: 'AUTOMATIC', label: 'Automatic', sortOrder: 2 },
+      { value: 'SEMI_AUTOMATIC', label: 'Semi-automatic', sortOrder: 3 },
+      { value: 'CVT', label: 'CVT', sortOrder: 4 },
+    ],
+  },
+  { fieldKey: 'reverse_gear', label: 'Reverse gear', fieldType: 'BOOLEAN', sortOrder: 470, section: 'Engine, gearbox' },
+  {
+    fieldKey: 'number_of_gears',
+    label: 'Number of gears',
+    fieldType: 'SELECT',
+    sortOrder: 480,
+    section: 'Engine, gearbox',
+    options: [
+      { value: '4', label: '4', sortOrder: 1 },
+      { value: '5', label: '5', sortOrder: 2 },
+      { value: '6', label: '6', sortOrder: 3 },
+      { value: '8', label: '8', sortOrder: 4 },
+      { value: '12', label: '12', sortOrder: 5 },
+      { value: '16', label: '16', sortOrder: 6 },
+    ],
+  },
+  {
+    fieldKey: 'gearbox_brand',
+    label: 'Gearbox brand',
+    fieldType: 'SELECT',
+    sortOrder: 490,
+    section: 'Engine, gearbox',
+    options: [
+      { value: 'ZF', label: 'ZF', sortOrder: 1 },
+      { value: 'Allison', label: 'Allison', sortOrder: 2 },
+      { value: 'Voith', label: 'Voith', sortOrder: 3 },
+      { value: 'Dana', label: 'Dana', sortOrder: 4 },
+    ],
+  },
+  { fieldKey: 'gearbox_model', label: 'Gearbox model', fieldType: 'TEXT', sortOrder: 500, section: 'Engine, gearbox' },
+  {
+    fieldKey: 'number_of_fuel_tanks',
+    label: 'Number of fuel tanks',
+    fieldType: 'RADIO',
+    sortOrder: 510,
+    section: 'Engine, gearbox',
+    options: [
+      { value: '1', label: '1', sortOrder: 1 },
+      { value: '2', label: '2', sortOrder: 2 },
+      { value: '3', label: '3', sortOrder: 3 },
+    ],
+  },
+  { fieldKey: 'fuel_tank_volume', label: 'Volume', fieldType: 'NUMBER', sortOrder: 520, section: 'Engine, gearbox', validations: { min: 0, max: 5000, unit: 'l' } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'number_of_axles',
+    label: 'Number of axles',
+    fieldType: 'SELECT',
+    sortOrder: 600,
+    section: 'Axles, brakes',
+    options: [
+      { value: '1', label: '1', sortOrder: 1 },
+      { value: '2', label: '2', sortOrder: 2 },
+      { value: '3', label: '3', sortOrder: 3 },
+      { value: '4', label: '4', sortOrder: 4 },
+      { value: '5', label: '5', sortOrder: 5 },
+      { value: '6', label: '6', sortOrder: 6 },
+    ],
+  },
+  {
+    fieldKey: 'axle_brand',
+    label: 'Axle brand',
+    fieldType: 'SELECT',
+    sortOrder: 610,
+    section: 'Axles, brakes',
+    options: [
+      { value: 'BPW', label: 'BPW', sortOrder: 1 },
+      { value: 'SAF', label: 'SAF', sortOrder: 2 },
+      { value: 'ROR', label: 'ROR', sortOrder: 3 },
+      { value: 'Gigant', label: 'Gigant', sortOrder: 4 },
+      { value: 'ADR', label: 'ADR', sortOrder: 5 },
+    ],
+  },
+  { fieldKey: 'wheelbase', label: 'Wheelbase', fieldType: 'NUMBER', sortOrder: 620, section: 'Axles, brakes', validations: { min: 0, max: 10000, unit: 'mm' } as Prisma.InputJsonValue },
+  { fieldKey: 'tyre_size', label: 'Tyre size', fieldType: 'TEXT', sortOrder: 630, section: 'Axles, brakes' },
+  { fieldKey: 'tyre_condition_percent', label: 'Tyre condition (%)', fieldType: 'NUMBER', sortOrder: 640, section: 'Axles, brakes', validations: { min: 0, max: 100, unit: '%' } as Prisma.InputJsonValue },
+  { fieldKey: 'tyre_condition_mm', label: 'Tyre condition (mm)', fieldType: 'NUMBER', sortOrder: 650, section: 'Axles, brakes', validations: { min: 0, max: 1000, unit: 'mm' } as Prisma.InputJsonValue },
+  { fieldKey: 'enter_by_axles', label: 'Enter by axles', fieldType: 'BOOLEAN', sortOrder: 660, section: 'Axles, brakes' },
+  { fieldKey: 'air_conditioning', label: 'Air conditioning', fieldType: 'BOOLEAN', sortOrder: 700, section: 'Additional options' },
+  {
+    fieldKey: 'air_conditioning_type',
+    label: 'Air conditioning type',
+    fieldType: 'RADIO',
+    sortOrder: 710,
+    section: 'Additional options',
+    options: [
+      { value: 'CLIMATE_CONTROL', label: 'Climate control', sortOrder: 1 },
+      { value: 'MULTI_ZONE_CLIMATE_CONTROL', label: 'Multi-zone climate control', sortOrder: 2 },
+      { value: 'DUAL_ZONE_CLIMATE_CONTROL', label: 'Dual-zone climate control', sortOrder: 3 },
+    ],
+  },
+  { fieldKey: 'powered_windows', label: 'Powered windows', fieldType: 'BOOLEAN', sortOrder: 720, section: 'Additional options' },
+  {
+    fieldKey: 'powered_windows_scope',
+    label: 'Powered windows',
+    fieldType: 'RADIO',
+    sortOrder: 730,
+    section: 'Additional options',
+    options: [
+      { value: 'FRONT', label: 'Front', sortOrder: 1 },
+      { value: 'FRONT_AND_REAR', label: 'Front and rear', sortOrder: 2 },
+    ],
+  },
+  {
+    fieldKey: 'interior_material',
+    label: 'Interior material',
+    fieldType: 'RADIO',
+    sortOrder: 740,
+    section: 'Additional options',
+    options: [
+      { value: 'ALCANTARA', label: 'Alcantara', sortOrder: 1 },
+      { value: 'FAUX_LEATHER', label: 'Faux leather', sortOrder: 2 },
+    ],
+  },
+  {
+    fieldKey: 'more_details',
+    label: 'Description',
+    fieldType: 'RICHTEXT',
+    sortOrder: 800,
+    section: 'More details',
+    validations: {
+      placeholder:
+        'Indicate additional characteristics or special features of your combine.',
+    } as Prisma.InputJsonValue,
+  },
+  {
+    fieldKey: 'advert_type',
+    label: 'Advert type',
+    fieldType: 'RADIO',
+    sortOrder: 900,
+    section: 'Ad parameters',
+    options: [
+      { value: 'SALE', label: 'Sale', sortOrder: 1 },
+      { value: 'RENT', label: 'Rent', sortOrder: 2 },
+      { value: 'SALE_RENT', label: 'Sale / Rent', sortOrder: 3 },
+    ],
+  },
+  { fieldKey: 'price', label: 'Price', fieldType: 'NUMBER', sortOrder: 910, section: 'Ad parameters', validations: { min: 0, max: 1000000000 } as Prisma.InputJsonValue },
+  {
+    fieldKey: 'currency',
+    label: 'Currency',
+    fieldType: 'SELECT',
+    sortOrder: 920,
+    section: 'Ad parameters',
+    options: [
+      { value: 'EUR', label: 'EUR', sortOrder: 1 },
+      { value: 'USD', label: 'USD', sortOrder: 2 },
+      { value: 'GBP', label: 'GBP', sortOrder: 3 },
+      { value: 'UAH', label: 'UAH', sortOrder: 4 },
+    ],
+  },
+  {
+    fieldKey: 'vat_type',
+    label: 'VAT',
+    fieldType: 'RADIO',
+    sortOrder: 930,
+    section: 'Ad parameters',
+    options: [
+      { value: 'EXCLUDING', label: 'excluding VAT', sortOrder: 1 },
+      { value: 'INCLUDING', label: 'including VAT', sortOrder: 2 },
+    ],
+  },
+  { fieldKey: 'reserved', label: 'Reserved', fieldType: 'BOOLEAN', sortOrder: 940, section: 'Ad parameters' },
+  { fieldKey: 'leasing_possible', label: 'Leasing is possible', fieldType: 'BOOLEAN', sortOrder: 950, section: 'Ad parameters' },
+  { fieldKey: 'purchase_on_credit_possible', label: 'Purchase on credit is possible', fieldType: 'BOOLEAN', sortOrder: 960, section: 'Ad parameters' },
+  { fieldKey: 'purchase_by_installments_possible', label: 'Purchase by installments is possible', fieldType: 'BOOLEAN', sortOrder: 970, section: 'Ad parameters' },
+  {
+    fieldKey: 'warranty',
+    label: 'Warranty',
+    fieldType: 'SELECT',
+    sortOrder: 980,
+    section: 'Ad parameters',
+    options: [
+      { value: 'NONE', label: 'No warranty', sortOrder: 1 },
+      { value: '3_MONTHS', label: '3 months', sortOrder: 2 },
+      { value: '6_MONTHS', label: '6 months', sortOrder: 3 },
+      { value: '12_MONTHS', label: '12 months', sortOrder: 4 },
+      { value: '24_MONTHS', label: '24 months', sortOrder: 5 },
+    ],
+  },
+  { fieldKey: 'seller_stock_id', label: 'Seller stock ID', fieldType: 'TEXT', sortOrder: 990, section: 'Ad parameters' },
+];
 
 export type CoreSeedData = {
   users: SeedUsers;
@@ -287,6 +1080,48 @@ export async function seedCore(prisma: PrismaClient): Promise<CoreSeedData> {
 
     return motorizedTokens.some((token) => value.includes(token));
   };
+
+  const buildGardenMachineryTemplateCreate = () => ({
+    create: GARDEN_MACHINERY_TEMPLATE_FIELDS.map((field) => ({
+      fieldKey: field.fieldKey,
+      label: field.label,
+      fieldType: field.fieldType,
+      required: field.required ?? false,
+      sortOrder: field.sortOrder,
+      section: field.section,
+      validations: field.validations ?? {},
+      options: field.options
+        ? {
+            create: field.options.map((option) => ({
+              value: option.value,
+              label: option.label,
+              sortOrder: option.sortOrder,
+            })),
+          }
+        : undefined,
+    })),
+  });
+
+  const buildCombinesTemplateCreate = () => ({
+    create: COMBINES_TEMPLATE_FIELDS.map((field) => ({
+      fieldKey: field.fieldKey,
+      label: field.label,
+      fieldType: field.fieldType,
+      required: field.required ?? false,
+      sortOrder: field.sortOrder,
+      section: field.section,
+      validations: field.validations ?? {},
+      options: field.options
+        ? {
+            create: field.options.map((option) => ({
+              value: option.value,
+              label: option.label,
+              sortOrder: option.sortOrder,
+            })),
+          }
+        : undefined,
+    })),
+  });
 
   const passwordHash = await bcrypt.hash('test1234', 10);
 
@@ -489,16 +1324,13 @@ export async function seedCore(prisma: PrismaClient): Promise<CoreSeedData> {
     await insertNode({ marketplaceKey: 'machineryline', node });
   }
 
-  const brandRows = await Promise.all([
-    prisma.brand.create({ data: { name: 'John Deere' } }),
-    prisma.brand.create({ data: { name: 'Claas' } }),
-    prisma.brand.create({ data: { name: 'Caterpillar' } }),
-    prisma.brand.create({ data: { name: 'Komatsu' } }),
-    prisma.brand.create({ data: { name: 'MAN' } }),
-    prisma.brand.create({ data: { name: 'Mercedes-Benz' } }),
-    prisma.brand.create({ data: { name: 'Toyota' } }),
-    prisma.brand.create({ data: { name: 'BMW' } }),
-  ]);
+  const allBrandNames = Array.from(
+    new Set([...AGRO_WORKBOOK_BRANDS, ...NON_AGRO_BRANDS]),
+  ).sort((a, b) => a.localeCompare(b));
+
+  const brandRows = await Promise.all(
+    allBrandNames.map((name) => prisma.brand.create({ data: { name } })),
+  );
 
   const brandMap = new Map<string, string>(brandRows.map((brand) => [brand.name, brand.id]));
 
@@ -515,8 +1347,29 @@ export async function seedCore(prisma: PrismaClient): Promise<CoreSeedData> {
     });
   }
 
-  await linkBrandToCategory('John Deere', 'wheel-tractors');
-  await linkBrandToCategory('Claas', 'grain-harvesters');
+  async function linkBrandToMarketplaceCategories(
+    brandName: string,
+    marketplaceKey: string,
+  ) {
+    const brandId = brandMap.get(brandName);
+    const marketplaceId = marketplaceMap.get(marketplaceKey);
+    if (!brandId || !marketplaceId) return;
+
+    for (const category of categoriesBySlug.values()) {
+      if (category.marketplaceId !== marketplaceId) continue;
+      await prisma.brandCategory.create({
+        data: {
+          brandId,
+          categoryId: category.id,
+        },
+      });
+    }
+  }
+
+  for (const brandName of AGRO_WORKBOOK_BRANDS) {
+    await linkBrandToMarketplaceCategories(brandName, 'agroline');
+  }
+
   await linkBrandToCategory('Caterpillar', 'tracked-excavators');
   await linkBrandToCategory('Komatsu', 'wheel-loaders');
   await linkBrandToCategory('MAN', 'truck-tractors');
@@ -539,11 +1392,18 @@ export async function seedCore(prisma: PrismaClient): Promise<CoreSeedData> {
     },
   });
 
-  for (const slug of ALL_LEAF_CATEGORY_SLUGS) {
+  for (const slug of COMBINE_HEADER_TEMPLATE_TARGET_SLUGS) {
     const category = categoriesBySlug.get(slug);
     if (!category) continue;
 
-    const isMotorizedCategory = isLikelyMotorizedSlug(slug);
+    const isCombineHeaderTemplate = COMBINE_HEADER_TEMPLATE_SLUGS.has(slug);
+    const isCombinesTemplate = COMBINES_TEMPLATE_SLUGS.has(slug);
+    const isGardenMachineryTemplate = GARDEN_MACHINERY_TEMPLATE_SLUGS.has(slug);
+    const isMotorizedCategory =
+      !isCombineHeaderTemplate &&
+      !isCombinesTemplate &&
+      !isGardenMachineryTemplate &&
+      isLikelyMotorizedSlug(slug);
     const blockIds = isMotorizedCategory ? ['engine_block'] : [];
 
     await prisma.formTemplate.create({
@@ -552,7 +1412,11 @@ export async function seedCore(prisma: PrismaClient): Promise<CoreSeedData> {
         version: 1,
         isActive: true,
         blockIds,
-        fields: isMotorizedCategory
+        fields: isCombineHeaderTemplate || isCombinesTemplate
+          ? buildCombinesTemplateCreate()
+          : isGardenMachineryTemplate
+          ? buildGardenMachineryTemplateCreate()
+          : isMotorizedCategory
           ? undefined
           : {
               create: [

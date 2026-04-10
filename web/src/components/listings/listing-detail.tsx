@@ -12,24 +12,25 @@ import {
   Package,
   Clock,
   ExternalLink,
-  MessageSquare,
   Phone,
-  Star,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PriceDisplay } from '@/components/ui/price-display';
-import { StarRating } from '@/components/ui/star-rating';
 import { useCategoryTemplate, useListingDetail, useRecordView } from '@/lib/queries';
 import { useAuthStore } from '@/stores/auth-store';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FavoriteButton } from './favorite-button';
 import { ContactSellerButton } from './contact-seller-button';
 import { getCategoryDisplayName } from '@/lib/display-labels';
+import { useTranslation } from '@/components/providers/translation-provider';
+import { tGroup, tLabel, tOption } from '@/lib/template-i18n';
 
 const conditionLabels: Record<string, string> = {
   NEW: 'Новий',
-  USED: 'Б/в',
-  DEMO: 'Демонстраційний',
+  USED: 'Вживаний',
+  NOT_RUNNING: 'Не на ходу',
+  FOR_IMPORT: 'Під пригон',
+  FOR_PARTS: 'На запчастини',
 };
 
 const listingTypeLabels: Record<string, string> = {
@@ -37,6 +38,7 @@ const listingTypeLabels: Record<string, string> = {
   RENT: 'Оренда',
   FROM_MANUFACTURER: 'Від виробника',
 };
+const HIDDEN_ATTRIBUTE_KEYS = new Set(['right_hand_drive']);
 
 const formatDate = (iso?: string | null) => {
   if (!iso) return '-';
@@ -62,9 +64,10 @@ export function ListingDetail({ id }: { id: string }) {
   const categoryId = listing?.categoryId ?? '';
   const { data: template } = useCategoryTemplate(categoryId);
   const { isAuthenticated } = useAuthStore();
+  const { locale } = useTranslation();
   const recordView = useRecordView();
 
-  const [openAttributeSection, setOpenAttributeSection] = useState<string | null>(null);
+  const [openAttributeSections, setOpenAttributeSections] = useState<Set<string>>(new Set());
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
@@ -95,8 +98,8 @@ export function ListingDetail({ id }: { id: string }) {
 
   const resolveValueLabel = (field: any, rawValue: string) => {
     const normalizedRaw = String(rawValue).trim().toLowerCase();
-    if (normalizedRaw === 'true') return 'Yes';
-    if (normalizedRaw === 'false') return 'No';
+    if (normalizedRaw === 'true') return tOption('Yes', locale);
+    if (normalizedRaw === 'false') return tOption('No', locale);
 
     const options = [...(field?.options ?? []), ...(field?.staticOptions ?? [])];
     if (options.length === 0) return rawValue;
@@ -120,16 +123,19 @@ export function ListingDetail({ id }: { id: string }) {
   };
 
   const displayAttributes = useMemo(() => {
-    return (listing?.attributes ?? []).map((attr: any) => {
-      const field = templateFieldMap.get(attr.key);
-      return {
-        ...attr,
-        key: attr.key,
-        displayKey: field?.label || prettifyKey(attr.key),
-        displayValue: resolveValueLabel(field, String(attr.value ?? '')),
-      };
-    });
-  }, [listing?.attributes, templateFieldMap]);
+    return (listing?.attributes ?? [])
+      .filter((attr: any) => !HIDDEN_ATTRIBUTE_KEYS.has(String(attr?.key ?? '').trim().toLowerCase()))
+      .map((attr: any) => {
+        const field = templateFieldMap.get(attr.key);
+        const rawLabel = field?.label || prettifyKey(attr.key);
+        return {
+          ...attr,
+          key: attr.key,
+          displayKey: tLabel(rawLabel, locale),
+          displayValue: resolveValueLabel(field, String(attr.value ?? '')),
+        };
+      });
+  }, [listing?.attributes, locale, templateFieldMap]);
 
   const attributeSections = useMemo(() => {
     if (displayAttributes.length === 0) return [];
@@ -143,7 +149,7 @@ export function ListingDetail({ id }: { id: string }) {
       const attr = byKey.get(String(field.key));
       if (!attr) continue;
 
-      const sectionName = field.group || field.section || 'Додаткові деталі';
+      const sectionName = tGroup(field.group || field.section || 'Додаткові деталі', locale);
       const current = grouped.get(sectionName) ?? [];
       current.push(attr);
       grouped.set(sectionName, current);
@@ -152,24 +158,25 @@ export function ListingDetail({ id }: { id: string }) {
 
     const unmatched = displayAttributes.filter((attr: any) => !matchedKeys.has(attr.key));
     if (unmatched.length > 0) {
-      const fallbackSection = grouped.get('Додаткові деталі') ?? [];
-      grouped.set('Додаткові деталі', [...fallbackSection, ...unmatched]);
+      const fallbackSectionName = tGroup('Додаткові деталі', locale);
+      const fallbackSection = grouped.get(fallbackSectionName) ?? [];
+      grouped.set(fallbackSectionName, [...fallbackSection, ...unmatched]);
     }
 
     if (grouped.size === 0) {
-      grouped.set('Додаткові деталі', displayAttributes);
+      grouped.set(tGroup('Додаткові деталі', locale), displayAttributes);
     }
 
     return Array.from(grouped.entries());
-  }, [displayAttributes, template?.fields]);
+  }, [displayAttributes, locale, template?.fields]);
 
   useEffect(() => {
     if (attributeSections.length === 0) {
-      setOpenAttributeSection(null);
+      setOpenAttributeSections(new Set());
       return;
     }
     const names = attributeSections.map(([sectionName]) => sectionName);
-    setOpenAttributeSection((current) => (current && names.includes(current) ? current : names[0]));
+    setOpenAttributeSections(new Set(names));
   }, [attributeSections]);
 
   const mainImage = listing?.media?.[activeImageIndex]?.url || listing?.media?.[0]?.url;
@@ -179,15 +186,15 @@ export function ListingDetail({ id }: { id: string }) {
 
   const summaryRows = useMemo(() => {
     const baseRows = [
-      { label: 'Brand', value: listing?.brand?.name ?? null },
-      { label: 'Category', value: listing?.category?.name ?? null },
+      { label: tLabel('Brand', locale), value: listing?.brand?.name ?? null },
+      { label: tLabel('Category', locale), value: listing?.category?.name ?? null },
       {
-        label: 'Condition',
+        label: tLabel('Condition', locale),
         value: listing?.condition ? conditionLabels[listing.condition] ?? listing.condition : null,
       },
-      { label: 'Year', value: listing?.year ? String(listing.year) : null },
-      { label: 'Location', value: locationLabel || null },
-      { label: 'Published', value: formatDate(listing?.publishedAt || listing?.createdAt) },
+      { label: tLabel('Year', locale), value: listing?.year ? String(listing.year) : null },
+      { label: locale === 'uk' ? 'Локація' : 'Location', value: locationLabel || null },
+      { label: locale === 'uk' ? 'Опубліковано' : 'Published', value: formatDate(listing?.publishedAt || listing?.createdAt) },
     ].filter((row) => row.value && row.value !== '-');
 
     const takenLabels = new Set(baseRows.map((row) => row.label.toLowerCase()));
@@ -213,6 +220,7 @@ export function ListingDetail({ id }: { id: string }) {
     listing?.publishedAt,
     listing?.year,
     locationLabel,
+    locale,
   ]);
 
   if (isLoading) {
@@ -238,7 +246,7 @@ export function ListingDetail({ id }: { id: string }) {
   }
 
   return (
-    <div className="container-main py-10 md:py-12">
+    <div className="container-main pt-6 pb-10 md:pt-8 md:pb-12">
       <div className="listing-detail-shell relative overflow-hidden rounded-[28px] p-4 md:p-6">
         <div className="pointer-events-none absolute -left-24 -top-24 h-60 w-60 rounded-full bg-blue-500/15 blur-3xl" />
         <div className="pointer-events-none absolute -right-24 top-1/3 h-72 w-72 rounded-full bg-orange-500/10 blur-3xl" />
@@ -261,7 +269,7 @@ export function ListingDetail({ id }: { id: string }) {
               )}
               {listing.listingType && <Badge>{listingTypeLabels[listing.listingType] ?? listing.listingType}</Badge>}
               {listing.brand && <Badge variant="outline">{listing.brand.name}</Badge>}
-              {listing.category && <Badge variant="outline">{getCategoryDisplayName(listing.category.name)}</Badge>}
+              {listing.category && <Badge variant="outline">{getCategoryDisplayName(listing.category.name, locale)}</Badge>}
             </div>
             <div className="flex items-center gap-2">
               {listing.externalUrl && (
@@ -348,7 +356,7 @@ export function ListingDetail({ id }: { id: string }) {
             </section>
 
             <aside className="listing-detail-panel rounded-2xl p-4 backdrop-blur-sm animate-[fade-up_0.8s_ease-out_forwards]">
-              <h3 className="text-base font-bold text-[var(--text-primary)]">Seller&apos;s contacts</h3>
+              <h3 className="text-base font-bold text-[var(--text-primary)]">Контакти продавця</h3>
 
               {listing.company ? (
                 <>
@@ -368,14 +376,9 @@ export function ListingDetail({ id }: { id: string }) {
                   <div className="mt-3 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
                     {listing.company.isVerified && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-green-500/15 px-2 py-1 text-green-300">
-                        <ShieldCheck size={12} /> Verified
+                        <ShieldCheck size={12} /> Верифіковано
                       </span>
                     )}
-                    <span className="inline-flex items-center gap-1 text-amber-300">
-                      <Star size={12} className="fill-current" />
-                      {Number(listing.company.ratingAvg || 0).toFixed(1)}
-                    </span>
-                    <span>({listing.company.reviewsCount} reviews)</span>
                   </div>
 
                   {sellerPhone && (
@@ -389,7 +392,7 @@ export function ListingDetail({ id }: { id: string }) {
                     href={`/companies/${listing.company.slug}`}
                     className="listing-detail-secondary-btn mt-3 block w-full rounded-xl px-3 py-2 text-center text-sm font-semibold"
                   >
-                    View company profile
+                    Перейти до профілю компанії
                   </Link>
                 </>
               ) : (
@@ -406,26 +409,26 @@ export function ListingDetail({ id }: { id: string }) {
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-6">
               <section className="listing-detail-panel rounded-2xl p-5 backdrop-blur-sm animate-[fade-up_0.9s_ease-out_forwards]">
-                <h3 className="mb-3 text-base font-bold text-[var(--text-primary)]">Details</h3>
+                <h3 className="mb-3 text-base font-bold text-[var(--text-primary)]">Деталі</h3>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {(listing.country || listing.city) && (
                     <div className="listing-detail-subpanel flex items-center gap-2 rounded-xl px-3 py-2 text-sm">
                       <MapPin size={14} className="text-blue-300" />
-                      <span className="text-[var(--text-secondary)]">Location:</span>
+                      <span className="text-[var(--text-secondary)]">Локація:</span>
                       <span className="listing-detail-strong font-medium">{locationLabel}</span>
                     </div>
                   )}
                   {listing.year && (
                     <div className="listing-detail-subpanel flex items-center gap-2 rounded-xl px-3 py-2 text-sm">
                       <Calendar size={14} className="text-blue-300" />
-                      <span className="text-[var(--text-secondary)]">Year:</span>
+                      <span className="text-[var(--text-secondary)]">Рік:</span>
                       <span className="listing-detail-strong font-medium">{listing.year}</span>
                     </div>
                   )}
                   {listing.hoursValue != null && (
                     <div className="listing-detail-subpanel flex items-center gap-2 rounded-xl px-3 py-2 text-sm">
                       <Clock size={14} className="text-blue-300" />
-                      <span className="text-[var(--text-secondary)]">Hours:</span>
+                      <span className="text-[var(--text-secondary)]">Напрацювання:</span>
                       <span className="listing-detail-strong font-medium">
                         {listing.hoursValue} {listing.hoursUnit ?? 'м/г'}
                       </span>
@@ -443,10 +446,10 @@ export function ListingDetail({ id }: { id: string }) {
 
               {attributeSections.length > 0 && (
                 <section className="listing-detail-panel rounded-2xl p-4 md:p-5 backdrop-blur-sm animate-[fade-up_1.05s_ease-out_forwards]">
-                  <h3 className="mb-3 text-base font-bold text-[var(--text-primary)]">Characteristics</h3>
+                  <h3 className="mb-3 text-base font-bold text-[var(--text-primary)]">Характеристики</h3>
                   <div className="space-y-2.5">
                     {attributeSections.map(([sectionName, items], sectionIndex) => {
-                      const isOpen = openAttributeSection === sectionName;
+                      const isOpen = openAttributeSections.has(sectionName);
 
                       return (
                         <section
@@ -461,7 +464,15 @@ export function ListingDetail({ id }: { id: string }) {
                           <button
                             type="button"
                             onClick={() =>
-                              setOpenAttributeSection((current) => (current === sectionName ? null : sectionName))
+                              setOpenAttributeSections((current) => {
+                                const next = new Set(current);
+                                if (next.has(sectionName)) {
+                                  next.delete(sectionName);
+                                } else {
+                                  next.add(sectionName);
+                                }
+                                return next;
+                              })
                             }
                             className="flex w-full items-center justify-between px-4 py-3"
                           >
@@ -503,7 +514,7 @@ export function ListingDetail({ id }: { id: string }) {
 
               {(cleanedDescription || listing.externalUrl) && (
                 <section className="listing-detail-panel rounded-2xl p-5 backdrop-blur-sm animate-[fade-up_1.18s_ease-out_forwards]">
-                  <h3 className="mb-3 text-base font-bold text-[var(--text-primary)]">More details</h3>
+                  <h3 className="mb-3 text-base font-bold text-[var(--text-primary)]">Додатково</h3>
                   {cleanedDescription && (
                     <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-secondary)]">{cleanedDescription}</p>
                   )}
@@ -515,7 +526,7 @@ export function ListingDetail({ id }: { id: string }) {
                       className="mt-3 inline-flex items-center gap-1.5 text-sm text-blue-300 hover:text-orange-300"
                     >
                       <ExternalLink size={14} />
-                      View original source
+                      Переглянути джерело
                     </a>
                   )}
                 </section>
@@ -524,36 +535,18 @@ export function ListingDetail({ id }: { id: string }) {
 
             <aside className="space-y-4">
               <section className="listing-detail-panel rounded-2xl p-5 backdrop-blur-sm animate-[fade-up_1.25s_ease-out_forwards]">
-                <h3 className="text-base font-bold text-[var(--text-primary)]">Purchase tips</h3>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Поради перед купівлею</h3>
                 <p className="mt-2 text-sm text-[var(--text-secondary)]">
                   Перед купівлею перевірте серійний номер, історію сервісу та відповідність технічних параметрів документам.
                 </p>
               </section>
 
               <section className="listing-detail-panel rounded-2xl p-5 backdrop-blur-sm animate-[fade-up_1.32s_ease-out_forwards]">
-                <h3 className="text-base font-bold text-[var(--text-primary)]">Safety tips</h3>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Поради з безпеки</h3>
                 <p className="mt-2 text-sm text-[var(--text-secondary)]">
                   Використовуйте захищені способи оплати та погоджуйте огляд техніки в присутності відповідального представника.
                 </p>
               </section>
-
-              {listing.company && (
-                <section className="listing-detail-panel rounded-2xl p-5 backdrop-blur-sm animate-[fade-up_1.4s_ease-out_forwards]">
-                  <h3 className="mb-2 text-base font-bold text-[var(--text-primary)]">Seller snapshot</h3>
-                  <p className="text-sm font-semibold text-[var(--text-primary)]">{listing.company.name}</p>
-                  <div className="mt-2 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                    <StarRating rating={listing.company.ratingAvg} size={14} />
-                    <span>{listing.company.reviewsCount} відгуків</span>
-                  </div>
-                  <Link
-                    href={`/companies/${listing.company.slug}`}
-                    className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-blue-300 hover:text-orange-300"
-                  >
-                    <MessageSquare size={14} />
-                    Перейти в профіль
-                  </Link>
-                </section>
-              )}
             </aside>
           </div>
         </div>

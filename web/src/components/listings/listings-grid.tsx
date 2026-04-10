@@ -5,6 +5,7 @@ import { ListingCardSkeleton } from '@/components/ui/skeleton';
 import { Pagination } from '@/components/ui/pagination';
 import { Package } from 'lucide-react';
 import type { PaginatedResponse, Listing } from '@/types/api';
+import { useTranslation } from '@/components/providers/translation-provider';
 
 interface ListingsGridProps {
   data?: PaginatedResponse<Listing>;
@@ -14,12 +15,13 @@ interface ListingsGridProps {
 }
 
 export function ListingsGrid({ data, isLoading, page, onPageChange }: ListingsGridProps) {
+  const { t } = useTranslation();
   return (
     <div>
       {/* Results count */}
       {data && (
         <div className="mb-6 text-sm text-[var(--text-secondary)]">
-          Показано {data.data.length} з {data.meta.total} результатів
+          {t('listings.resultsCount', { shown: data.data.length, total: data.meta.total })}
         </div>
       )}
 

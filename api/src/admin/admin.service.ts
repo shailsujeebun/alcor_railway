@@ -40,6 +40,36 @@ export class AdminService {
     });
   }
 
+  async deleteMarketplace(id: number) {
+    const marketplaceId = BigInt(id);
+
+    const existing = await this.prisma.marketplace.findUnique({
+      where: { id: marketplaceId },
+      select: { id: true, name: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Marketplace not found');
+    }
+
+    const [categoriesCount, listingsCount] = await this.prisma.$transaction([
+      this.prisma.category.count({ where: { marketplaceId } }),
+      this.prisma.listing.count({ where: { marketplaceId } }),
+    ]);
+
+    if (categoriesCount > 0 || listingsCount > 0) {
+      throw new BadRequestException(
+        'Cannot delete marketplace because it still has categories or listings.',
+      );
+    }
+
+    await this.prisma.marketplace.delete({
+      where: { id: marketplaceId },
+    });
+
+    return { deletedId: existing.id.toString() };
+  }
+
   async createCategory(data: {
     marketplaceId: number;
     name: string;

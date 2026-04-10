@@ -124,7 +124,7 @@ export function DealerRegistrationForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-              Email *
+              Електронна пошта *
             </label>
             <input
               type="email"

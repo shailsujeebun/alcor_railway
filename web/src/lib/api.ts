@@ -618,7 +618,7 @@ export const updateListingAttributes = (id: string, attributes: Array<{ key: str
 
 export interface ContactPayload {
   name: string;
-  email: string;
+  email?: string;
   phoneCountry?: string;
   phoneNumber?: string;
 }
@@ -684,6 +684,11 @@ export const updateAdminMarketplace = (id: number, data: { name?: string; isActi
   fetchApi<AdminMarketplace>(`/admin/marketplaces/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
+  });
+
+export const deleteAdminMarketplace = (id: number) =>
+  fetchApi<void>(`/admin/marketplaces/${id}`, {
+    method: 'DELETE',
   });
 
 export const createAdminCategory = (data: {

@@ -6,6 +6,24 @@ import {
   getBuiltInEngineBlock,
 } from '../templates/template-schema';
 
+const AGRO_SHARED_COMBINE_FORM_SLUGS = new Set([
+  'combines',
+  'grain-harvesters',
+  'forage-harvesters',
+  'beet-harvesters',
+  'combine-headers',
+  'grain-headers',
+  'corn-headers',
+  'sunflower-headers',
+]);
+
+const AGRO_SHARED_COMBINE_TEMPLATE_PREFERRED_SLUGS = new Set([
+  'combines',
+  'grain-harvesters',
+  'forage-harvesters',
+  'beet-harvesters',
+]);
+
 export interface CategoryTreeNode {
   id: string;
   marketplaceId: string;
@@ -158,6 +176,57 @@ export class CategoriesService {
     return this.mapTemplate(best, best.category, category);
   }
 
+  private async findSharedAgroCombineTemplate(category: any) {
+    if (!AGRO_SHARED_COMBINE_FORM_SLUGS.has(String(category.slug ?? '').toLowerCase())) {
+      return null;
+    }
+
+    const candidates = await this.prisma.formTemplate.findMany({
+      where: {
+        isActive: true,
+        category: {
+          marketplaceId: category.marketplaceId,
+          slug: { in: Array.from(AGRO_SHARED_COMBINE_FORM_SLUGS) },
+        },
+      },
+      include: {
+        ...this.templateWithFieldsInclude,
+        category: {
+          select: {
+            id: true,
+            slug: true,
+            hasEngine: true,
+            marketplaceId: true,
+            parentId: true,
+          },
+        },
+      },
+    });
+
+    const best = candidates.sort((a, b) => {
+      const aPreferred = AGRO_SHARED_COMBINE_TEMPLATE_PREFERRED_SLUGS.has(
+        String(a.category?.slug ?? '').toLowerCase(),
+      )
+        ? 1
+        : 0;
+      const bPreferred = AGRO_SHARED_COMBINE_TEMPLATE_PREFERRED_SLUGS.has(
+        String(b.category?.slug ?? '').toLowerCase(),
+      )
+        ? 1
+        : 0;
+
+      if (aPreferred !== bPreferred) return bPreferred - aPreferred;
+      if ((a.fields?.length ?? 0) !== (b.fields?.length ?? 0)) {
+        return (b.fields?.length ?? 0) - (a.fields?.length ?? 0);
+      }
+      return (b.version ?? 0) - (a.version ?? 0);
+    })[0];
+
+    if (!best) return null;
+
+    return this.mapTemplate(best, best.category, category);
+  }
+
   private async mapTemplate(
     template: any,
     category: any,
@@ -169,8 +238,11 @@ export class CategoriesService {
     // For engine categories, always include engine_block even if not yet
     // stored on the template — this ensures the posting form always shows
     // the full set of engine-specific fields (Fuel type, Power, etc.).
+    const hasExplicitTemplateFields = (template.fields?.length ?? 0) > 0;
     const effectiveBlockIds =
-      runtimeCategory.hasEngine && !blockIds.includes('engine_block')
+      runtimeCategory.hasEngine &&
+      !hasExplicitTemplateFields &&
+      !blockIds.includes('engine_block')
         ? ['engine_block', ...blockIds]
         : blockIds;
 
@@ -249,6 +321,13 @@ export class CategoriesService {
 
     if (!category) {
       return null;
+    }
+
+    const sharedAgroCombineTemplate = await this.findSharedAgroCombineTemplate(
+      category,
+    );
+    if (sharedAgroCombineTemplate) {
+      return sharedAgroCombineTemplate;
     }
 
     // Check nearest active ancestor template.

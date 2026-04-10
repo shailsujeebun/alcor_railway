@@ -45,6 +45,11 @@ export class AdminController {
     return this.adminService.updateMarketplace(id, body);
   }
 
+  @Delete('marketplaces/:id')
+  deleteMarketplace(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.deleteMarketplace(id);
+  }
+
   // ─── Categories ──────────────────────────────────────
 
   @Post('categories')

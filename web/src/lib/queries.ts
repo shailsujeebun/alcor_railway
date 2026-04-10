@@ -90,7 +90,9 @@ export function useCategories(marketplaceId?: string) {
   return useQuery({
     queryKey: ['categories', marketplaceId ?? 'all'],
     queryFn: () => api.getCategories(marketplaceId),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 }
 

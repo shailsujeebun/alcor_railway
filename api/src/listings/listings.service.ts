@@ -19,14 +19,32 @@ import {
   mergeTemplateFieldsWithBlocks,
 } from '../templates/template-schema';
 
+const AGRO_SHARED_COMBINE_FORM_SLUGS = new Set([
+  'combines',
+  'grain-harvesters',
+  'forage-harvesters',
+  'beet-harvesters',
+  'combine-headers',
+  'grain-headers',
+  'corn-headers',
+  'sunflower-headers',
+]);
+
+const AGRO_SHARED_COMBINE_TEMPLATE_PREFERRED_SLUGS = new Set([
+  'combines',
+  'grain-harvesters',
+  'forage-harvesters',
+  'beet-harvesters',
+]);
+
 const VALID_TRANSITIONS: Record<ListingStatus, ListingStatus[]> = {
-  DRAFT: [ListingStatus.ACTIVE, ListingStatus.SUBMITTED],
-  SUBMITTED: [ListingStatus.ACTIVE, ListingStatus.DRAFT],
-  PENDING_MODERATION: [ListingStatus.ACTIVE, ListingStatus.REJECTED],
+  DRAFT: [ListingStatus.PENDING_MODERATION, ListingStatus.REMOVED],
+  SUBMITTED: [ListingStatus.ACTIVE, ListingStatus.REJECTED, ListingStatus.DRAFT],
+  PENDING_MODERATION: [ListingStatus.ACTIVE, ListingStatus.REJECTED, ListingStatus.DRAFT],
   ACTIVE: [ListingStatus.PAUSED, ListingStatus.EXPIRED, ListingStatus.REMOVED],
   PAUSED: [ListingStatus.ACTIVE, ListingStatus.REMOVED],
-  EXPIRED: [ListingStatus.ACTIVE, ListingStatus.DRAFT],
-  REJECTED: [ListingStatus.ACTIVE, ListingStatus.DRAFT],
+  EXPIRED: [ListingStatus.PENDING_MODERATION, ListingStatus.DRAFT],
+  REJECTED: [ListingStatus.PENDING_MODERATION, ListingStatus.DRAFT],
   REMOVED: [],
 };
 
@@ -46,10 +64,34 @@ const listingIncludes = {
   city: true,
   media: { orderBy: { sortOrder: 'asc' as const } },
   attribute: true,
+  fact: true,
   ownerUser: {
     select: { id: true, email: true, firstName: true, lastName: true },
   },
 };
+
+/**
+ * Flatten ListingFact fields onto the listing response so the frontend
+ * receives `priceAmount`, `priceCurrency`, `priceType`, `condition`, `year`, etc.
+ * If the listing has a price, `priceType` defaults to 'FIXED'; otherwise 'ON_REQUEST'.
+ */
+function flattenListingFact(listing: any): any {
+  if (!listing) return listing;
+  const { fact, ...rest } = listing;
+  const priceAmount = fact?.priceAmount != null ? Number(fact.priceAmount) : null;
+  const priceCurrency = fact?.priceCurrency ?? null;
+  const priceType = priceAmount != null ? 'FIXED' : 'ON_REQUEST';
+  const condition = fact?.condition ?? null;
+  const year = fact?.year ?? null;
+  return {
+    ...rest,
+    priceAmount,
+    priceCurrency,
+    priceType,
+    condition,
+    year,
+  };
+}
 
 @Injectable()
 export class ListingsService {
@@ -88,6 +130,59 @@ export class ListingsService {
     } catch {
       throw new BadRequestException(`${fieldName} must be a numeric id`);
     }
+  }
+
+  private async findSharedAgroCombineTemplate(category: any) {
+    if (!AGRO_SHARED_COMBINE_FORM_SLUGS.has(String(category.slug ?? '').toLowerCase())) {
+      return null;
+    }
+
+    const candidates = await this.prisma.formTemplate.findMany({
+      where: {
+        isActive: true,
+        category: {
+          marketplaceId: category.marketplaceId,
+          slug: { in: Array.from(AGRO_SHARED_COMBINE_FORM_SLUGS) },
+        },
+      },
+      include: {
+        fields: {
+          orderBy: { sortOrder: 'asc' as const },
+          include: {
+            options: {
+              orderBy: { sortOrder: 'asc' as const },
+            },
+          },
+        },
+        category: {
+          select: {
+            id: true,
+            slug: true,
+            hasEngine: true,
+            marketplaceId: true,
+          },
+        },
+      },
+    });
+
+    return candidates.sort((a, b) => {
+      const aPreferred = AGRO_SHARED_COMBINE_TEMPLATE_PREFERRED_SLUGS.has(
+        String(a.category?.slug ?? '').toLowerCase(),
+      )
+        ? 1
+        : 0;
+      const bPreferred = AGRO_SHARED_COMBINE_TEMPLATE_PREFERRED_SLUGS.has(
+        String(b.category?.slug ?? '').toLowerCase(),
+      )
+        ? 1
+        : 0;
+
+      if (aPreferred !== bPreferred) return bPreferred - aPreferred;
+      if ((a.fields?.length ?? 0) !== (b.fields?.length ?? 0)) {
+        return (b.fields?.length ?? 0) - (a.fields?.length ?? 0);
+      }
+      return (b.version ?? 0) - (a.version ?? 0);
+    })[0] ?? null;
   }
 
   async create(
@@ -130,7 +225,9 @@ export class ListingsService {
         ? Object.fromEntries(attributes.map((a) => [a.key, a.value]))
         : undefined;
 
-    const status = ListingStatus.ACTIVE;
+    const status = this.isPrivilegedRole(callerRole)
+      ? ListingStatus.ACTIVE
+      : ListingStatus.DRAFT;
 
     // Fetch category to get marketplaceId
     let marketplaceId: bigint | undefined;
@@ -178,7 +275,7 @@ export class ListingsService {
           country: countryId ? { connect: { id: countryId } } : undefined,
           city: cityId ? { connect: { id: cityId } } : undefined,
           status,
-          publishedAt: new Date(),
+          publishedAt: status === ListingStatus.ACTIVE ? new Date() : null,
           fact: {
             create: {
               priceAmount,
@@ -240,7 +337,7 @@ export class ListingsService {
       data: { listingsCount: { increment: 1 } },
     });
 
-    return listing;
+    return flattenListingFact(listing);
   }
 
   async findAll(query: ListingQueryDto) {
@@ -312,12 +409,14 @@ export class ListingsService {
           country: true,
           city: true,
           media: { orderBy: { sortOrder: 'asc' }, take: 1 },
+          fact: true,
         },
       }),
       this.prisma.listing.count({ where }),
     ]);
 
-    return new PaginatedResponseDto(data, total, query.page!, query.limit!);
+    const flattenedData = data.map(flattenListingFact);
+    return new PaginatedResponseDto(flattenedData, total, query.page!, query.limit!);
   }
 
   async findByCompany(companyId: string, query: ListingQueryDto) {
@@ -343,12 +442,14 @@ export class ListingsService {
           country: true,
           city: true,
           media: { orderBy: { sortOrder: 'asc' }, take: 1 },
+          fact: true,
         },
       }),
       this.prisma.listing.count({ where }),
     ]);
 
-    return new PaginatedResponseDto(data, total, query.page!, query.limit!);
+    const flattenedData = data.map(flattenListingFact);
+    return new PaginatedResponseDto(flattenedData, total, query.page!, query.limit!);
   }
 
   async findById(id: string) {
@@ -361,7 +462,7 @@ export class ListingsService {
       throw new NotFoundException(`Listing "${id}" not found`);
     }
 
-    return listing;
+    return flattenListingFact(listing);
   }
 
   async update(
@@ -385,6 +486,15 @@ export class ListingsService {
       countryId,
       cityId,
       sellerPhones,
+      priceAmount,
+      priceCurrency,
+      priceType,
+      condition,
+      year,
+      hoursValue,
+      hoursUnit,
+      listingType,
+      euroClass,
       ...rest
     } = dto;
 
@@ -425,6 +535,21 @@ export class ListingsService {
         }
       }
 
+      // Update fact table with price, condition, year etc.
+      if (priceAmount !== undefined || priceCurrency !== undefined || condition !== undefined || year !== undefined) {
+        const factData: Record<string, any> = {};
+        if (priceAmount !== undefined) factData.priceAmount = priceAmount;
+        if (priceCurrency !== undefined) factData.priceCurrency = priceCurrency;
+        if (condition !== undefined) factData.condition = condition;
+        if (year !== undefined) factData.year = year;
+
+        await tx.listingFact.upsert({
+          where: { listingId: BigInt(id) },
+          create: { listingId: BigInt(id), ...factData },
+          update: factData,
+        });
+      }
+
       const updated = await tx.listing.update({
         where: { id: BigInt(id) },
         data: {
@@ -458,7 +583,7 @@ export class ListingsService {
         include: listingIncludes,
       });
 
-      return updated;
+      return flattenListingFact(updated);
     });
 
     await this.syncFacts(id);
@@ -492,7 +617,7 @@ export class ListingsService {
 
     this.ensureListingMutationAccess(listing, actorUserId, actorRole);
 
-    this.validateTransition(listing.status, ListingStatus.ACTIVE);
+    this.validateTransition(listing.status, ListingStatus.PENDING_MODERATION);
 
     // ─── Validation ──────────────────────────────────
     const errors: string[] = [];
@@ -553,14 +678,42 @@ export class ListingsService {
       });
     }
 
-    return this.prisma.listing.update({
+    const updated = await this.prisma.listing.update({
       where: { id },
       data: {
-        status: ListingStatus.ACTIVE,
-        publishedAt: listing.publishedAt ?? new Date(),
+        status: ListingStatus.PENDING_MODERATION,
+        submittedAt: new Date(),
+        moderatedAt: null,
+        moderationReason: null,
+        publishedAt: null,
       },
       include: listingIncludes,
     });
+
+    const adminRecipients = await this.prisma.user.findMany({
+      where: {
+        role: {
+          in: [UserRole.ADMIN, UserRole.MANAGER],
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    await Promise.all(
+      adminRecipients.map((recipient) =>
+        this.notificationsService.create(
+          recipient.id,
+          NotificationType.SYSTEM,
+          'Нове оголошення на модерації',
+          `Оголошення "${listing.title}" очікує схвалення.`,
+          `/admin/moderation`,
+        ),
+      ),
+    );
+
+    return updated;
   }
 
   async approve(id: string) {
@@ -577,6 +730,8 @@ export class ListingsService {
       data: {
         status: ListingStatus.ACTIVE,
         publishedAt: listing.publishedAt ?? new Date(),
+        moderatedAt: new Date(),
+        moderationReason: null,
       },
       include: listingIncludes,
     });
@@ -598,6 +753,10 @@ export class ListingsService {
 
   async reject(id: string, reason: string) {
     const listing = await this.findById(id);
+    const normalizedReason = String(reason ?? '').trim();
+    if (!normalizedReason) {
+      throw new BadRequestException('Rejection reason is required');
+    }
     if (
       listing.status !== ListingStatus.SUBMITTED &&
       listing.status !== ListingStatus.PENDING_MODERATION
@@ -611,7 +770,9 @@ export class ListingsService {
       where: { id },
       data: {
         status: ListingStatus.REJECTED,
-        moderationReason: reason,
+        moderationReason: normalizedReason,
+        moderatedAt: new Date(),
+        publishedAt: null,
       },
       include: listingIncludes,
     });
@@ -621,7 +782,7 @@ export class ListingsService {
         listing.ownerUserId,
         NotificationType.LISTING_REJECTED,
         'Оголошення відхилено',
-        `Ваше оголошення "${listing.title}" було відхилено: ${reason}`,
+        `Ваше оголошення "${listing.title}" було відхилено: ${normalizedReason}`,
         `/cabinet/listings`,
       );
     }
@@ -668,9 +829,11 @@ export class ListingsService {
     return this.prisma.listing.update({
       where: { id },
       data: {
-        status: ListingStatus.ACTIVE,
+        status: ListingStatus.PENDING_MODERATION,
+        submittedAt: new Date(),
+        moderatedAt: null,
         moderationReason: null,
-        publishedAt: listing.publishedAt ?? new Date(),
+        publishedAt: null,
       },
       include: listingIncludes,
     });
@@ -722,7 +885,9 @@ export class ListingsService {
       throw new NotFoundException('Category not found');
     }
 
-    const template = category.formTemplates[0];
+    const template =
+      (await this.findSharedAgroCombineTemplate(category)) ??
+      category.formTemplates[0];
     if (!template) {
       // No template means no validation needed (or default validation)
       return { success: true, errors: [] };
@@ -918,7 +1083,7 @@ export class ListingsService {
   ) {
     const listing = await this.prisma.listing.findUnique({
       where: { id },
-      include: { seller: { include: { sellerContact: true } } },
+      include: { seller: { include: { sellerContact: true } }, country: true },
     });
 
     if (!listing) {
@@ -927,15 +1092,24 @@ export class ListingsService {
 
     this.ensureListingMutationAccess(listing, actorUserId, actorRole);
 
+    const fallbackName =
+      String(dto.name ?? '').trim() || listing.title || 'Marketplace seller';
+    const fallbackEmail = String(dto.email ?? '').trim() || 'noreply@alcor.com';
+    const fallbackPhoneNumber = String(dto.phoneNumber ?? '').trim() || '0000000';
+    const fallbackPhoneCountry =
+      String(dto.phoneCountry ?? '').trim() ||
+      listing.country?.iso2 ||
+      'DE';
+
     // If listing already has a seller contact linked, update it
     if (listing.seller && listing.seller.sellerContact) {
       return this.prisma.sellerContact.update({
         where: { id: listing.seller.sellerContactId },
         data: {
-          name: dto.name,
-          email: dto.email,
-          phoneCountry: dto.phoneCountry,
-          phoneNumber: dto.phoneNumber,
+          name: fallbackName,
+          email: fallbackEmail,
+          phoneCountry: fallbackPhoneCountry,
+          phoneNumber: fallbackPhoneNumber,
           privacyConsent: dto.privacyConsent ?? false,
           termsConsent: dto.termsConsent ?? false,
         },
@@ -945,10 +1119,10 @@ export class ListingsService {
     // Otherwise create new contact and link it
     const contact = await this.prisma.sellerContact.create({
       data: {
-        name: dto.name,
-        email: dto.email,
-        phoneCountry: dto.phoneCountry,
-        phoneNumber: dto.phoneNumber,
+        name: fallbackName,
+        email: fallbackEmail,
+        phoneCountry: fallbackPhoneCountry,
+        phoneNumber: fallbackPhoneNumber,
         privacyConsent: dto.privacyConsent ?? false,
         termsConsent: dto.termsConsent ?? false,
       },

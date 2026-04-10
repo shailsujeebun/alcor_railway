@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { startTransition, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { useCompanies } from '@/lib/queries';
@@ -56,25 +56,31 @@ export function CompaniesContent() {
     if (value) params.set(key, value);
     else params.delete(key);
     params.set('page', '1');
-    router.replace(`/companies?${params.toString()}`, { scroll: false });
+    startTransition(() => {
+      router.replace(`/companies?${params.toString()}`, { scroll: false });
+    });
   }, [searchParams, router]);
 
   const clearFilters = useCallback(() => {
     setFilters({ ...emptyFilters });
     setPage(1);
-    router.replace('/companies', { scroll: false });
+    startTransition(() => {
+      router.replace('/companies', { scroll: false });
+    });
   }, [router]);
 
   const handlePageChange = useCallback((p: number) => {
     setPage(p);
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', String(p));
-    router.replace(`/companies?${params.toString()}`, { scroll: false });
+    startTransition(() => {
+      router.replace(`/companies?${params.toString()}`, { scroll: false });
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [searchParams, router]);
 
   return (
-    <div className="container-main py-10">
+    <div className="container-main pt-10 pb-24 md:pb-28">
       <div className="mb-8">
         <h1 className="font-heading font-extrabold text-3xl md:text-4xl text-[var(--text-primary)]">
           {t('companies.catalogTitlePrefix')} <span className="gradient-text">{t('companies.catalogTitleAccent')}</span>
@@ -91,8 +97,8 @@ export function CompaniesContent() {
       </button>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        <aside className="hidden lg:block w-[280px] flex-shrink-0">
-          <div className="sticky top-20">
+        <aside className="hidden lg:block w-[280px] flex-shrink-0 self-start pb-12 md:pb-16">
+          <div className="scrollbar-hidden sticky top-20 max-h-[calc(100vh-9rem)] overflow-y-auto pr-3">
             <CompaniesFilters filters={filters} onFilterChange={updateFilter} onClear={clearFilters} />
           </div>
         </aside>

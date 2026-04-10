@@ -21,9 +21,13 @@ export function Footer() {
   ];
 
   return (
-    <footer style={{ background: 'var(--bg-secondary)' }}>
-      <div className="container-main py-10 sm:py-12 lg:py-14">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
+    <footer
+      style={{ background: 'var(--bg-secondary)' }}
+      className="shadow-[0_-1px_0_rgba(59,130,246,0.12)]"
+    >
+      <div className="container-main pt-6 sm:pt-8 lg:pt-10 pb-8 sm:pb-10 lg:pb-12">
+        <div className="h-px w-full bg-[var(--border-color)] mb-14 sm:mb-16 lg:mb-20" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12">
           <div className="md:col-span-2 lg:col-span-5">
             <Link href={homeLogoHref} className="logo-link flex items-center gap-3 mb-4">
               <Image
@@ -129,7 +133,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-[var(--border-color)] mt-8 lg:mt-10 pt-5 lg:pt-6">
+        <div className="border-t border-[var(--border-color)] mt-12 lg:mt-14 pt-9 lg:pt-10 pb-2 lg:pb-3">
           <p className="text-sm text-[var(--text-secondary)]">
             &copy; {new Date().getFullYear()} АЛЬКОР. {t('footer.rights')}
           </p>

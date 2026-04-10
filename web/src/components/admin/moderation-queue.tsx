@@ -8,8 +8,8 @@ import type { Listing, ListingStatus } from '@/types/api';
 import { getCategoryDisplayName } from '@/lib/display-labels';
 
 const STATUS_TABS: { label: string; value: ListingStatus }[] = [
-  { label: 'На модерації', value: 'SUBMITTED' },
   { label: 'Очікує перевірки', value: 'PENDING_MODERATION' },
+  { label: 'Подані раніше', value: 'SUBMITTED' },
   { label: 'Активні', value: 'ACTIVE' },
   { label: 'Відхилені', value: 'REJECTED' },
   { label: 'Призупинені', value: 'PAUSED' },
@@ -28,7 +28,7 @@ const STATUS_BADGE: Record<ListingStatus, { label: string; className: string }> 
 
 export function ModerationQueue() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<ListingStatus>('SUBMITTED');
+  const [activeTab, setActiveTab] = useState<ListingStatus>('PENDING_MODERATION');
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [page, setPage] = useState(1);

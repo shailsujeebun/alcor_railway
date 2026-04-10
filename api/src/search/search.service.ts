@@ -2,6 +2,25 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListingStatus } from '@prisma/client';
 
+/** Flatten the nested `fact` relation into top-level price / condition / year fields */
+function flattenListingFact(listing: any): any {
+  if (!listing) return listing;
+  const { fact, ...rest } = listing;
+  const priceAmount = fact?.priceAmount != null ? Number(fact.priceAmount) : null;
+  const priceCurrency = fact?.priceCurrency ?? null;
+  const priceType = priceAmount != null ? 'FIXED' : 'ON_REQUEST';
+  const condition = fact?.condition ?? null;
+  const year = fact?.year ?? null;
+  return {
+    ...rest,
+    priceAmount,
+    priceCurrency,
+    priceType,
+    condition,
+    year,
+  };
+}
+
 export interface SearchQuery {
   q?: string;
   search?: string;
@@ -157,6 +176,10 @@ export class SearchService {
         orderBy,
         include: {
           category: true,
+          brand: true,
+          country: true,
+          city: true,
+          company: true,
           media: { take: 1, orderBy: { sortOrder: 'asc' } },
           fact: true,
         },
@@ -167,7 +190,7 @@ export class SearchService {
     const facets = await this.getFacets(query);
 
     return {
-      data: items,
+      data: items.map(flattenListingFact),
       meta: {
         total,
         page,

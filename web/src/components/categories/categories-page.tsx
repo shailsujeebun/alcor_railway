@@ -12,6 +12,7 @@ import {
   getMarketplaceDisplayName,
   shouldHideCategory,
 } from '@/lib/display-labels';
+import { useTranslation } from '@/components/providers/translation-provider';
 
 const MARKETPLACE_ORDER = ['agroline', 'autoline', 'machineryline'] as const;
 const CATEGORY_PREVIEW_LIMIT = 12;
@@ -68,6 +69,7 @@ export function CategoriesPageContent() {
   const [activeMarketplaceId, setActiveMarketplaceId] = useState<string>('');
   const [search, setSearch] = useState('');
   const [showAll, setShowAll] = useState(false);
+  const { locale } = useTranslation();
   const marketplaceQueryKey = searchParams.get('marketplace')?.trim().toLowerCase() ?? '';
 
   const orderedMarketplaces = useMemo(() => {
@@ -105,10 +107,10 @@ export function CategoriesPageContent() {
     );
     if (!query) return visibleTopLevel;
     return visibleTopLevel.filter((category) => {
-      const displayName = getCategoryDisplayName(category.name).toLowerCase();
+      const displayName = getCategoryDisplayName(category.name, locale).toLowerCase();
       return category.name.toLowerCase().includes(query) || displayName.includes(query);
     });
-  }, [topLevel, search]);
+  }, [topLevel, search, locale]);
 
   const visibleTopLevel = useMemo(() => {
     if (showAll || search.trim()) return filteredTopLevel;
@@ -124,7 +126,7 @@ export function CategoriesPageContent() {
 
   if (isLoading && !categories) {
     return (
-      <div className="container-main py-10">
+      <div className="container-main pt-10 pb-24 md:pb-28">
         <Skeleton className="h-10 w-64 mb-8" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -136,7 +138,7 @@ export function CategoriesPageContent() {
   }
 
   return (
-    <div className="container-main py-10">
+    <div className="container-main pt-10 pb-24 md:pb-28">
       <div className="mb-8">
         <h1 className="font-heading font-extrabold text-3xl md:text-4xl text-[var(--text-primary)]">
           Перегляд <span className="gradient-text">категорій</span>
@@ -160,7 +162,7 @@ export function CategoriesPageContent() {
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
             >
-              {getMarketplaceDisplayName(mp.name, mp.key)}
+              {getMarketplaceDisplayName(mp.name, mp.key, locale)}
               {effectiveMarketplaceId === mp.id && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-bright rounded-full" />
               )}
@@ -174,7 +176,7 @@ export function CategoriesPageContent() {
           type="text"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search category..."
+          placeholder="Пошук категорії..."
           className="w-full md:w-[420px] px-4 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] focus:border-blue-bright outline-none transition-colors"
         />
       </div>
@@ -182,8 +184,8 @@ export function CategoriesPageContent() {
       {filteredTopLevel.length === 0 ? (
         <div className="text-center py-20">
           <Layers size={48} className="mx-auto text-blue-bright/20 mb-4" />
-          <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] mb-2">No categories found</h3>
-          <p className="text-sm text-[var(--text-secondary)]">Try a different marketplace or search query.</p>
+          <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] mb-2">Категорій не знайдено</h3>
+          <p className="text-sm text-[var(--text-secondary)]">Спробуйте інший маркетплейс або змініть пошуковий запит.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -197,7 +199,7 @@ export function CategoriesPageContent() {
                   href={`/listings?marketplaceId=${effectiveMarketplaceId ?? ''}&categoryId=${cat.id}`}
                   className="font-heading font-bold text-lg text-[var(--text-primary)] hover:text-blue-bright transition-colors"
                 >
-                  {getCategoryDisplayName(cat.name)}
+                  {getCategoryDisplayName(cat.name, locale)}
                 </Link>
               </div>
 
@@ -216,7 +218,7 @@ export function CategoriesPageContent() {
                       className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors py-1"
                     >
                       <ChevronRight size={14} />
-                      {getCategoryDisplayName(child.name)}
+                      {getCategoryDisplayName(child.name, locale)}
                     </Link>
                   ))}
                 </div>

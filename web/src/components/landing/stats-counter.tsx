@@ -2,15 +2,17 @@
 
 import { Package, Building2, Globe, Layers } from 'lucide-react';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
-
-const stats = [
-  { icon: Package, label: 'Оголошень', value: 2500, suffix: '+' },
-  { icon: Building2, label: 'Компаній', value: 850, suffix: '+' },
-  { icon: Globe, label: 'Країн', value: 40, suffix: '+' },
-  { icon: Layers, label: 'Категорій', value: 120, suffix: '+' },
-];
+import { useTranslation } from '@/components/providers/translation-provider';
 
 export function StatsCounter() {
+  const { t } = useTranslation();
+  const stats = [
+    { icon: Package, label: t('landing.statsListings'), value: 2500, suffix: '+' },
+    { icon: Building2, label: t('landing.statsCompanies'), value: 850, suffix: '+' },
+    { icon: Globe, label: t('landing.statsCountries'), value: 40, suffix: '+' },
+    { icon: Layers, label: t('landing.statsCategories'), value: 120, suffix: '+' },
+  ];
+
   return (
     <section className="section-padding relative -mt-10 md:-mt-16 z-10">
       <div className="container-main">

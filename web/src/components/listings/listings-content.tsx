@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { startTransition, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { useSearchListings } from '@/lib/queries';
@@ -89,25 +89,31 @@ export function ListingsContent() {
       params.delete('cityId');
     }
     params.set('page', '1');
-    router.replace(`/listings?${params.toString()}`, { scroll: false });
+    startTransition(() => {
+      router.replace(`/listings?${params.toString()}`, { scroll: false });
+    });
   }, [searchParams, router]);
 
   const clearFilters = useCallback(() => {
     setFilters({ ...emptyFilters });
     setPage(1);
-    router.replace('/listings', { scroll: false });
+    startTransition(() => {
+      router.replace('/listings', { scroll: false });
+    });
   }, [router]);
 
   const handlePageChange = useCallback((p: number) => {
     setPage(p);
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', String(p));
-    router.replace(`/listings?${params.toString()}`, { scroll: false });
+    startTransition(() => {
+      router.replace(`/listings?${params.toString()}`, { scroll: false });
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [searchParams, router]);
 
   return (
-    <div className="container-main py-10">
+    <div className="container-main pt-10 pb-24 md:pb-28">
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="font-heading font-extrabold text-3xl md:text-4xl text-[var(--text-primary)]">
@@ -127,8 +133,8 @@ export function ListingsContent() {
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:block w-[280px] flex-shrink-0">
-          <div className="sticky top-20">
+        <aside className="hidden lg:block w-[280px] flex-shrink-0 self-start pb-12 md:pb-16">
+          <div className="scrollbar-hidden sticky top-20 max-h-[calc(100vh-9rem)] overflow-y-auto pr-3">
             <ListingsFilters filters={filters} onFilterChange={updateFilter} onClear={clearFilters} />
           </div>
         </aside>

@@ -1,7 +1,7 @@
 'use client';
 
 import { SearchInput } from '@/components/ui/search-input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useCountries, useCities, useActivityTypes, useBrands } from '@/lib/queries';
 import { useTranslation } from '@/components/providers/translation-provider';
 
@@ -30,31 +30,6 @@ export function CompaniesFilters({ filters, onFilterChange, onClear }: Companies
 
   const hasFilters = Object.values(filters).some(Boolean);
 
-  const FilterSelect = ({
-    value,
-    onChange,
-    placeholder,
-    options,
-  }: {
-    value: string;
-    onChange: (val: string) => void;
-    placeholder: string;
-    options: { value: string; label: string }[];
-  }) => (
-    <Select value={value || undefined} onValueChange={onChange}>
-      <SelectTrigger>
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((opt) => (
-          <SelectItem key={opt.value} value={opt.value}>
-            {opt.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-
   return (
     <div className="glass-card p-6 space-y-5">
       <div className="flex items-center justify-between">
@@ -74,27 +49,31 @@ export function CompaniesFilters({ filters, onFilterChange, onClear }: Companies
 
       <div>
         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('companies.activityTypeLabel')}</label>
-        <FilterSelect
+        <SearchableSelect
           value={filters.activityTypeId}
           onChange={(v) => onFilterChange('activityTypeId', v)}
           placeholder={t('companies.activityTypePlaceholder')}
           options={(activityTypes ?? []).map((at) => ({ value: at.id, label: at.name }))}
+          searchPlaceholder="Почніть вводити для пошуку..."
+          emptyText="Немає результатів"
         />
       </div>
 
       <div>
         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('companies.brandLabel')}</label>
-        <FilterSelect
+        <SearchableSelect
           value={filters.brandId}
           onChange={(v) => onFilterChange('brandId', v)}
           placeholder={t('companies.brandPlaceholder')}
           options={(brands ?? []).map((b) => ({ value: b.id, label: b.name }))}
+          searchPlaceholder="Почніть вводити для пошуку..."
+          emptyText="Немає результатів"
         />
       </div>
 
       <div>
         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('companies.countryLabel')}</label>
-        <FilterSelect
+        <SearchableSelect
           value={filters.countryId}
           onChange={(v) => {
             onFilterChange('countryId', v);
@@ -102,38 +81,46 @@ export function CompaniesFilters({ filters, onFilterChange, onClear }: Companies
           }}
           placeholder={t('companies.countryPlaceholder')}
           options={(countries ?? []).map((c) => ({ value: c.id, label: c.name }))}
+          searchPlaceholder="Почніть вводити для пошуку..."
+          emptyText="Немає результатів"
         />
       </div>
 
       {filters.countryId && (
         <div>
           <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('companies.cityLabel')}</label>
-          <FilterSelect
+          <SearchableSelect
             value={filters.cityId}
             onChange={(v) => onFilterChange('cityId', v)}
             placeholder={t('companies.cityPlaceholder')}
             options={(citiesData?.data ?? []).map((c) => ({ value: c.id, label: c.name }))}
+            searchPlaceholder="Почніть вводити для пошуку..."
+            emptyText="Немає результатів"
           />
         </div>
       )}
 
       <div>
         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('companies.verificationLabel')}</label>
-        <FilterSelect
+        <SearchableSelect
           value={filters.isVerified}
           onChange={(v) => onFilterChange('isVerified', v)}
           placeholder={t('companies.verificationPlaceholder')}
           options={[{ value: 'true', label: t('companies.verificationOnly') }]}
+          searchPlaceholder="Почніть вводити для пошуку..."
+          emptyText="Немає результатів"
         />
       </div>
 
       <div>
         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('companies.dealerLabel')}</label>
-        <FilterSelect
+        <SearchableSelect
           value={filters.isOfficialDealer}
           onChange={(v) => onFilterChange('isOfficialDealer', v)}
           placeholder={t('companies.dealerPlaceholder')}
           options={[{ value: 'true', label: t('companies.dealerOnly') }]}
+          searchPlaceholder="Почніть вводити для пошуку..."
+          emptyText="Немає результатів"
         />
       </div>
     </div>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Check, Loader2 } from 'lucide-react';
 import { useWizard } from './wizard-context';
 import { useAuthStore } from '@/stores/auth-store';
-import { useCompanies, useCreateCompany, useCreateListing, useUpdateListing } from '@/lib/queries';
+import { useCompanies, useCreateCompany, useCreateListing, useSubmitListing, useUpdateListing, useResubmitListing, useUpdateListingContact } from '@/lib/queries';
 import { validateListingDraft } from '@/lib/api';
 import type { CreateListingPayload, Listing } from '@/types/api';
 
@@ -68,6 +68,28 @@ export function ContactStep() {
 
     const createMutation = useCreateListing();
     const updateMutation = useUpdateListing();
+    const updateContactMutation = useUpdateListingContact();
+    const submitMutation = useSubmitListing();
+    const resubmitMutation = useResubmitListing();
+
+    const buildContactPayload = () => {
+        const primaryPhone = form.sellerPhones
+            ?.split(',')
+            .map((entry) => entry.trim())
+            .filter(Boolean)[0];
+
+        const fallbackName =
+            form.sellerName?.trim() ||
+            [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() ||
+            user?.email ||
+            'Seller';
+
+        return {
+            name: fallbackName,
+            email: form.sellerEmail?.trim() || user?.email || undefined,
+            phoneNumber: primaryPhone || undefined,
+        };
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -158,9 +180,13 @@ export function ContactStep() {
                     ? 'NEW'
                     : normalizedCondition === 'used'
                         ? 'USED'
-                        : normalizedCondition === 'demo' || normalizedCondition === 'demonstration'
-                            ? 'DEMO'
-                            : undefined;
+                        : normalizedCondition === 'not_running'
+                            ? 'NOT_RUNNING'
+                            : normalizedCondition === 'for_import'
+                                ? 'FOR_IMPORT'
+                                : normalizedCondition === 'for_parts'
+                                    ? 'FOR_PARTS'
+                                    : undefined;
 
             const normalizedAdvertType = dynamicAdvertType.toLowerCase();
             const mappedListingType =
@@ -225,17 +251,44 @@ export function ContactStep() {
             if (isEditing && listing) {
                 const { companyId, ...updateData } = payload;
                 await updateMutation.mutateAsync({ id: listing.id, data: updateData });
+                await updateContactMutation.mutateAsync({
+                    id: listing.id,
+                    data: buildContactPayload(),
+                });
+                if (!isAdmin && (listing.status === 'DRAFT' || listing.status === 'REJECTED' || listing.status === 'EXPIRED')) {
+                    if (listing.status === 'DRAFT') {
+                        await submitMutation.mutateAsync(listing.id);
+                    } else {
+                        await resubmitMutation.mutateAsync(listing.id);
+                    }
+                }
             } else {
-                await createMutation.mutateAsync(payload);
+                const created = await createMutation.mutateAsync(payload);
+                await updateContactMutation.mutateAsync({
+                    id: created.id,
+                    data: buildContactPayload(),
+                });
+                if (!isAdmin) {
+                    await submitMutation.mutateAsync(created.id);
+                }
             }
 
-            setSuccess('Оголошення успішно збережено!');
+            setSuccess(
+                isAdmin
+                    ? 'Оголошення успішно опубліковано!'
+                    : 'Оголошення надіслано на модерацію. Воно з’явиться після схвалення адміністратором.',
+            );
             localStorage.removeItem('listing_draft');
 
             const redirectTo = isAdmin ? '/admin/moderation' : '/cabinet/listings';
             setTimeout(() => router.push(redirectTo), 1500);
         } catch (err) {
-            const message = err instanceof Error ? err.message : String(err);
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : typeof err === 'object' && err !== null && 'message' in err
+                        ? String((err as { message?: unknown }).message)
+                        : String(err);
             setError(`Помилка: ${message}`);
         } finally {
             setIsSubmitting(false);
@@ -332,7 +385,7 @@ export function ContactStep() {
                         <input type="text" name="sellerName" value={form.sellerName} onChange={handleChange} className={inputClass} placeholder="Ваше ім'я" />
                     </div>
                     <div>
-                        <label className={labelClass}>Email</label>
+                        <label className={labelClass}>Електронна пошта</label>
                         <input type="email" name="sellerEmail" value={form.sellerEmail} onChange={handleChange} className={inputClass} placeholder="email@example.com" />
                     </div>
                 </div>

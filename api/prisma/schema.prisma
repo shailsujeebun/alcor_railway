@@ -153,7 +153,9 @@ model CompanyUser {
 enum ListingCondition {
   NEW
   USED
-  DEMO
+  NOT_RUNNING
+  FOR_IMPORT
+  FOR_PARTS
 }
 
 enum ListingType {
@@ -463,6 +465,9 @@ model Listing {
   categoryId    BigInt        @map("category_id")
   category      Category      @relation(fields: [categoryId], references: [id])
   status        ListingStatus @default(DRAFT)
+  moderationReason String?    @map("moderation_reason")
+  submittedAt      DateTime?  @map("submitted_at")
+  moderatedAt      DateTime?  @map("moderated_at")
 
   // Legacy/Optional fields for backward compat or auth link
   companyId   String?

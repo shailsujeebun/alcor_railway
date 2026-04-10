@@ -1,5 +1,94 @@
 # Project Status Update - 2026-02-13
 
+## 11. Update - 2026-04-09 (Agro Form Templates, Brands, and Local Runtime)
+
+- Local preview/runtime maintenance:
+  - frontend and backend restarted multiple times during form/template verification
+  - local Postgres was reseeded repeatedly from `api/prisma/seed-all.ts`
+  - login path restored after local DB recovery.
+- Agro taxonomy and brands:
+  - removed `Farm lands and buildings` from Agro market seed data
+  - switched Agro brand seeding to the workbook-driven list from `/Users/rohan/Desktop/agri_brands_ukraine.xlsx`
+  - removed non-Agro brand leakage from Agro category brand dropdowns.
+- Template persistence hardening:
+  - category-specific form definitions moved into seed-backed template sets in `api/prisma/seed-all/core.ts`
+  - runtime template resolution updated so explicit custom templates are not overwritten by generic motorized `engine_block` fallback logic.
+- Combine headers branch:
+  - `combine-headers`, `grain-headers`, `corn-headers`, and `sunflower-headers` now use the shared custom form with:
+    - `Basic characteristics`
+    - `More details`
+    - `Ad parameters`.
+- Combines branch:
+  - `combines`, `grain-harvesters`, `forage-harvesters`, and `beet-harvesters` moved onto a shared custom template
+  - latest seeded version includes:
+    - `Basic characteristics`
+    - `Engine, gearbox`
+    - `Axles, brakes`
+    - `Additional options`
+    - `More details`
+    - `Ad parameters`
+  - fields expanded to match the latest screenshot-driven combine form request.
+- Garden machinery:
+  - `garden-machinery` now uses a dedicated multi-section custom form with:
+    - `Basic characteristics`
+    - `Engine, gearbox`
+    - `More details`
+    - `Ad parameters`.
+- Translation and wizard polish:
+  - expanded Ukrainian dynamic-form translation coverage for new field labels, option labels, and section names
+  - fixed dynamic form field-type badge translations
+  - added extra bottom spacing above the footer in the listing wizard
+  - reduced stale category/template caching in the frontend query layer so reseeded templates are re-fetched on mount.
+
+## 10. Update - 2026-04-06 (Moderation, Homepage Translation, Catalog UX, Admin Cleanup)
+
+- Local runtime recovery completed:
+  - backend/frontend restarted
+  - Postgres/Redis/MinIO/Mailpit brought up
+  - Prisma migrations confirmed
+  - seed rerun and marketplace/listing data restored.
+- Review UI cleanup completed:
+  - removed remaining review/rating display from listing detail
+  - removed homepage testimonials section.
+- Admin marketplace management expanded:
+  - inactive legacy marketplaces removed from local admin view/database
+  - explicit `Edit` and `Delete` actions added
+  - backend marketplace delete endpoint added with guardrails against deleting linked data
+  - action-card overflow/layout fixed.
+- Listing form and detail cleanup:
+  - duplicate category field removed from dynamic form
+  - `right_hand_drive` removed from templates/public detail rendering
+  - `net_weight` removed from website form
+  - Agro title behavior changed so non-tractor agro categories use manual titles.
+- Date input UX upgraded:
+  - split year/month inputs replaced with a proper calendar flow
+  - month/year jump selectors added
+  - overflow/clipping issues fixed inside dynamic form accordions.
+- Moderation workflow implemented for user-submitted listings:
+  - new user submissions now go to `PENDING_MODERATION`
+  - admin approval required before public visibility
+  - rejection reason required and sent back to the user via notification
+  - rejected listings can be edited and resubmitted
+  - admin/manager receive notification on submission
+  - Prisma moderation fields added and migrated.
+- Posting reliability fixes:
+  - seller contact data is now persisted before moderation submit
+  - resolved "Listing is incomplete" posting failures for valid drafts.
+- Homepage translation reliability improved:
+  - homepage hero/top bar/stats/categories CTA/contact sections moved to dictionary-backed translation keys
+  - main `EN/UA` toggle now visibly updates the homepage instead of leaving major sections hardcoded.
+- Footer and landing-page polish:
+  - removed dark spacer bands
+  - clarified divider behavior
+  - improved footer spacing and lower-page transitions.
+- Catalog page layout and filter UX fixes:
+  - added stronger spacing before footer on listings/companies/categories catalogs
+  - sticky desktop filters no longer visually bleed into footer
+  - hidden sticky sidebar scrollbar track
+  - `SearchableSelect` now deselects on second click
+  - heavy route updates wrapped in `startTransition` for smoother filter interaction
+  - categories page memo dependency corrected (`locale` added).
+
 ## 1. Task Checklist
 
 - [x] **Start Docker Infrastructure**

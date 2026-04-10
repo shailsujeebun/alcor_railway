@@ -33,14 +33,14 @@ export function ListingCard({ listing }: ListingCardProps) {
             </div>
           )}
           <div className="absolute top-3 left-3 flex gap-1.5">
-            {listing.condition && (
+            {listing.condition && (['NEW','USED','NOT_RUNNING','FOR_IMPORT','FOR_PARTS'] as string[]).includes(listing.condition) && (
               <Badge variant={listing.condition === 'NEW' ? 'success' : 'warning'}>
-                {t(`listingCard.condition.${listing.condition}`) ?? listing.condition}
+                {t(`listingCard.condition.${listing.condition}`)}
               </Badge>
             )}
             {listing.listingType && (
               <Badge variant="default">
-                {t(`listingCard.listingType.${listing.listingType}`) ?? listing.listingType}
+                {t(`listingCard.listingType.${listing.listingType}`)}
               </Badge>
             )}
           </div>

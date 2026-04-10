@@ -162,7 +162,7 @@ export default function PrivacyPage() {
             </p>
             <div className="text-[var(--text-secondary)] leading-relaxed space-y-2">
               <p>
-                <span className="text-blue-bright font-semibold">Email:</span>{' '}
+                <span className="text-blue-bright font-semibold">Електронна пошта:</span>{' '}
                 <a
                   href="mailto:alkorfk@gmail.com"
                   className="text-blue-bright hover:underline transition-all"
