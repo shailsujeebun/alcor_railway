@@ -11,6 +11,7 @@ import {
   getCategoryDisplayName,
   getMarketplaceDisplayName,
 } from '@/lib/display-labels';
+import { useTranslation } from '@/components/providers/translation-provider';
 
 // Helper to get marketplace icon by key
 function getMarketplaceIcon(key: string): string {
@@ -50,6 +51,7 @@ export default function SelectCategoryPage() {
     const [activeMarketplaceId, setActiveMarketplaceId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+    const { locale } = useTranslation();
 
     const { data: marketplaces, isLoading: loadingMarketplaces } = useMarketplaces();
     const fallbackMarketplaceId = useMemo(
@@ -73,11 +75,11 @@ export default function SelectCategoryPage() {
         const q = searchQuery.toLowerCase();
         if (
           cat.name.toLowerCase().includes(q) ||
-          getCategoryDisplayName(cat.name).toLowerCase().includes(q)
+          getCategoryDisplayName(cat.name, locale).toLowerCase().includes(q)
         ) return true;
         if (cat.children?.some((child) =>
           child.name.toLowerCase().includes(q) ||
-          getCategoryDisplayName(child.name).toLowerCase().includes(q)
+          getCategoryDisplayName(child.name, locale).toLowerCase().includes(q)
         )) return true;
         return false;
     };
@@ -114,7 +116,7 @@ export default function SelectCategoryPage() {
                         <span>/</span>
                         <span className="text-[var(--text-primary)]">
                             {activeMarketplace
-                              ? getMarketplaceDisplayName(activeMarketplace.name, activeMarketplace.key)
+                              ? getMarketplaceDisplayName(activeMarketplace.name, activeMarketplace.key, locale)
                               : 'Оберіть розділ'}
                         </span>
                     </div>
@@ -168,7 +170,7 @@ export default function SelectCategoryPage() {
                             >
                                 <span className="flex items-center gap-2">
                                     <span>{getMarketplaceIcon(mp.key)}</span>
-                                    {getMarketplaceDisplayName(mp.name, mp.key)}
+                                    {getMarketplaceDisplayName(mp.name, mp.key, locale)}
                                 </span>
                                 {effectiveMarketplaceId === mp.id && (
                                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-bright" />
@@ -206,7 +208,7 @@ export default function SelectCategoryPage() {
                                         </div>
                                         <div>
                                             <p className="font-heading font-bold text-[var(--text-primary)] group-hover:text-blue-bright transition-colors">
-                                                {getCategoryDisplayName(category.name)}
+                                                {getCategoryDisplayName(category.name, locale)}
                                             </p>
                                             <p className="text-xs text-[var(--text-secondary)]">Розмістити оголошення →</p>
                                         </div>
@@ -223,7 +225,7 @@ export default function SelectCategoryPage() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-heading font-bold text-[var(--text-primary)] group-hover:text-blue-bright transition-colors">
-                                                    {getCategoryDisplayName(category.name)}
+                                                    {getCategoryDisplayName(category.name, locale)}
                                                 </p>
                                                 <p className="text-xs text-[var(--text-secondary)]">
                                                     {category.children?.length} підкатегорій
@@ -245,7 +247,7 @@ export default function SelectCategoryPage() {
                                                       const query = searchQuery.toLowerCase();
                                                       return (
                                                         child.name.toLowerCase().includes(query) ||
-                                                        getCategoryDisplayName(child.name).toLowerCase().includes(query)
+                                                        getCategoryDisplayName(child.name, locale).toLowerCase().includes(query)
                                                       );
                                                     })
                                                     .map((child) => (
@@ -255,7 +257,7 @@ export default function SelectCategoryPage() {
                                                             className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--text-secondary)] hover:text-blue-bright hover:bg-blue-bright/5 transition-colors text-left"
                                                         >
                                                             <ChevronRight size={14} className="flex-shrink-0" />
-                                                            {getCategoryDisplayName(child.name)}
+                                                            {getCategoryDisplayName(child.name, locale)}
                                                         </button>
                                                     ))}
                                             </div>

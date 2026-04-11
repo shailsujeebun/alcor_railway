@@ -6,7 +6,6 @@ import { FeaturedListings } from '@/components/landing/featured-listings';
 import { CategoriesGrid } from '@/components/landing/categories-grid';
 import { CompanyHighlights } from '@/components/landing/company-highlights';
 import { HowItWorks } from '@/components/landing/how-it-works';
-import { Testimonials } from '@/components/landing/testimonials';
 import { CTABanner } from '@/components/landing/cta-banner';
 import { ContactSection } from '@/components/landing/contact-section';
 
@@ -19,7 +18,6 @@ export default function HomePage() {
       <CategoriesGrid />
       <CompanyHighlights />
       <HowItWorks />
-      <Testimonials />
       <CTABanner />
       <ContactSection />
     </>

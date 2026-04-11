@@ -97,7 +97,9 @@ export function useCategories(marketplaceId?: string) {
   return useQuery({
     queryKey: ['categories', marketplaceId ?? 'all'],
     queryFn: () => api.getCategories(marketplaceId),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -275,6 +277,20 @@ export function useAdminStats() {
   });
 }
 
+export function useAdminCategories() {
+  return useQuery({
+    queryKey: ['admin-categories'],
+    queryFn: api.getAdminCategories,
+  });
+}
+
+export function useAdminBrands() {
+  return useQuery({
+    queryKey: ['admin-brands'],
+    queryFn: api.getAdminBrands,
+  });
+}
+
 export function useAdminTemplates() {
   return useQuery({
     queryKey: ['admin-templates'],
@@ -441,6 +457,13 @@ export function useUpdateProfile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
     },
+  });
+}
+
+export function useMySubscription() {
+  return useQuery({
+    queryKey: ['my-subscription'],
+    queryFn: api.getMySubscription,
   });
 }
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Bookmark } from 'lucide-react';
 import { SearchInput } from '@/components/ui/search-input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useMarketplaces, useCategories, useBrands, useCountries, useCities, useCreateSavedSearch } from '@/lib/queries';
 import { useAuthStore } from '@/stores/auth-store';
 import {
@@ -10,6 +10,7 @@ import {
   getMarketplaceDisplayName,
   shouldHideCategory,
 } from '@/lib/display-labels';
+import { useTranslation } from '@/components/providers/translation-provider';
 
 interface FiltersState {
   marketplaceId: string;
@@ -42,6 +43,7 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
   const { data: countries } = useCountries();
   const { data: citiesData } = useCities(filters.countryId || undefined);
   const { isAuthenticated } = useAuthStore();
+  const { locale } = useTranslation();
   const saveMutation = useCreateSavedSearch();
   const [saveName, setSaveName] = useState('');
   const [showSave, setShowSave] = useState(false);
@@ -54,31 +56,6 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
   );
 
   const hasFilters = Object.values(filters).some(Boolean);
-
-  const FilterSelect = ({
-    value,
-    onChange,
-    placeholder,
-    options,
-  }: {
-    value: string;
-    onChange: (val: string) => void;
-    placeholder: string;
-    options: { value: string; label: string }[];
-  }) => (
-    <Select value={value || undefined} onValueChange={onChange}>
-      <SelectTrigger>
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((opt) => (
-          <SelectItem key={opt.value} value={opt.value}>
-            {opt.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
 
   return (
     <div className="glass-card p-6 space-y-5">
@@ -95,14 +72,16 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
       {marketplaces && marketplaces.length > 1 && (
         <div>
           <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Майданчик</label>
-          <FilterSelect
+          <SearchableSelect
             value={filters.marketplaceId}
             onChange={(v) => onFilterChange('marketplaceId', v)}
             placeholder="Усі майданчики"
             options={marketplaces.map((m) => ({
               value: m.id,
-              label: getMarketplaceDisplayName(m.name, m.key),
+              label: getMarketplaceDisplayName(m.name, m.key, locale),
             }))}
+            searchPlaceholder="Почніть вводити для пошуку..."
+            emptyText="Немає результатів"
           />
         </div>
       )}
@@ -115,7 +94,7 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
 
       <div>
         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Сортування</label>
-        <FilterSelect
+        <SearchableSelect
           value={filters.sort}
           onChange={(v) => onFilterChange('sort', v)}
           placeholder="За замовчуванням"
@@ -126,37 +105,43 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
             { value: 'yearDesc', label: 'Рік — спочатку нові' },
             { value: 'yearAsc', label: 'Рік — спочатку старі' },
           ]}
+          searchPlaceholder="Почніть вводити для пошуку..."
+          emptyText="Немає результатів"
         />
       </div>
 
       <div>
         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Категорія</label>
-        <FilterSelect
+        <SearchableSelect
           value={filters.categoryId}
           onChange={(v) => onFilterChange('categoryId', v)}
           placeholder="Усі категорії"
           options={flatCategories.map((c) => ({
             value: c.id,
             label: c.parentId
-              ? `  ${getCategoryDisplayName(c.name)}`
-              : getCategoryDisplayName(c.name),
+              ? `  ${getCategoryDisplayName(c.name, locale)}`
+              : getCategoryDisplayName(c.name, locale),
           }))}
+          searchPlaceholder="Почніть вводити для пошуку..."
+          emptyText="Немає результатів"
         />
       </div>
 
       <div>
         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Марка</label>
-        <FilterSelect
+        <SearchableSelect
           value={filters.brandId}
           onChange={(v) => onFilterChange('brandId', v)}
           placeholder="Усі марки"
           options={(brands ?? []).map((b) => ({ value: b.id, label: b.name }))}
+          searchPlaceholder="Почніть вводити для пошуку..."
+          emptyText="Немає результатів"
         />
       </div>
 
       <div>
         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Тип оголошення</label>
-        <FilterSelect
+        <SearchableSelect
           value={filters.listingType}
           onChange={(v) => onFilterChange('listingType', v)}
           placeholder="Усі типи"
@@ -165,20 +150,26 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
             { value: 'RENT', label: 'Оренда' },
             { value: 'FROM_MANUFACTURER', label: 'Від виробника' },
           ]}
+          searchPlaceholder="Почніть вводити для пошуку..."
+          emptyText="Немає результатів"
         />
       </div>
 
       <div>
         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Стан</label>
-        <FilterSelect
+        <SearchableSelect
           value={filters.condition}
           onChange={(v) => onFilterChange('condition', v)}
           placeholder="Будь-який стан"
           options={[
             { value: 'NEW', label: 'Новий' },
-            { value: 'USED', label: 'Б/в' },
-            { value: 'DEMO', label: 'Демонстраційний' },
+            { value: 'USED', label: 'Вживаний' },
+            { value: 'NOT_RUNNING', label: 'Не на ходу' },
+            { value: 'FOR_IMPORT', label: 'Під пригон' },
+            { value: 'FOR_PARTS', label: 'На запчастини' },
           ]}
+          searchPlaceholder="Почніть вводити для пошуку..."
+          emptyText="Немає результатів"
         />
       </div>
 
@@ -204,7 +195,7 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
 
       <div>
         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Валюта</label>
-        <FilterSelect
+        <SearchableSelect
           value={filters.priceCurrency}
           onChange={(v) => onFilterChange('priceCurrency', v)}
           placeholder="Усі валюти"
@@ -213,6 +204,8 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
             { value: 'USD', label: '$ USD' },
             { value: 'UAH', label: '₴ UAH' },
           ]}
+          searchPlaceholder="Почніть вводити для пошуку..."
+          emptyText="Немає результатів"
         />
       </div>
 
@@ -238,7 +231,7 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
 
       <div>
         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Євро клас</label>
-        <FilterSelect
+        <SearchableSelect
           value={filters.euroClass}
           onChange={(v) => onFilterChange('euroClass', v)}
           placeholder="Усі класи"
@@ -248,12 +241,14 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
             { value: 'Euro 5', label: 'Euro 5' },
             { value: 'Euro 6', label: 'Euro 6' },
           ]}
+          searchPlaceholder="Почніть вводити для пошуку..."
+          emptyText="Немає результатів"
         />
       </div>
 
       <div>
         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Країна</label>
-        <FilterSelect
+        <SearchableSelect
           value={filters.countryId}
           onChange={(v) => {
             onFilterChange('countryId', v);
@@ -261,17 +256,21 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
           }}
           placeholder="Усі країни"
           options={(countries ?? []).map((c) => ({ value: c.id, label: c.name }))}
+          searchPlaceholder="Почніть вводити для пошуку..."
+          emptyText="Немає результатів"
         />
       </div>
 
       {filters.countryId && (
         <div>
           <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Місто</label>
-          <FilterSelect
+          <SearchableSelect
             value={filters.cityId}
             onChange={(v) => onFilterChange('cityId', v)}
             placeholder="Усі міста"
             options={(citiesData?.data ?? []).map((c) => ({ value: c.id, label: c.name }))}
+            searchPlaceholder="Почніть вводити для пошуку..."
+            emptyText="Немає результатів"
           />
         </div>
       )}
@@ -294,22 +293,23 @@ export function ListingsFilters({ filters, onFilterChange, onClear }: ListingsFi
                     if (!saveName.trim()) return;
                     const activeFilters: Record<string, string> = {};
                     for (const [key, value] of Object.entries(filters)) {
-                      if (value) activeFilters[key] = value;
+                      if (value) {
+                        activeFilters[key] = value;
+                      }
                     }
                     saveMutation.mutate(
-                      { name: saveName.trim(), filters: activeFilters },
+                      { name: saveName, filters: activeFilters },
                       {
                         onSuccess: () => {
-                          setSaveName('');
                           setShowSave(false);
+                          setSaveName('');
                         },
                       },
                     );
                   }}
-                  disabled={!saveName.trim() || saveMutation.isPending}
-                  className="flex-1 px-3 py-2 rounded-lg gradient-cta text-white text-sm font-medium disabled:opacity-50"
+                  className="flex-1 px-3 py-2 rounded-lg bg-blue-bright text-white text-sm font-medium hover:bg-blue-light transition-colors"
                 >
-                  {saveMutation.isPending ? 'Збереження...' : 'Зберегти'}
+                  Зберегти
                 </button>
                 <button
                   onClick={() => { setShowSave(false); setSaveName(''); }}

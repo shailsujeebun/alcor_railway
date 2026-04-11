@@ -31,6 +31,27 @@
         - [ ] `GET /search`
         - [ ] `GET /listings/:id`
 
+## Update - 2026-04-09 (Category Form Template Pass)
+
+- Reworked Agro category seeding and local preview/runtime state:
+  - reran `pnpm run seed:all` multiple times to rebuild local category/form data from source
+  - restarted local backend/frontend during verification.
+- Agro market catalog/data changes:
+  - removed `Farm lands and buildings`
+  - switched Agro brand assignment to the workbook list from `/Users/rohan/Desktop/agri_brands_ukraine.xlsx`
+  - restricted non-Agro brands from appearing in Agro category brand selectors.
+- Custom category templates now encoded in seed data:
+  - `combine-headers` + `grain-headers` + `corn-headers` + `sunflower-headers`
+  - `combines` + `grain-harvesters` + `forage-harvesters` + `beet-harvesters`
+  - `garden-machinery`.
+- Runtime template resolution fixed:
+  - explicit custom templates are no longer stomped by generic engine fallback injection.
+- Frontend dynamic-form/wizard updates:
+  - expanded Ukrainian label/option/section translations
+  - stopped hiding `net_weight`
+  - refreshed category/template queries more aggressively after reseeds
+  - added more bottom spacing above the footer in the listing wizard.
+
 ## Test Status
 
 - 2026-02-12: `api` tests passed (`npm test`)

@@ -15,16 +15,15 @@ function marketplaceIcon(key: string): string {
   return '📦';
 }
 
-function marketplaceSubtitle(key: string): string {
-  if (key === 'autoline') return 'Trucks, trailers, buses and transport';
-  if (key === 'machineryline') return 'Construction and industrial machinery';
-  if (key === 'agroline') return 'Agricultural machinery and equipment';
-  return 'Browse marketplace categories';
-}
-
 export function CategoriesGrid() {
   const { data: marketplaces = [] } = useMarketplaces();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const marketplaceSubtitleLabel = (key: string) => {
+    if (key === 'autoline') return t('landing.categorySubtitleAutoline');
+    if (key === 'machineryline') return t('landing.categorySubtitleMachineryline');
+    if (key === 'agroline') return t('landing.categorySubtitleAgroline');
+    return t('landing.categorySubtitleDefault');
+  };
 
   const ordered = MARKETPLACE_ORDER
     .map((key) => marketplaces.find((marketplace) => marketplace.key === key))
@@ -58,9 +57,9 @@ export function CategoriesGrid() {
                 <span className="text-2xl sm:text-3xl">{marketplaceIcon(marketplace.key)}</span>
               </div>
               <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] leading-tight">
-                {getMarketplaceDisplayName(marketplace.name, marketplace.key)}
+                {getMarketplaceDisplayName(marketplace.name, marketplace.key, locale)}
               </h3>
-              <p className="text-sm text-[var(--text-secondary)] mt-2">{marketplaceSubtitle(marketplace.key)}</p>
+              <p className="text-sm text-[var(--text-secondary)] mt-2">{marketplaceSubtitleLabel(marketplace.key)}</p>
               <p className="text-xs text-blue-bright mt-4">{t('landing.categoriesOpenAll')}</p>
             </Link>
           ))}

@@ -38,6 +38,9 @@ The backend runs on `http://localhost:3000` and the frontend on `http://localhos
 ## 📚 Documentation
 
 - **[CLAUDE.md](./CLAUDE.md)** - Comprehensive project documentation including tech stack, architecture, API endpoints, and development patterns
+- **[../changes 11.04.md](../changes%2011.04.md)** - Session changelog for 2026-04-11 covering Ukrainian-default admin fixes, seller registration persistence, car brand seed expansion, and layout polish
+- **[../changes 10.04.md](../changes%2010.04.md)** - Session changelog for 2026-04-10 covering subcategory moderation, admin taxonomy split, and admin translation updates
+- **[../changes 06.04.md](../changes%2006.04.md)** - Session changelog for 2026-04-06 covering moderation workflow, homepage translation fixes, catalog UX fixes, and admin cleanup
 - **[AD.MD](./AD.MD)** - Ad placement & listing wizard documentation
 - **[ADMIN.MD](./ADMIN.MD)** - Admin features documentation (marketplaces, categories, form templates)
 - **[security-hardening.md](./security-hardening.md)** - Prioritized security hardening backlog with owners, acceptance criteria, and verification tests
@@ -220,6 +223,34 @@ For more information, please refer to the detailed documentation files listed ab
 - Reworked category discovery/navigation:
   - home now shows 3 top-level marketplace cards
   - category catalog is marketplace-scoped with tab switching and search
+
+## Update - 2026-04-06 (Moderation + Translation + Catalog Fixes)
+
+- Added a full moderation gate for user-submitted listings:
+  - new submissions now require admin approval before going live
+  - admin rejection requires a reason
+  - users receive rejection notifications and can resubmit after edits
+  - admins/managers receive notifications on new submissions.
+- Cleaned up public marketplace UI:
+  - removed remaining review/rating UI from listing detail
+  - removed homepage testimonials/reviews section.
+- Improved homepage translation behavior:
+  - moved homepage hero, CTA, stats, category subtitles, top-bar CTA, and contact section onto dictionary-backed translation keys
+  - `EN/UA` toggle now visibly updates the homepage content.
+- Improved listing wizard/form UX:
+  - removed duplicate category input in dynamic details
+  - removed `right_hand_drive` and `net_weight` from website-facing forms/detail rendering
+  - upgraded split year/month controls to an in-app calendar date picker with month/year selectors.
+- Improved admin marketplace management:
+  - inactive legacy marketplaces removed from the active local admin view
+  - explicit marketplace `Edit` and `Delete` controls added
+  - backend delete endpoint added with protections when linked categories/listings still exist.
+- Fixed catalog page layout/filter issues:
+  - added proper breathing room above the footer on listings/companies/categories catalogs
+  - fixed sticky desktop filter sidebar/footer interaction
+  - hidden sticky scrollbar artifact
+  - filter select now deselects on second click
+  - route updates deferred with `startTransition` for smoother filter interactions.
   - direct links supported through `/categories?marketplace=<key>`.
 - Fixed layout issues found in QA screenshots:
   - removed unwanted dark spacer above footer

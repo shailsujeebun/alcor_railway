@@ -1,9 +1,9 @@
 import {
   IsEmail,
-  IsOptional,
   IsString,
   Matches,
   MinLength,
+  MinLength as MinTextLength,
 } from 'class-validator';
 
 export class RegisterDto {
@@ -20,11 +20,11 @@ export class RegisterDto {
   })
   password: string;
 
-  @IsOptional()
   @IsString()
-  firstName?: string;
+  @MinTextLength(1, { message: 'First name is required' })
+  firstName: string;
 
-  @IsOptional()
   @IsString()
-  lastName?: string;
+  @MinTextLength(1, { message: 'Last name is required' })
+  lastName: string;
 }

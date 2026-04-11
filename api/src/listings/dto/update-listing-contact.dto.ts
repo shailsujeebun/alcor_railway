@@ -4,12 +4,15 @@ export class UpdateListingContactDto {
   @IsString()
   name!: string;
 
+  @IsOptional()
   @IsEmail()
   email!: string;
 
+  @IsOptional()
   @IsString()
   phoneCountry!: string;
 
+  @IsOptional()
   @IsString()
   phoneNumber!: string;
 

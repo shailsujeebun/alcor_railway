@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { CategorySubmissionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   getBuiltInEngineBlock,
@@ -31,6 +32,45 @@ export class AdminService {
     });
   }
 
+  async getBrands() {
+    const brands = await this.prisma.brand.findMany({
+      orderBy: { name: 'asc' },
+      include: {
+        categories: {
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                marketplaceId: true,
+                parentId: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            listings: true,
+            models: true,
+          },
+        },
+      },
+    });
+
+    return brands.map((brand) => ({
+      id: brand.id,
+      name: brand.name,
+      categories: brand.categories.map((entry) => ({
+        id: Number(entry.category.id),
+        name: entry.category.name,
+        marketplaceId: Number(entry.category.marketplaceId),
+        parentId: entry.category.parentId ? Number(entry.category.parentId) : null,
+      })),
+      listingsCount: brand._count.listings,
+      modelsCount: brand._count.models,
+    }));
+  }
+
   async updateMarketplace(
     id: number,
     data: { name?: string; isActive?: boolean },
@@ -39,6 +79,138 @@ export class AdminService {
       where: { id },
       data,
     });
+  }
+
+  async deleteMarketplace(id: number) {
+    const marketplaceId = BigInt(id);
+
+    const existing = await this.prisma.marketplace.findUnique({
+      where: { id: marketplaceId },
+      select: { id: true, name: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Marketplace not found');
+    }
+
+    const [categoriesCount, listingsCount] = await this.prisma.$transaction([
+      this.prisma.category.count({ where: { marketplaceId } }),
+      this.prisma.listing.count({ where: { marketplaceId } }),
+    ]);
+
+    if (categoriesCount > 0 || listingsCount > 0) {
+      throw new BadRequestException(
+        'Cannot delete marketplace because it still has categories or listings.',
+      );
+    }
+
+    await this.prisma.marketplace.delete({
+      where: { id: marketplaceId },
+    });
+
+    return { deletedId: existing.id.toString() };
+  }
+
+  async createBrand(data: { name: string; categoryId?: number }) {
+    const normalizedName = data.name.trim();
+    if (!normalizedName) {
+      throw new BadRequestException('Brand name is required');
+    }
+
+    const brand = await this.prisma.brand.upsert({
+      where: { name: normalizedName },
+      create: { name: normalizedName },
+      update: {},
+    });
+
+    if (data.categoryId) {
+      await this.prisma.brandCategory.upsert({
+        where: {
+          brandId_categoryId: {
+            brandId: brand.id,
+            categoryId: BigInt(data.categoryId),
+          },
+        },
+        create: {
+          brandId: brand.id,
+          categoryId: BigInt(data.categoryId),
+        },
+        update: {},
+      });
+    }
+
+    return brand;
+  }
+
+  async updateBrand(
+    id: string,
+    data: { name?: string; categoryId?: number | null },
+  ) {
+    const existing = await this.prisma.brand.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Brand not found');
+    }
+
+    const normalizedName = data.name?.trim();
+    if (data.name !== undefined && !normalizedName) {
+      throw new BadRequestException('Brand name is required');
+    }
+
+    const brand = await this.prisma.brand.update({
+      where: { id },
+      data: normalizedName ? { name: normalizedName } : {},
+    });
+
+    await this.prisma.brandCategory.deleteMany({
+      where: { brandId: id },
+    });
+
+    if (data.categoryId) {
+      await this.prisma.brandCategory.create({
+        data: {
+          brandId: id,
+          categoryId: BigInt(data.categoryId),
+        },
+      });
+    }
+
+    return brand;
+  }
+
+  async deleteBrand(id: string) {
+    const existing = await this.prisma.brand.findUnique({
+      where: { id },
+      select: { id: true, name: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Brand not found');
+    }
+
+    const listingsCount = await this.prisma.listing.count({
+      where: { brandId: id },
+    });
+
+    if (listingsCount > 0) {
+      throw new BadRequestException(
+        'Cannot delete brand because it is already used by listings.',
+      );
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.brandCategory.deleteMany({ where: { brandId: id } }),
+      this.prisma.model.updateMany({
+        where: { brandId: id },
+        data: { brandId: null },
+      }),
+      this.prisma.brand.delete({ where: { id } }),
+    ]);
+
+    return { deletedId: existing.id };
   }
 
   async createCategory(data: {
@@ -69,8 +241,46 @@ export class AdminService {
           data.hasEngine === undefined
             ? inheritedHasEngine
             : Boolean(data.hasEngine),
+        submissionStatus: CategorySubmissionStatus.APPROVED,
+        approvedAt: new Date(),
       },
     });
+  }
+
+  async getCategories() {
+    const all = await this.prisma.category.findMany({
+      orderBy: [{ marketplaceId: 'asc' }, { name: 'asc' }],
+      include: {
+        suggestedByUser: {
+          select: { id: true, email: true, firstName: true, lastName: true },
+        },
+      },
+    });
+
+    const map = new Map<string | null, typeof all>();
+    for (const cat of all) {
+      const parentId = cat.parentId ? cat.parentId.toString() : null;
+      if (!map.has(parentId)) map.set(parentId, []);
+      map.set(parentId, [...(map.get(parentId) ?? []), cat]);
+    }
+
+    const buildTree = (parentId: string | null): any[] =>
+      (map.get(parentId) ?? []).map((cat) => ({
+        id: Number(cat.id),
+        marketplaceId: Number(cat.marketplaceId),
+        slug: cat.slug,
+        name: cat.name,
+        parentId: cat.parentId ? Number(cat.parentId) : null,
+        sortOrder: cat.sortOrder ?? null,
+        hasEngine: Boolean(cat.hasEngine),
+        submissionStatus: cat.submissionStatus,
+        rejectionReason: cat.rejectionReason ?? null,
+        suggestedByUser: cat.suggestedByUser,
+        approvedAt: cat.approvedAt,
+        children: buildTree(cat.id.toString()),
+      }));
+
+    return buildTree(null);
   }
 
   async updateCategory(
@@ -134,6 +344,169 @@ export class AdminService {
       });
 
       return { deletedIds: subtreeIds.map((value) => value.toString()) };
+    });
+  }
+
+  private async cloneTemplateToCategory(tx: any, category: any) {
+    const parentCategory = category.parentId
+      ? await tx.category.findUnique({
+          where: { id: category.parentId },
+          select: {
+            id: true,
+            hasEngine: true,
+            formTemplates: {
+              where: { isActive: true },
+              orderBy: { version: 'desc' },
+              take: 1,
+              include: {
+                fields: {
+                  orderBy: { sortOrder: 'asc' },
+                  include: {
+                    options: {
+                      orderBy: { sortOrder: 'asc' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        })
+      : null;
+
+    const siblingTemplates =
+      category.parentId && (!parentCategory || parentCategory.formTemplates.length === 0)
+        ? await tx.formTemplate.findMany({
+            where: {
+              isActive: true,
+              category: {
+                parentId: category.parentId,
+                submissionStatus: CategorySubmissionStatus.APPROVED,
+              },
+            },
+            orderBy: [{ version: 'desc' }],
+            include: {
+              fields: {
+                orderBy: { sortOrder: 'asc' },
+                include: {
+                  options: {
+                    orderBy: { sortOrder: 'asc' },
+                  },
+                },
+              },
+            },
+          })
+        : [];
+
+    const siblingTemplate = siblingTemplates.slice().sort((a: any, b: any) => {
+      const aBlocks = Array.isArray(a.blockIds) ? a.blockIds : [];
+      const bBlocks = Array.isArray(b.blockIds) ? b.blockIds : [];
+      const aHasEngineBlock = aBlocks.includes('engine_block') ? 1 : 0;
+      const bHasEngineBlock = bBlocks.includes('engine_block') ? 1 : 0;
+      if (aHasEngineBlock !== bHasEngineBlock) {
+        return bHasEngineBlock - aHasEngineBlock;
+      }
+      return (b.fields?.length ?? 0) - (a.fields?.length ?? 0);
+    })[0];
+
+    const sourceTemplate =
+      parentCategory?.formTemplates?.[0] ?? siblingTemplate ?? null;
+    if (!sourceTemplate) return;
+
+    const existingTemplate = await tx.formTemplate.findFirst({
+      where: { categoryId: category.id },
+      select: { id: true },
+    });
+    if (existingTemplate) return;
+
+    const childTemplate = await tx.formTemplate.create({
+      data: {
+        categoryId: category.id,
+        version: 1,
+        isActive: true,
+        blockIds: sourceTemplate.blockIds ?? [],
+      },
+    });
+
+    for (const field of sourceTemplate.fields) {
+      const createdField = await tx.formField.create({
+        data: {
+          templateId: childTemplate.id,
+          fieldKey: field.fieldKey,
+          label: field.label,
+          fieldType: field.fieldType,
+          required: field.required,
+          sortOrder: field.sortOrder,
+          helpText: field.helpText,
+          validations: field.validations ?? {},
+          visibilityIf: field.visibilityIf ?? {},
+          requiredIf: field.requiredIf ?? {},
+          config: field.config ?? {},
+          section: field.section,
+        },
+      });
+
+      if (field.options.length > 0) {
+        await tx.fieldOption.createMany({
+          data: field.options.map((option: any) => ({
+            fieldId: createdField.id,
+            value: option.value,
+            label: option.label,
+            sortOrder: option.sortOrder,
+          })),
+        });
+      }
+    }
+  }
+
+  async approveCategory(id: number, actorUserId: string) {
+    const categoryId = BigInt(id);
+
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.category.findUnique({
+        where: { id: categoryId },
+      });
+
+      if (!existing) {
+        throw new NotFoundException('Category not found');
+      }
+
+      const approved = await tx.category.update({
+        where: { id: categoryId },
+        data: {
+          submissionStatus: CategorySubmissionStatus.APPROVED,
+          approvedAt: new Date(),
+          approvedByUserId: actorUserId,
+          rejectedAt: null,
+          rejectionReason: null,
+        },
+      });
+
+      await this.cloneTemplateToCategory(tx, approved);
+      return approved;
+    });
+  }
+
+  async rejectCategory(id: number, reason: string | undefined) {
+    const categoryId = BigInt(id);
+
+    const existing = await this.prisma.category.findUnique({
+      where: { id: categoryId },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Category not found');
+    }
+
+    return this.prisma.category.update({
+      where: { id: categoryId },
+      data: {
+        submissionStatus: CategorySubmissionStatus.REJECTED,
+        rejectedAt: new Date(),
+        rejectionReason: reason?.trim() || null,
+        approvedAt: null,
+        approvedByUserId: null,
+      },
     });
   }
 

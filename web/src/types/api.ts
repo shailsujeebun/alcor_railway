@@ -4,6 +4,7 @@ export type ListingType = 'SALE' | 'RENT' | 'FROM_MANUFACTURER';
 export type MediaKind = 'LOGO' | 'COVER' | 'GALLERY' | 'PHOTO' | 'VIDEO' | 'PDF';
 export type ListingStatus = 'DRAFT' | 'SUBMITTED' | 'PENDING_MODERATION' | 'ACTIVE' | 'PAUSED' | 'EXPIRED' | 'REJECTED' | 'REMOVED';
 export type DealerLeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'PACKAGE_SELECTED' | 'CONVERTED' | 'REJECTED';
+export type CategorySubmissionStatus = 'APPROVED' | 'PENDING' | 'REJECTED';
 
 export interface Country {
   id: string;
@@ -48,6 +49,7 @@ export interface Category {
   name: string;
   parentId: string | null;
   hasEngine?: boolean;
+  submissionStatus?: CategorySubmissionStatus;
   children?: Category[];
 }
 
@@ -295,6 +297,27 @@ export interface UpdateProfilePayload {
   phone?: string;
 }
 
+export interface Plan {
+  id: string;
+  slug: string;
+  name: string;
+  priceMonthly: number | null;
+  priceYearly: number | null;
+  currency: string;
+  features: string[];
+  isActive: boolean;
+}
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  planId: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  plan: Plan;
+}
+
 // ─── Favorites & View History ──────────────────────
 
 export interface Favorite {
@@ -442,7 +465,10 @@ export interface AdminTemplate {
     id: string;
     name: string;
     slug: string;
-    marketplace?: { name: string };
+    marketplace?: {
+      name: string;
+      key?: string;
+    };
   };
   fields?: { id: string }[];
 }

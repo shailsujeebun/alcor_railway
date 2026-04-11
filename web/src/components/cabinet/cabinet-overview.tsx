@@ -30,7 +30,7 @@ export function CabinetOverview() {
   const total = listings.length;
   const active = listings.filter((l: Listing) => l.status === 'ACTIVE').length;
   const drafts = listings.filter((l: Listing) => l.status === 'DRAFT').length;
-  const paused = listings.filter((l: Listing) => l.status === 'PAUSED').length;
+  const pending = listings.filter((l: Listing) => l.status === 'PENDING_MODERATION').length;
   const recent = listings.slice(0, 5);
 
   const displayName = (user?.firstName || user?.email?.split('@')[0] || 'Користувач').trim();
@@ -50,7 +50,7 @@ export function CabinetOverview() {
           { label: 'Всього', value: total, icon: FileText, color: 'text-blue-400' },
           { label: 'Активних', value: active, icon: CheckCircle, color: 'text-green-400' },
           { label: 'Чернетки', value: drafts, icon: Clock, color: 'text-gray-400' },
-          { label: 'Призупинені', value: paused, icon: PauseCircle, color: 'text-yellow-400' },
+          { label: 'На модерації', value: pending, icon: PauseCircle, color: 'text-yellow-400' },
         ].map((stat) => {
           const Icon = stat.icon;
           return (

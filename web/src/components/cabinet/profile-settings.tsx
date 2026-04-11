@@ -62,7 +62,7 @@ export function ProfileSettings() {
       <form onSubmit={handleSubmit} className="glass-card p-6 sm:p-8 max-w-xl space-y-5">
         {/* Email (read-only) */}
         <div>
-          <label className={labelClass}>Email</label>
+          <label className={labelClass}>Електронна пошта</label>
           <input
             type="email"
             value={user?.email ?? ''}
@@ -70,7 +70,7 @@ export function ProfileSettings() {
             className={`${inputClass} opacity-60 cursor-not-allowed`}
           />
           <p className="text-xs text-[var(--text-secondary)] mt-1">
-            Email не можна змінити
+            Електронну пошту не можна змінити
           </p>
         </div>
 

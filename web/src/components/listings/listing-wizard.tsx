@@ -136,7 +136,7 @@ function ListingWizardInner({ listing }: ListingWizardProps) {
         setSuccess,
       }}
     >
-      <div className="flex flex-col xl:flex-row gap-8 items-start">
+      <div className="flex flex-col xl:flex-row gap-8 items-start pb-16 md:pb-24">
         <div className="flex-1 w-full min-w-0">
           {currentStep === 1 && <DescriptionStep />}
           {currentStep === 2 && <MediaStep />}

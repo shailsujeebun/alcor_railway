@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { OptionsService } from './options.service';
-import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('options')
 export class OptionsController {
@@ -32,13 +32,11 @@ export class OptionsController {
   }
 
   @Post('brands')
-  @UseGuards(JwtAuthGuard)
   createBrand(@Body() body: { name: string; categoryId?: string }) {
     return this.optionsService.createBrand(body.name, body.categoryId);
   }
 
   @Post('models')
-  @UseGuards(JwtAuthGuard)
   createModel(
     @Body() body: { name: string; brandId?: string; categoryId?: string },
   ) {
@@ -58,18 +56,17 @@ export class OptionsController {
       marketplaceId: string;
       parentId?: string;
     },
+    @CurrentUser() user: { id: string; role?: string },
   ) {
-    return this.optionsService.createCategory(body);
+    return this.optionsService.createCategory(body, user);
   }
 
   @Post('countries')
-  @UseGuards(JwtAuthGuard)
   createCountry(@Body() body: { name: string; iso2?: string }) {
     return this.optionsService.createCountry(body.name, body.iso2);
   }
 
   @Post('cities')
-  @UseGuards(JwtAuthGuard)
   createCity(@Body() body: { name: string; countryId: string }) {
     return this.optionsService.createCity(body.name, body.countryId);
   }

@@ -36,7 +36,11 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const existing = await this.usersService.findByEmail(dto.email);
+    const normalizedEmail = dto.email.trim().toLowerCase();
+    const firstName = dto.firstName.trim();
+    const lastName = dto.lastName.trim();
+
+    const existing = await this.usersService.findByEmail(normalizedEmail);
     if (existing) {
       throw new ConflictException('Email already registered');
     }
@@ -44,10 +48,10 @@ export class AuthService {
     this.ensurePasswordStrength(dto.password);
     const passwordHash = await bcrypt.hash(dto.password, 10);
     const user = await this.usersService.create({
-      email: dto.email,
+      email: normalizedEmail,
       passwordHash,
-      firstName: dto.firstName,
-      lastName: dto.lastName,
+      firstName,
+      lastName,
     });
 
     await this.createAndLogVerificationCode(user.id, user.email);

@@ -23,10 +23,17 @@ export class UsersService {
   async create(data: {
     email: string;
     passwordHash: string;
-    firstName?: string;
-    lastName?: string;
+    firstName: string;
+    lastName: string;
   }) {
-    return this.prisma.user.create({ data });
+    return this.prisma.user.create({
+      data: {
+        ...data,
+        email: data.email.trim().toLowerCase(),
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+      },
+    });
   }
 
   async updateProfile(id: string, dto: UpdateProfileDto) {

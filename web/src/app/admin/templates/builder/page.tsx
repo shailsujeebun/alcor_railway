@@ -15,6 +15,7 @@ import {
     updateAdminTemplate,
 } from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/components/providers/translation-provider';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -27,7 +28,6 @@ import {
 import { ChevronDown, Plus, Save, Trash } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { TemplateBlockSchema } from '@/lib/schemaTypes';
-import { useTranslation } from '@/components/providers/translation-provider';
 import { getCategoryDisplayName } from '@/lib/display-labels';
 
 interface CategoryNode {
@@ -39,7 +39,7 @@ interface CategoryNode {
 const DEFAULT_SECTION = 'Загальна інформація';
 
 export default function AdminTemplatesPage() {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [templateName, setTemplateName] = useState('');
     const [existingTemplateId, setExistingTemplateId] = useState<number | null>(null);
@@ -554,7 +554,7 @@ export default function AdminTemplatesPage() {
                                                 <SelectContent>
                                                     {options.map((category) => (
                                                         <SelectItem key={category.id} value={category.id.toString()}>
-                                                            {getCategoryDisplayName(category.name)}
+                                                            {getCategoryDisplayName(category.name, locale)}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>

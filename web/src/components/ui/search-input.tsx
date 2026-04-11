@@ -10,7 +10,7 @@ interface SearchInputProps {
   className?: string;
 }
 
-export function SearchInput({ value, onChange, placeholder = 'Search...', className }: SearchInputProps) {
+export function SearchInput({ value, onChange, placeholder = 'Пошук...', className }: SearchInputProps) {
   const [local, setLocal] = useState(value);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
 

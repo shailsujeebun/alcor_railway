@@ -153,7 +153,7 @@ export default function TermsPage() {
               </p>
               <div className="text-[var(--text-secondary)] leading-relaxed">
                 <p className="mb-2">
-                  Email: <a href="mailto:alkorfk@gmail.com" className="text-blue-bright hover:underline">
+                  Електронна пошта: <a href="mailto:alkorfk@gmail.com" className="text-blue-bright hover:underline">
                     alkorfk@gmail.com
                   </a>
                 </p>

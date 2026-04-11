@@ -5,6 +5,7 @@ import {
     getAdminMarketplaces,
     createAdminMarketplace,
     updateAdminMarketplace,
+    deleteAdminMarketplace,
     AdminMarketplace,
 } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { Plus, Edit2, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Edit2, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { useRouter } from 'next/navigation';
 import { getMarketplaceDisplayName } from '@/lib/display-labels';
@@ -78,11 +79,29 @@ export default function AdminMarketplacesPage() {
         }
     }
 
+    async function handleDelete(mp: AdminMarketplace) {
+        const confirmed = window.confirm(
+            `Delete marketplace "${mp.name}"? This only works when it has no categories and no listings.`,
+        );
+        if (!confirmed) return;
+
+        try {
+            await deleteAdminMarketplace(mp.id);
+            loadMarketplaces();
+        } catch (error) {
+            console.error('Failed to delete marketplace', error);
+            alert('Failed to delete marketplace. Remove its categories and listings first.');
+        }
+    }
+
     function openEdit(mp: AdminMarketplace) {
         setFormData({ key: mp.key, name: mp.name });
         setEditingId(mp.id);
         setIsDialogOpen(true);
     }
+
+    const activeMarketplaces = marketplaces.filter((mp) => mp.isActive);
+    const inactiveMarketplaces = marketplaces.filter((mp) => !mp.isActive);
 
     if (isLoading) return <div className="p-8">Завантаження...</div>;
 
@@ -146,13 +165,13 @@ export default function AdminMarketplacesPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {marketplaces.map((mp) => (
+                {activeMarketplaces.map((mp) => (
                     <div
                         key={mp.id}
                         className="bg-card border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
                     >
-                        <div className="flex justify-between items-start mb-4">
-                            <div>
+                        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="min-w-0">
                                 <h3 className="text-xl font-semibold mb-1">
                                   {getMarketplaceDisplayName(mp.name, mp.key)}
                                 </h3>
@@ -160,14 +179,23 @@ export default function AdminMarketplacesPage() {
                                     {mp.key}
                                 </code>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap items-center gap-2 self-start sm:justify-end">
                                 <Button
                                     variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
+                                    size="sm"
                                     onClick={() => openEdit(mp)}
                                 >
-                                    <Edit2 className="w-4 h-4" />
+                                    <Edit2 className="w-4 h-4 mr-2" />
+                                    Edit
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-red-400 hover:text-red-300"
+                                    onClick={() => handleDelete(mp)}
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete
                                 </Button>
                             </div>
                         </div>
@@ -198,12 +226,69 @@ export default function AdminMarketplacesPage() {
                     </div>
                 ))}
 
-                {marketplaces.length === 0 && (
+                {activeMarketplaces.length === 0 && (
                     <div className="col-span-full text-center py-12 text-muted-foreground">
                         Маркетплейси не знайдено. Створіть перший.
                     </div>
                 )}
             </div>
+
+            {inactiveMarketplaces.length > 0 && (
+                <div className="mt-10">
+                    <h2 className="mb-4 text-xl font-semibold">Inactive marketplaces</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {inactiveMarketplaces.map((mp) => (
+                            <div
+                                key={mp.id}
+                                className="bg-card border rounded-xl p-6 shadow-sm opacity-80"
+                            >
+                                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                    <div className="min-w-0">
+                                        <h3 className="text-xl font-semibold mb-1">
+                                            {getMarketplaceDisplayName(mp.name, mp.key)}
+                                        </h3>
+                                        <code className="text-sm bg-muted px-2 py-1 rounded text-muted-foreground">
+                                            {mp.key}
+                                        </code>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2 self-start sm:justify-end">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => openEdit(mp)}
+                                        >
+                                            <Edit2 className="w-4 h-4 mr-2" />
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-red-400 hover:text-red-300"
+                                            onClick={() => handleDelete(mp)}
+                                        >
+                                            <Trash2 className="w-4 h-4 mr-2" />
+                                            Delete
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                                    <span className="flex items-center gap-2 text-sm text-gray-400">
+                                        <XCircle className="w-4 h-4" /> Inactive
+                                    </span>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => toggleActive(mp.id, mp.isActive)}
+                                    >
+                                        Activate
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

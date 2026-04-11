@@ -6,6 +6,7 @@ import { useWizard } from './wizard-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth-store';
 import {
+  createCategoryOption,
   createCityOption,
   createCountryOption,
 } from '@/lib/api';
@@ -21,6 +22,7 @@ import {
   getCategoryDisplayName,
   getMarketplaceDisplayName,
 } from '@/lib/display-labels';
+import { useTranslation } from '@/components/providers/translation-provider';
 
 const CATEGORY_PREVIEW_LIMIT = 12;
 
@@ -82,16 +84,19 @@ export function DescriptionStep() {
   const { form, setForm, setCurrentStep } = useWizard();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const { t, locale } = useTranslation();
 
   const { data: marketplaces = [] } = useMarketplaces();
-  const { data: categories = [] } = useCategories();
+  const { data: categories = [], refetch: refetchCategories } = useCategories();
   const { data: countries, refetch: refetchCountries } = useCountries();
   const { data: citiesData, refetch: refetchCities } = useCities(form.countryId || undefined);
   const cities = citiesData?.data ?? [];
   const [newCountryName, setNewCountryName] = useState('');
   const [newCityName, setNewCityName] = useState('');
+  const [newSubcategoryName, setNewSubcategoryName] = useState('');
   const [isCreatingCountry, setIsCreatingCountry] = useState(false);
   const [isCreatingCity, setIsCreatingCity] = useState(false);
+  const [isCreatingSubcategory, setIsCreatingSubcategory] = useState(false);
 
   const [selectedMarketplaceId, setSelectedMarketplaceId] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
@@ -120,6 +125,11 @@ export function DescriptionStep() {
     [marketplaceCategories, selectedCategoryId],
   );
 
+  const selectedMarketplace = useMemo(
+    () => activeMarketplaces.find((marketplace) => marketplace.id === selectedMarketplaceId),
+    [activeMarketplaces, selectedMarketplaceId],
+  );
+
   const subCategories = useMemo(() => {
     if (!selectedCategoryId) return [];
 
@@ -133,11 +143,25 @@ export function DescriptionStep() {
 
   const hasSubcategories = subCategories.length > 0;
 
+  const shouldAutoGenerateTitle = useMemo(() => {
+    const marketplaceKey = String(selectedMarketplace?.key ?? '').toLowerCase();
+    if (!marketplaceKey.includes('agro')) return true;
+
+    const categoryNames = [
+      selectedCategoryNode?.name,
+      categories.find((category) => category.id === form.categoryId)?.name,
+    ]
+      .filter(Boolean)
+      .map((name) => String(name).toLowerCase());
+
+    return categoryNames.some((name) => name.includes('tractor'));
+  }, [selectedMarketplace?.key, selectedCategoryNode?.name, categories, form.categoryId]);
+
   const filteredCategories = useMemo(() => {
     const query = categoryQuery.trim().toLowerCase();
     if (!query) return marketplaceCategories;
     return marketplaceCategories.filter((category) => {
-      const displayName = getCategoryDisplayName(category.name).toLowerCase();
+      const displayName = getCategoryDisplayName(category.name, locale).toLowerCase();
       return category.name.toLowerCase().includes(query) || displayName.includes(query);
     });
   }, [marketplaceCategories, categoryQuery]);
@@ -236,6 +260,44 @@ export function DescriptionStep() {
     }));
   };
 
+  const handleCreateSubcategory = async () => {
+    const normalizedName = newSubcategoryName.trim();
+    if (!normalizedName || !selectedMarketplaceId || !selectedCategoryId) return;
+    if (!user) {
+      alert('Please log in to suggest a new subcategory');
+      return;
+    }
+
+    setIsCreatingSubcategory(true);
+    try {
+      const created = await createCategoryOption({
+        name: normalizedName,
+        marketplaceId: selectedMarketplaceId,
+        parentId: selectedCategoryId,
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ['categories'] });
+      await refetchCategories();
+
+      if (created.status === 'APPROVED') {
+        setForm((prev) => ({
+          ...prev,
+          categoryId: created.value,
+          dynamicAttributes: {},
+        }));
+      } else if (created.status === 'PENDING') {
+        alert('Your subcategory request was sent to admin for approval. It will appear after approval.');
+      } else {
+        alert('This subcategory request is currently not approved.');
+      }
+      setNewSubcategoryName('');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to create subcategory');
+    } finally {
+      setIsCreatingSubcategory(false);
+    }
+  };
+
   const handleCreateCountry = async () => {
     if (!user) {
       alert('Please log in to create a new country');
@@ -317,7 +379,7 @@ export function DescriptionStep() {
   return (
     <div className="space-y-6">
       <div className={sectionClass}>
-        <h2 className={sectionTitleClass}>Basic information</h2>
+        <h2 className={sectionTitleClass}>{t('wizard.sectionBasicInfo')}</h2>
 
         <div className="space-y-4">
           <div>
@@ -335,7 +397,7 @@ export function DescriptionStep() {
                         : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                       }`}
                   >
-                    {getMarketplaceDisplayName(marketplace.name, marketplace.key)}
+                    {getMarketplaceDisplayName(marketplace.name, marketplace.key, locale)}
                   </button>
                 );
               })}
@@ -343,12 +405,12 @@ export function DescriptionStep() {
           </div>
 
           <div>
-            <label className={labelClass}>Category *</label>
+            <label className={labelClass}>{t('wizard.labelCategory')}</label>
             <input
               type="text"
               value={categoryQuery}
               onChange={(event) => setCategoryQuery(event.target.value)}
-              placeholder="Search category..."
+              placeholder={t('wizard.searchCategory')}
               className={`${inputClass} mb-3`}
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -365,10 +427,10 @@ export function DescriptionStep() {
                       }`}
                   >
                     <p className="text-xl mb-1">{getCategoryIcon(getCategoryDisplayName(category.name))}</p>
-                    <p className="text-sm font-semibold text-[var(--text-primary)]">{getCategoryDisplayName(category.name)}</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">{getCategoryDisplayName(category.name, locale)}</p>
                     {category.children && category.children.length > 0 && (
                       <p className="text-xs text-[var(--text-secondary)] mt-1">
-                        {category.children.length} subcategories
+                        {category.children.length} {t('wizard.subcategoriesCount')}
                       </p>
                     )}
                   </button>
@@ -377,7 +439,7 @@ export function DescriptionStep() {
             </div>
             {filteredCategories.length === 0 && (
               <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                No categories found for this search.
+                {t('wizard.noCategories')}
               </p>
             )}
             {hasHiddenCategories && (
@@ -386,7 +448,7 @@ export function DescriptionStep() {
                 onClick={() => setShowAllCategories(true)}
                 className="mt-3 text-sm text-blue-bright hover:text-blue-light"
               >
-                Show all {filteredCategories.length} categories
+                {t('wizard.showAll').replace('{count}', String(filteredCategories.length))}
               </button>
             )}
             {showAllCategories && !categoryQuery.trim() && filteredCategories.length > CATEGORY_PREVIEW_LIMIT && (
@@ -395,14 +457,14 @@ export function DescriptionStep() {
                 onClick={() => setShowAllCategories(false)}
                 className="mt-3 ml-4 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               >
-                Show fewer
+                {t('wizard.showFewer')}
               </button>
             )}
           </div>
 
           {hasSubcategories && (
             <div>
-              <label className={labelClass}>Subcategory *</label>
+              <label className={labelClass}>{t('wizard.labelSubcategory')}</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
                 {subCategories.map((subcategory) => {
                   const isSelected = form.categoryId === subcategory.id;
@@ -416,7 +478,7 @@ export function DescriptionStep() {
                           : 'border-[var(--border-color)] hover:border-blue-bright/40'
                         }`}
                     >
-                      {getCategoryDisplayName(subcategory.name)}
+                      {getCategoryDisplayName(subcategory.name, locale)}
                     </button>
                   );
                 })}
@@ -426,31 +488,61 @@ export function DescriptionStep() {
 
           {!hasSubcategories && selectedCategoryId && (
             <p className="text-sm text-[var(--text-secondary)]">
-              This category has no subcategories. It will be used directly.
+              {t('wizard.noSubcategories')}
             </p>
           )}
 
+          {selectedCategoryId && selectedMarketplaceId && (
+            <div className="rounded-lg border border-dashed border-[var(--border-color)] bg-[var(--bg-secondary)]/35 p-4">
+              <label className={labelClass}>{t('wizard.addSubcategoryLabel')}</label>
+              <div className="flex flex-col gap-3 md:flex-row">
+                <input
+                  type="text"
+                  value={newSubcategoryName}
+                  onChange={(event) => setNewSubcategoryName(event.target.value)}
+                  placeholder={t('wizard.addSubcategoryPlaceholder')}
+                  className={`${inputClass} flex-1`}
+                />
+                <button
+                  type="button"
+                  onClick={handleCreateSubcategory}
+                  disabled={!newSubcategoryName.trim() || isCreatingSubcategory}
+                  className="rounded-lg bg-blue-bright px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-light disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isCreatingSubcategory ? t('wizard.saving') : t('wizard.addSubcategoryButton')}
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-[var(--text-secondary)]">
+                {t('wizard.addSubcategoryHelp')}
+              </p>
+            </div>
+          )}
+
           <div>
-            <label className={labelClass}>Ad name *</label>
+            <label className={labelClass}>{t('wizard.labelAdName')}</label>
             <input
               type="text"
               name="title"
               value={form.title}
               onChange={handleChange}
-              className={inputClass}
-              placeholder="For example: CAT 320 2019 excavator"
+              readOnly={shouldAutoGenerateTitle}
+              className={`${inputClass} ${shouldAutoGenerateTitle ? 'bg-[var(--bg-secondary)] cursor-default' : ''}`}
+              placeholder={t('wizard.placeholderAdName')}
             />
+            <p className="text-xs text-[var(--text-secondary)] mt-1">
+              {shouldAutoGenerateTitle ? t('wizard.adNameAutoGenerated') : 'Enter the ad name manually for this category.'}
+            </p>
           </div>
         </div>
       </div>
 
       {form.categoryId && (
         <div className={sectionClass}>
-          <h2 className={sectionTitleClass}>Details</h2>
+          <h2 className={sectionTitleClass}>{t('wizard.sectionDetails')}</h2>
           {isTemplateLoading ? (
             <div className="flex items-center space-x-2 text-[var(--text-secondary)]">
               <div className="w-4 h-4 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
-              <span className="text-sm">Loading form fields...</span>
+              <span className="text-sm">{t('wizard.loadingFields')}</span>
             </div>
           ) : template ? (
             <DynamicForm
@@ -458,42 +550,47 @@ export function DescriptionStep() {
               template={template}
               values={form.dynamicAttributes}
               onChange={(values) => setForm((prev) => ({ ...prev, dynamicAttributes: values }))}
+              onTitleParts={({ brand, model, year }) => {
+                if (!shouldAutoGenerateTitle) return;
+                const title = [brand, model, year].filter(Boolean).join(' ');
+                setForm((prev) => (prev.title !== title ? { ...prev, title } : prev));
+              }}
             />
           ) : (
             <p className="text-[var(--text-secondary)] text-sm">
-              Additional fields are not configured for this category yet.
+              {t('wizard.noFieldsConfigured')}
             </p>
           )}
         </div>
       )}
 
       <div className={sectionClass}>
-        <h2 className={sectionTitleClass}>Description</h2>
+        <h2 className={sectionTitleClass}>{t('wizard.sectionDescription')}</h2>
         <div>
-          <label className={labelClass}>Detailed description</label>
+          <label className={labelClass}>{t('wizard.labelDescription')}</label>
           <textarea
             name="description"
             value={form.description}
             onChange={handleChange}
             rows={6}
             className={inputClass}
-            placeholder="Describe the equipment, its condition, and key features..."
+            placeholder={t('wizard.placeholderDescription')}
           />
         </div>
       </div>
 
       <div className={sectionClass}>
-        <h2 className={sectionTitleClass}>Location</h2>
+        <h2 className={sectionTitleClass}>{t('wizard.sectionLocation')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>Country</label>
+            <label className={labelClass}>{t('wizard.labelCountry')}</label>
             <select
               name="countryId"
               value={form.countryId}
               onChange={handleChange}
               className={selectClass}
             >
-              <option value="">Choose country</option>
+              <option value="">{t('wizard.chooseCountry')}</option>
               {countries?.map((country) => (
                 <option key={country.id} value={country.id}>
                   {country.name}
@@ -505,7 +602,7 @@ export function DescriptionStep() {
                 type="text"
                 value={newCountryName}
                 onChange={(event) => setNewCountryName(event.target.value)}
-                placeholder="Add new country"
+                placeholder={t('wizard.addNewCountry')}
                 className={inputClass}
                 disabled={!user}
               />
@@ -515,12 +612,12 @@ export function DescriptionStep() {
                 disabled={!newCountryName.trim() || isCreatingCountry || !user}
                 className="px-3 py-2 rounded-md border border-[var(--border-color)] text-xs disabled:opacity-50"
               >
-                {isCreatingCountry ? 'Saving...' : 'Add'}
+                {isCreatingCountry ? t('wizard.saving') : t('wizard.add')}
               </button>
             </div>
           </div>
           <div>
-            <label className={labelClass}>City</label>
+            <label className={labelClass}>{t('wizard.labelCity')}</label>
             <select
               name="cityId"
               value={form.cityId}
@@ -528,7 +625,7 @@ export function DescriptionStep() {
               disabled={!form.countryId}
               className={`${selectClass} disabled:opacity-50`}
             >
-              <option value="">Choose city</option>
+              <option value="">{t('wizard.chooseCity')}</option>
               {cities.map((city) => (
                 <option key={city.id} value={city.id}>
                   {city.name}
@@ -540,7 +637,7 @@ export function DescriptionStep() {
                 type="text"
                 value={newCityName}
                 onChange={(event) => setNewCityName(event.target.value)}
-                placeholder="Add new city"
+                placeholder={t('wizard.addNewCity')}
                 className={inputClass}
                 disabled={!form.countryId || !user}
               />
@@ -550,7 +647,7 @@ export function DescriptionStep() {
                 disabled={!form.countryId || !newCityName.trim() || isCreatingCity || !user}
                 className="px-3 py-2 rounded-md border border-[var(--border-color)] text-xs disabled:opacity-50"
               >
-                {isCreatingCity ? 'Saving...' : 'Add'}
+                {isCreatingCity ? t('wizard.saving') : t('wizard.add')}
               </button>
             </div>
           </div>
@@ -562,7 +659,7 @@ export function DescriptionStep() {
           onClick={handleNext}
           className="px-8 py-3 rounded-lg gradient-cta text-white font-medium hover:opacity-90 transition-opacity"
         >
-          Next: Photos and videos →
+          {t('wizard.nextPhotos')}
         </button>
       </div>
     </div>
