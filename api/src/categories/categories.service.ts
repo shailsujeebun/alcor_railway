@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CategorySubmissionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import {
@@ -31,6 +32,7 @@ export interface CategoryTreeNode {
   name: string;
   parentId: string | null;
   hasEngine: boolean;
+  submissionStatus: CategorySubmissionStatus;
   children: CategoryTreeNode[];
 }
 
@@ -81,7 +83,10 @@ export class CategoriesService {
     }
 
     const all = await this.prisma.category.findMany({
-      where,
+      where: {
+        ...where,
+        submissionStatus: CategorySubmissionStatus.APPROVED,
+      },
       orderBy: { name: 'asc' },
     });
 
@@ -100,6 +105,7 @@ export class CategoriesService {
         name: cat.name,
         parentId: cat.parentId ? cat.parentId.toString() : null,
         hasEngine: Boolean(cat.hasEngine),
+        submissionStatus: cat.submissionStatus,
         children: buildTree(cat.id.toString()),
       }));
     };

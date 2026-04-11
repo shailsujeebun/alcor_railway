@@ -21,12 +21,20 @@ export function RegisterForm() {
     e.preventDefault();
     setError('');
 
+    const normalizedFirstName = firstName.trim();
+    const normalizedLastName = lastName.trim();
+
     if (password !== confirmPassword) {
       setError(t('auth.register.errorPasswordMismatch'));
       return;
     }
 
-    if (password.length < 6) {
+    if (!normalizedFirstName || !normalizedLastName) {
+      setError(t('auth.register.errorDefault'));
+      return;
+    }
+
+    if (password.length < 10) {
       setError(t('auth.register.errorPasswordLength'));
       return;
     }
@@ -37,8 +45,8 @@ export function RegisterForm() {
       await registerUser({
         email,
         password,
-        firstName: firstName || undefined,
-        lastName: lastName || undefined,
+        firstName: normalizedFirstName,
+        lastName: normalizedLastName,
       });
       window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
     } catch (err: unknown) {
@@ -73,6 +81,7 @@ export function RegisterForm() {
               type="text"
               value={firstName}
               onChange={(event) => setFirstName(event.target.value)}
+              required
               className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-blue-bright transition-colors"
               placeholder={t('auth.register.firstNamePlaceholder')}
             />
@@ -85,6 +94,7 @@ export function RegisterForm() {
               type="text"
               value={lastName}
               onChange={(event) => setLastName(event.target.value)}
+              required
               className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-blue-bright transition-colors"
               placeholder={t('auth.register.lastNamePlaceholder')}
             />
@@ -115,7 +125,7 @@ export function RegisterForm() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
-              minLength={6}
+              minLength={10}
               className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-blue-bright transition-colors pr-11"
               placeholder={t('auth.register.passwordPlaceholder')}
             />

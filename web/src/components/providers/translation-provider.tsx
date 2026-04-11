@@ -42,7 +42,6 @@ const URL_REGEX = /\bhttps?:\/\/\S+/i;
 const BATCH_SIZE = 120;
 const REQUEST_PARALLELISM = 6;
 const OBSERVER_DEBOUNCE_MS = 120;
-const LOCALE_STORAGE_KEY = 'alcor-locale';
 const TRANSLATION_CACHE_KEY = 'alcor-translation-cache';
 const TRANSLATION_PENDING_TIMEOUT_MS = 800;
 const MAX_SESSION_CACHE_ENTRIES = 2000;
@@ -106,24 +105,14 @@ function saveTranslationCache(cache: Map<string, string>) {
   } catch { /* ignore */ }
 }
 
-function getStoredLocale(): Locale {
-  try {
-    return localStorage.getItem(LOCALE_STORAGE_KEY) === 'en' ? 'en' : 'uk';
-  } catch {
-    return 'uk';
-  }
-}
-
 export function useTranslation() {
   return useContext(TranslationContext);
 }
 
 export function TranslationProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  // Always start with 'uk' to match SSR. We sync from localStorage in useEffect below.
   const [locale, setLocaleState] = useState<Locale>('uk');
   const localeRef = useRef<Locale>('uk');
-  const hasHydratedRef = useRef(false);
   const textOriginalsRef = useRef<Map<Text, string>>(new Map());
   const attrOriginalsRef = useRef<Map<HTMLElement, AttributeSnapshot>>(new Map());
   const translationCacheRef = useRef<Map<string, string>>(loadTranslationCache());
@@ -132,16 +121,6 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
   const observerDebounceRef = useRef<number | null>(null);
   const pendingTimeoutRef = useRef<number | null>(null);
   const cacheDirtyRef = useRef(false);
-
-  // ── Hydration-safe: read stored locale AFTER first client render ──
-  useEffect(() => {
-    if (hasHydratedRef.current) return;
-    hasHydratedRef.current = true;
-    const stored = getStoredLocale();
-    if (stored !== 'uk') {
-      setLocaleState(stored);
-    }
-  }, []);
 
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
@@ -444,13 +423,10 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
     }, 500);
   }, [applyTranslationsToRoot]);
 
-  // --- Sync locale to ref, localStorage, and document ---
+  // --- Sync locale to ref and document ---
   useEffect(() => {
     localeRef.current = locale;
     document.documentElement.lang = locale;
-    try {
-      localStorage.setItem(LOCALE_STORAGE_KEY, locale);
-    } catch { /* ignore */ }
     document.body.setAttribute('data-active-lang', locale);
 
     if (locale === 'uk') {

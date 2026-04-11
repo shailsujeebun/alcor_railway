@@ -21,7 +21,7 @@ export function ContactSection() {
 
   return (
     <section
-      className="section-padding"
+      className="section-padding footer-seamless-section"
       style={{ background: 'linear-gradient(180deg, var(--bg-secondary) 0%, rgba(10, 22, 40, 0.96) 100%)' }}
     >
       <div className="container-main">

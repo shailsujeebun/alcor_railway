@@ -44,6 +44,14 @@ enum CompanyUserRole {
   EDITOR
 }
 
+enum CategorySubmissionStatus {
+  APPROVED
+  PENDING
+  REJECTED
+
+  @@map("category_submission_status")
+}
+
 // ─── Auth Models ───────────────────────────────────────
 
 model User {
@@ -81,6 +89,8 @@ model User {
   emailVerificationCodes EmailVerificationCode[]
   notifications          Notification[]
   savedSearches          SavedSearch[]
+  suggestedCategories    Category[]             @relation("CategorySuggestedBy")
+  approvedCategories     Category[]             @relation("CategoryApprovedBy")
 }
 
 model OAuthAccount {
@@ -260,16 +270,24 @@ model Model {
 }
 
 model Category {
-  id            BigInt      @id @default(autoincrement()) @map("category_id")
-  marketplaceId BigInt      @map("marketplace_id")
-  marketplace   Marketplace @relation(fields: [marketplaceId], references: [id])
-  parentId      BigInt?     @map("parent_id")
-  parent        Category?   @relation("CategoryTree", fields: [parentId], references: [id])
-  children      Category[]  @relation("CategoryTree")
-  name          String
-  slug          String
-  sortOrder     Int?        @map("sort_order")
-  hasEngine     Boolean     @default(false) @map("has_engine")
+  id               BigInt                   @id @default(autoincrement()) @map("category_id")
+  marketplaceId    BigInt                   @map("marketplace_id")
+  marketplace      Marketplace              @relation(fields: [marketplaceId], references: [id])
+  parentId         BigInt?                  @map("parent_id")
+  parent           Category?                @relation("CategoryTree", fields: [parentId], references: [id])
+  children         Category[]               @relation("CategoryTree")
+  name             String
+  slug             String
+  sortOrder        Int?                     @map("sort_order")
+  hasEngine        Boolean                  @default(false) @map("has_engine")
+  submissionStatus CategorySubmissionStatus @default(APPROVED) @map("submission_status")
+  suggestedByUserId String?                 @map("suggested_by_user_id")
+  suggestedByUser  User?                    @relation("CategorySuggestedBy", fields: [suggestedByUserId], references: [id], onDelete: SetNull)
+  approvedByUserId String?                  @map("approved_by_user_id")
+  approvedByUser   User?                    @relation("CategoryApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  approvedAt       DateTime?                @map("approved_at")
+  rejectedAt       DateTime?                @map("rejected_at")
+  rejectionReason  String?                  @map("rejection_reason")
 
   listings      Listing[]
   formTemplates FormTemplate[]
@@ -277,6 +295,8 @@ model Category {
   models        Model[]
 
   @@unique([marketplaceId, slug])
+  @@index([submissionStatus])
+  @@index([suggestedByUserId])
   @@map("category")
 }
 

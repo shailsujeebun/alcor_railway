@@ -20,6 +20,7 @@ import type {
   Listing,
   Marketplace,
   PaginatedResponse,
+  Subscription,
   ReplyTicketPayload,
   SendMessagePayload,
   SupportTicket,
@@ -251,6 +252,9 @@ export const createCompanyReview = (companyId: string, data: CreateReviewPayload
     method: 'POST',
     body: JSON.stringify(data),
   });
+
+export const getMySubscription = () =>
+  fetchApi<Subscription | null>('/subscriptions/me');
 
 // Listing status actions
 export const submitListing = (id: string) =>
@@ -665,14 +669,45 @@ export interface AdminCategory {
   marketplaceId: number;
   name: string;
   slug: string;
-  parentId?: number;
-  sortOrder?: number;
+  parentId?: number | null;
+  sortOrder?: number | null;
   hasEngine?: boolean;
+  submissionStatus: import('@/types/api').CategorySubmissionStatus;
+  rejectionReason?: string | null;
+  approvedAt?: string | null;
+  suggestedByUser?: {
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+  } | null;
   children?: AdminCategory[];
+}
+
+export interface CategorySuggestionResult {
+  value: string;
+  label: string;
+  status: import('@/types/api').CategorySubmissionStatus;
+}
+
+export interface AdminBrand {
+  id: string;
+  name: string;
+  categories: Array<{
+    id: number;
+    name: string;
+    marketplaceId: number;
+    parentId: number | null;
+  }>;
+  listingsCount: number;
+  modelsCount: number;
 }
 
 export const getAdminMarketplaces = () =>
   fetchApi<AdminMarketplace[]>('/admin/marketplaces');
+
+export const getAdminBrands = () =>
+  fetchApi<AdminBrand[]>('/admin/brands');
 
 export const createAdminMarketplace = (data: { key: string; name: string }) =>
   fetchApi<AdminMarketplace>('/admin/marketplaces', {
@@ -690,6 +725,29 @@ export const deleteAdminMarketplace = (id: number) =>
   fetchApi<void>(`/admin/marketplaces/${id}`, {
     method: 'DELETE',
   });
+
+export const createAdminBrand = (data: { name: string; categoryId?: number }) =>
+  fetchApi<AdminBrand>('/admin/brands', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+export const updateAdminBrand = (
+  id: string,
+  data: { name?: string; categoryId?: number | null },
+) =>
+  fetchApi<AdminBrand>(`/admin/brands/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+
+export const deleteAdminBrand = (id: string) =>
+  fetchApi<void>(`/admin/brands/${id}`, {
+    method: 'DELETE',
+  });
+
+export const getAdminCategories = () =>
+  fetchApi<AdminCategory[]>('/admin/categories');
 
 export const createAdminCategory = (data: {
   marketplaceId: number;
@@ -718,6 +776,17 @@ export const updateAdminCategory = (id: number, data: {
 
 export const deleteAdminCategory = (id: number) =>
   fetchApi<void>(`/admin/categories/${id}`, { method: 'DELETE' });
+
+export const approveAdminCategory = (id: number) =>
+  fetchApi<AdminCategory>(`/admin/categories/${id}/approve`, {
+    method: 'PATCH',
+  });
+
+export const rejectAdminCategory = (id: number, reason?: string) =>
+  fetchApi<AdminCategory>(`/admin/categories/${id}/reject`, {
+    method: 'PATCH',
+    body: JSON.stringify({ reason }),
+  });
 
 export const getAdminTemplates = () =>
   fetchApi<import('@/types/api').AdminTemplate[]>('/admin/templates');
@@ -814,7 +883,7 @@ export const createCategoryOption = (payload: {
   marketplaceId: string;
   parentId?: string;
 }) =>
-  fetchApi<FieldOption>('/options/categories', {
+  fetchApi<CategorySuggestionResult>('/options/categories', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

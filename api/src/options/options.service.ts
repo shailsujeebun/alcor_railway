@@ -1,18 +1,42 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import {
+  CategorySubmissionStatus,
+  Prisma,
+  UserRole,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 type OptionItem = { value: string; label: string };
+type CategoryTemplateSource = Prisma.FormTemplateGetPayload<{
+  include: {
+    fields: {
+      include: {
+        options: true;
+      };
+    };
+  };
+}>;
+type CategoryOptionResult = {
+  value: string;
+  label: string;
+  status: CategorySubmissionStatus;
+};
 
 @Injectable()
 export class OptionsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private isPrivilegedRole(role?: string) {
+    return role === UserRole.ADMIN || role === UserRole.MANAGER;
+  }
+
   private slugify(input: string): string {
     const normalized = input
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/[^\p{L}\p{N}]+/gu, '-')
       .replace(/^-+|-+$/g, '');
     return normalized || 'custom-item';
   }
@@ -150,11 +174,115 @@ export class OptionsService {
     return { value: model.name, label: model.name };
   }
 
-  async createCategory(params: {
-    name: string;
-    marketplaceId: string;
-    parentId?: string;
-  }): Promise<OptionItem> {
+  private async cloneTemplateToCategory(
+    tx: Prisma.TransactionClient,
+    category: { id: bigint; parentId: bigint | null; hasEngine: boolean },
+    parentCategory:
+      | (Prisma.CategoryGetPayload<{
+          select: {
+            id: true;
+            hasEngine: true;
+            formTemplates: {
+              where: { isActive: true };
+              orderBy: { version: 'desc' };
+              take: 1;
+              include: {
+                fields: {
+                  orderBy: { sortOrder: 'asc' };
+                  include: { options: { orderBy: { sortOrder: 'asc' } } };
+                };
+              };
+            };
+          };
+        }> & { formTemplates: CategoryTemplateSource[] })
+      | null,
+  ) {
+    const siblingTemplates: CategoryTemplateSource[] =
+      category.parentId && (!parentCategory || parentCategory.formTemplates.length === 0)
+        ? await tx.formTemplate.findMany({
+            where: {
+              isActive: true,
+              category: {
+                parentId: category.parentId,
+                submissionStatus: CategorySubmissionStatus.APPROVED,
+              },
+            },
+            orderBy: [{ version: 'desc' }],
+            include: {
+              fields: {
+                orderBy: { sortOrder: 'asc' },
+                include: {
+                  options: {
+                    orderBy: { sortOrder: 'asc' },
+                  },
+                },
+              },
+            },
+          })
+        : [];
+
+    const siblingTemplate = siblingTemplates.slice().sort((a, b) => {
+      const aBlocks = Array.isArray(a.blockIds) ? a.blockIds : [];
+      const bBlocks = Array.isArray(b.blockIds) ? b.blockIds : [];
+      const aHasEngineBlock = aBlocks.includes('engine_block') ? 1 : 0;
+      const bHasEngineBlock = bBlocks.includes('engine_block') ? 1 : 0;
+      if (aHasEngineBlock !== bHasEngineBlock)
+        return bHasEngineBlock - aHasEngineBlock;
+      return (b.fields?.length ?? 0) - (a.fields?.length ?? 0);
+    })[0];
+
+    const sourceTemplate =
+      parentCategory?.formTemplates?.[0] ?? siblingTemplate ?? null;
+    if (!sourceTemplate) return;
+
+    const childTemplate = await tx.formTemplate.create({
+      data: {
+        categoryId: category.id,
+        version: 1,
+        isActive: true,
+        blockIds: (sourceTemplate.blockIds ?? []) as Prisma.InputJsonValue,
+      },
+    });
+
+    for (const field of sourceTemplate.fields) {
+      const createdField = await tx.formField.create({
+        data: {
+          templateId: childTemplate.id,
+          fieldKey: field.fieldKey,
+          label: field.label,
+          fieldType: field.fieldType,
+          required: field.required,
+          sortOrder: field.sortOrder,
+          helpText: field.helpText,
+          validations: (field.validations ?? {}) as Prisma.InputJsonValue,
+          visibilityIf: (field.visibilityIf ?? {}) as Prisma.InputJsonValue,
+          requiredIf: (field.requiredIf ?? {}) as Prisma.InputJsonValue,
+          config: (field.config ?? {}) as Prisma.InputJsonValue,
+          section: field.section,
+        },
+      });
+
+      if (field.options.length > 0) {
+        await tx.fieldOption.createMany({
+          data: field.options.map((option) => ({
+            fieldId: createdField.id,
+            value: option.value,
+            label: option.label,
+            sortOrder: option.sortOrder,
+          })),
+        });
+      }
+    }
+  }
+
+  async createCategory(
+    params: {
+      name: string;
+      marketplaceId: string;
+      parentId?: string;
+    },
+    actor: { id: string; role?: string },
+  ): Promise<CategoryOptionResult> {
     const normalizedName = params.name.trim();
     if (!normalizedName) {
       throw new BadRequestException('Category name is required');
@@ -168,6 +296,29 @@ export class OptionsService {
       params.parentId && /^\d+$/.test(params.parentId)
         ? BigInt(params.parentId)
         : null;
+
+    const existingCategory = await this.prisma.category.findFirst({
+      where: {
+        marketplaceId,
+        parentId,
+        name: {
+          equals: normalizedName,
+          mode: 'insensitive',
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        submissionStatus: true,
+      },
+    });
+    if (existingCategory) {
+      return {
+        value: existingCategory.id.toString(),
+        label: existingCategory.name,
+        status: existingCategory.submissionStatus,
+      };
+    }
 
     const parentCategory = parentId
       ? await this.prisma.category.findUnique({
@@ -194,38 +345,9 @@ export class OptionsService {
         })
       : null;
 
-    const siblingTemplates =
-      parentId && (!parentCategory || parentCategory.formTemplates.length === 0)
-        ? await this.prisma.formTemplate.findMany({
-            where: {
-              isActive: true,
-              category: {
-                parentId,
-              },
-            },
-            orderBy: [{ version: 'desc' }],
-            include: {
-              fields: {
-                orderBy: { sortOrder: 'asc' },
-                include: {
-                  options: {
-                    orderBy: { sortOrder: 'asc' },
-                  },
-                },
-              },
-            },
-          })
-        : [];
-
-    const siblingTemplate = siblingTemplates.slice().sort((a: any, b: any) => {
-      const aBlocks = Array.isArray(a.blockIds) ? a.blockIds : [];
-      const bBlocks = Array.isArray(b.blockIds) ? b.blockIds : [];
-      const aHasEngineBlock = aBlocks.includes('engine_block') ? 1 : 0;
-      const bHasEngineBlock = bBlocks.includes('engine_block') ? 1 : 0;
-      if (aHasEngineBlock !== bHasEngineBlock)
-        return bHasEngineBlock - aHasEngineBlock;
-      return (b.fields?.length ?? 0) - (a.fields?.length ?? 0);
-    })[0];
+    if (parentId && !parentCategory) {
+      throw new BadRequestException('Parent category not found');
+    }
 
     const baseSlug = this.slugify(normalizedName);
     let slug = baseSlug;
@@ -240,6 +362,10 @@ export class OptionsService {
       slug = `${baseSlug}-${attempt}`;
     }
 
+    const submissionStatus = this.isPrivilegedRole(actor.role)
+      ? CategorySubmissionStatus.APPROVED
+      : CategorySubmissionStatus.PENDING;
+
     const created = await this.prisma.$transaction(async (tx) => {
       const category = await tx.category.create({
         data: {
@@ -248,56 +374,31 @@ export class OptionsService {
           slug,
           parentId,
           hasEngine: Boolean(parentCategory?.hasEngine),
+          submissionStatus,
+          suggestedByUserId: actor.id,
+          approvedByUserId:
+            submissionStatus === CategorySubmissionStatus.APPROVED
+              ? actor.id
+              : null,
+          approvedAt:
+            submissionStatus === CategorySubmissionStatus.APPROVED
+              ? new Date()
+              : null,
         },
       });
 
-      const sourceTemplate =
-        parentCategory?.formTemplates?.[0] ?? siblingTemplate ?? null;
-      if (sourceTemplate) {
-        const childTemplate = await tx.formTemplate.create({
-          data: {
-            categoryId: category.id,
-            version: 1,
-            isActive: true,
-            blockIds: (sourceTemplate.blockIds ?? []) as any,
-          },
-        });
-
-        for (const field of sourceTemplate.fields) {
-          const createdField = await tx.formField.create({
-            data: {
-              templateId: childTemplate.id,
-              fieldKey: field.fieldKey,
-              label: field.label,
-              fieldType: field.fieldType,
-              required: field.required,
-              sortOrder: field.sortOrder,
-              helpText: field.helpText,
-              validations: (field.validations ?? {}) as any,
-              visibilityIf: (field.visibilityIf ?? {}) as any,
-              requiredIf: (field.requiredIf ?? {}) as any,
-              config: (field.config ?? {}) as any,
-              section: field.section,
-            },
-          });
-
-          if (field.options.length > 0) {
-            await tx.fieldOption.createMany({
-              data: field.options.map((option) => ({
-                fieldId: createdField.id,
-                value: option.value,
-                label: option.label,
-                sortOrder: option.sortOrder,
-              })),
-            });
-          }
-        }
+      if (submissionStatus === CategorySubmissionStatus.APPROVED) {
+        await this.cloneTemplateToCategory(tx, category, parentCategory);
       }
 
       return category;
     });
 
-    return { value: created.id.toString(), label: created.name };
+    return {
+      value: created.id.toString(),
+      label: created.name,
+      status: created.submissionStatus,
+    };
   }
 
   async createCountry(name: string, iso2?: string): Promise<OptionItem> {

@@ -1,5 +1,7 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { OptionsService } from './options.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('options')
 export class OptionsController {
@@ -46,6 +48,7 @@ export class OptionsController {
   }
 
   @Post('categories')
+  @UseGuards(JwtAuthGuard)
   createCategory(
     @Body()
     body: {
@@ -53,8 +56,9 @@ export class OptionsController {
       marketplaceId: string;
       parentId?: string;
     },
+    @CurrentUser() user: { id: string; role?: string },
   ) {
-    return this.optionsService.createCategory(body);
+    return this.optionsService.createCategory(body, user);
   }
 
   @Post('countries')

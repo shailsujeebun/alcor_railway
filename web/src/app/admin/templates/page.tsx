@@ -1,6 +1,8 @@
 ﻿'use client';
 
+import { useTranslation } from '@/components/providers/translation-provider';
 import { Button } from '@/components/ui/button';
+import { getCategoryDisplayName, getMarketplaceDisplayName } from '@/lib/display-labels';
 import {
   useAdminTemplates,
   useDeleteAdminTemplate,
@@ -21,6 +23,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 export default function AdminTemplatesPage() {
+  const { locale } = useTranslation();
   const { data: templates, isLoading, error } = useAdminTemplates();
   const deleteMutation = useDeleteAdminTemplate();
   const updateStatusMutation = useUpdateAdminTemplateStatus();
@@ -121,10 +124,19 @@ export default function AdminTemplatesPage() {
                     <td className="p-4 text-sm font-mono text-[var(--text-secondary)]">#{template.id}</td>
                     <td className="p-4">
                       <div className="font-medium">
-                        {template.category?.name || 'Невідома категорія'}
+                        {template.category?.name
+                          ? getCategoryDisplayName(template.category.name, locale)
+                          : 'Невідома категорія'}
                       </div>
                       <div className="text-xs text-[var(--text-secondary)]">
-                        {template.category?.marketplace?.name} • {template.category?.slug}
+                        {template.category?.marketplace?.name
+                          ? getMarketplaceDisplayName(
+                              template.category.marketplace.name,
+                              template.category.marketplace.key,
+                              locale,
+                            )
+                          : 'Невідомий маркетплейс'}{' '}
+                        • {template.category?.slug}
                       </div>
                     </td>
                     <td className="p-4">

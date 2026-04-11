@@ -301,6 +301,75 @@ const AGRO_WORKBOOK_BRANDS = [
   'Cummins',
 ] as const;
 
+const CAR_WORKBOOK_BRANDS = [
+  'Acura',
+  'Alfa Romeo',
+  'Aston Martin',
+  'Audi',
+  'Bentley',
+  'BMW',
+  'Buick',
+  'BYD',
+  'Cadillac',
+  'Chery',
+  'Chevrolet',
+  'Chrysler',
+  'Citroën',
+  'Cupra',
+  'Dodge',
+  'DS Automobiles',
+  'Ferrari',
+  'Fiat',
+  'Ford',
+  'Geely',
+  'Genesis',
+  'GMC',
+  'Great Wall',
+  'Haval',
+  'Honda',
+  'Hyundai',
+  'Infiniti',
+  'Jaguar',
+  'Jeep',
+  'Kia',
+  'Lamborghini',
+  'Lancia',
+  'Land Rover',
+  'Lexus',
+  'Li Auto',
+  'Lincoln',
+  'Mahindra',
+  'Maserati',
+  'Maybach',
+  'Mazda',
+  'McLaren',
+  'Mercedes-Benz',
+  'Mini',
+  'Mitsubishi',
+  'NIO',
+  'Nissan',
+  'Opel',
+  'Peugeot',
+  'Polestar',
+  'Porsche',
+  'Renault',
+  'Rolls-Royce',
+  'Saab (історична)',
+  'SEAT',
+  'Subaru',
+  'Suzuki',
+  'Tata Motors',
+  'Tesla',
+  'Toyota',
+  'Volkswagen',
+  'Volvo',
+  'Xpeng',
+  'Zeekr',
+  'Богдан',
+  'ЗАЗ',
+  'КрАЗ',
+] as const;
+
 const NON_AGRO_BRANDS = [
   'Caterpillar',
   'Komatsu',
@@ -308,6 +377,19 @@ const NON_AGRO_BRANDS = [
   'Mercedes-Benz',
   'Toyota',
   'BMW',
+] as const;
+
+const AUTOLINE_CAR_CATEGORY_SLUGS = [
+  'cars',
+  'sedans',
+  'hatchbacks',
+  'suv',
+  'coupes',
+  'convertibles',
+  'pickups',
+  'minivans',
+  'electric-cars',
+  'hybrid-cars',
 ] as const;
 
 function collectLeafSlugs(nodes: readonly CategorySeedNode[]): string[] {
@@ -1325,7 +1407,7 @@ export async function seedCore(prisma: PrismaClient): Promise<CoreSeedData> {
   }
 
   const allBrandNames = Array.from(
-    new Set([...AGRO_WORKBOOK_BRANDS, ...NON_AGRO_BRANDS]),
+    new Set([...AGRO_WORKBOOK_BRANDS, ...CAR_WORKBOOK_BRANDS, ...NON_AGRO_BRANDS]),
   ).sort((a, b) => a.localeCompare(b));
 
   const brandRows = await Promise.all(
@@ -1339,11 +1421,18 @@ export async function seedCore(prisma: PrismaClient): Promise<CoreSeedData> {
     const category = categoriesBySlug.get(categorySlug);
     if (!brandId || !category) return;
 
-    await prisma.brandCategory.create({
-      data: {
+    await prisma.brandCategory.upsert({
+      where: {
+        brandId_categoryId: {
+          brandId,
+          categoryId: category.id,
+        },
+      },
+      create: {
         brandId,
         categoryId: category.id,
       },
+      update: {},
     });
   }
 
@@ -1357,17 +1446,30 @@ export async function seedCore(prisma: PrismaClient): Promise<CoreSeedData> {
 
     for (const category of categoriesBySlug.values()) {
       if (category.marketplaceId !== marketplaceId) continue;
-      await prisma.brandCategory.create({
-        data: {
+      await prisma.brandCategory.upsert({
+        where: {
+          brandId_categoryId: {
+            brandId,
+            categoryId: category.id,
+          },
+        },
+        create: {
           brandId,
           categoryId: category.id,
         },
+        update: {},
       });
     }
   }
 
   for (const brandName of AGRO_WORKBOOK_BRANDS) {
     await linkBrandToMarketplaceCategories(brandName, 'agroline');
+  }
+
+  for (const brandName of CAR_WORKBOOK_BRANDS) {
+    for (const categorySlug of AUTOLINE_CAR_CATEGORY_SLUGS) {
+      await linkBrandToCategory(brandName, categorySlug);
+    }
   }
 
   await linkBrandToCategory('Caterpillar', 'tracked-excavators');

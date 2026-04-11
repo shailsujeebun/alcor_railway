@@ -6,6 +6,7 @@ import { useWizard } from './wizard-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth-store';
 import {
+  createCategoryOption,
   createCityOption,
   createCountryOption,
 } from '@/lib/api';
@@ -86,14 +87,16 @@ export function DescriptionStep() {
   const { t, locale } = useTranslation();
 
   const { data: marketplaces = [] } = useMarketplaces();
-  const { data: categories = [] } = useCategories();
+  const { data: categories = [], refetch: refetchCategories } = useCategories();
   const { data: countries, refetch: refetchCountries } = useCountries();
   const { data: citiesData, refetch: refetchCities } = useCities(form.countryId || undefined);
   const cities = citiesData?.data ?? [];
   const [newCountryName, setNewCountryName] = useState('');
   const [newCityName, setNewCityName] = useState('');
+  const [newSubcategoryName, setNewSubcategoryName] = useState('');
   const [isCreatingCountry, setIsCreatingCountry] = useState(false);
   const [isCreatingCity, setIsCreatingCity] = useState(false);
+  const [isCreatingSubcategory, setIsCreatingSubcategory] = useState(false);
 
   const [selectedMarketplaceId, setSelectedMarketplaceId] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
@@ -255,6 +258,44 @@ export function DescriptionStep() {
       categoryId: subcategoryId,
       dynamicAttributes: {},
     }));
+  };
+
+  const handleCreateSubcategory = async () => {
+    const normalizedName = newSubcategoryName.trim();
+    if (!normalizedName || !selectedMarketplaceId || !selectedCategoryId) return;
+    if (!user) {
+      alert('Please log in to suggest a new subcategory');
+      return;
+    }
+
+    setIsCreatingSubcategory(true);
+    try {
+      const created = await createCategoryOption({
+        name: normalizedName,
+        marketplaceId: selectedMarketplaceId,
+        parentId: selectedCategoryId,
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ['categories'] });
+      await refetchCategories();
+
+      if (created.status === 'APPROVED') {
+        setForm((prev) => ({
+          ...prev,
+          categoryId: created.value,
+          dynamicAttributes: {},
+        }));
+      } else if (created.status === 'PENDING') {
+        alert('Your subcategory request was sent to admin for approval. It will appear after approval.');
+      } else {
+        alert('This subcategory request is currently not approved.');
+      }
+      setNewSubcategoryName('');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to create subcategory');
+    } finally {
+      setIsCreatingSubcategory(false);
+    }
   };
 
   const handleCreateCountry = async () => {
@@ -449,6 +490,32 @@ export function DescriptionStep() {
             <p className="text-sm text-[var(--text-secondary)]">
               {t('wizard.noSubcategories')}
             </p>
+          )}
+
+          {selectedCategoryId && selectedMarketplaceId && (
+            <div className="rounded-lg border border-dashed border-[var(--border-color)] bg-[var(--bg-secondary)]/35 p-4">
+              <label className={labelClass}>{t('wizard.addSubcategoryLabel')}</label>
+              <div className="flex flex-col gap-3 md:flex-row">
+                <input
+                  type="text"
+                  value={newSubcategoryName}
+                  onChange={(event) => setNewSubcategoryName(event.target.value)}
+                  placeholder={t('wizard.addSubcategoryPlaceholder')}
+                  className={`${inputClass} flex-1`}
+                />
+                <button
+                  type="button"
+                  onClick={handleCreateSubcategory}
+                  disabled={!newSubcategoryName.trim() || isCreatingSubcategory}
+                  className="rounded-lg bg-blue-bright px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-light disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isCreatingSubcategory ? t('wizard.saving') : t('wizard.addSubcategoryButton')}
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-[var(--text-secondary)]">
+                {t('wizard.addSubcategoryHelp')}
+              </p>
+            </div>
           )}
 
           <div>

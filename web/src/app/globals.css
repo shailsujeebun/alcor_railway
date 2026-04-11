@@ -164,6 +164,7 @@ select:focus-visible {
   box-shadow: 0 12px 32px rgba(249, 115, 22, 0.18);
 }
 
+
 /* Navbar should keep a calm blue interaction style */
 .site-navbar a:hover {
   color: inherit;
@@ -518,8 +519,14 @@ select:focus-visible {
 }
 
 .site-main-shell {
+  --site-shell-footer-gap: clamp(2.5rem, 4vw, 4.5rem);
   padding-top: 0;
-  padding-bottom: 0;
+  padding-bottom: var(--site-shell-footer-gap);
+}
+
+.footer-seamless-section {
+  margin-bottom: calc(var(--site-shell-footer-gap) * -1);
+  padding-bottom: calc(120px + var(--site-shell-footer-gap));
 }
 
 .scrollbar-hidden {
@@ -533,22 +540,25 @@ select:focus-visible {
 
 @media (max-width: 1024px) {
   .site-main-shell {
+    --site-shell-footer-gap: 3rem;
     padding-top: 0;
-    padding-bottom: 0;
+    padding-bottom: var(--site-shell-footer-gap);
   }
 }
 
 @media (max-width: 768px) {
   .site-main-shell {
+    --site-shell-footer-gap: 2.5rem;
     padding-top: 0;
-    padding-bottom: 0;
+    padding-bottom: var(--site-shell-footer-gap);
   }
 }
 
 @media (max-width: 480px) {
   .site-main-shell {
+    --site-shell-footer-gap: 2rem;
     padding-top: 0;
-    padding-bottom: 0;
+    padding-bottom: var(--site-shell-footer-gap);
   }
 }
 

@@ -15,6 +15,8 @@ import {
   Globe,
   Layers,
   FileEdit,
+  GitBranch,
+  Tags,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
@@ -24,6 +26,8 @@ const sidebarLinks = [
   { href: '/admin', labelKey: 'admin.sidebar.overview', icon: LayoutDashboard },
   { href: '/admin/marketplaces', labelKey: 'admin.sidebar.marketplaces', icon: Globe },
   { href: '/admin/categories', labelKey: 'admin.sidebar.categories', icon: Layers },
+  { href: '/admin/subcategories', labelKey: 'admin.sidebar.subcategories', icon: GitBranch },
+  { href: '/admin/brands', labelKey: 'admin.sidebar.brands', icon: Tags },
   { href: '/admin/templates', labelKey: 'admin.sidebar.templates', icon: FileEdit },
   { href: '/admin/listings/new', labelKey: 'admin.sidebar.addListing', icon: PlusCircle },
   { href: '/admin/users', labelKey: 'admin.sidebar.users', icon: Users },
@@ -66,7 +70,7 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="container-main pt-16 md:pt-20 pb-10 md:pb-14">
+    <div className="container-main pt-16 md:pt-20 pb-16 md:pb-20">
       <div className="grid grid-cols-1 md:grid-cols-[240px_minmax(0,1fr)] items-start gap-6 md:gap-8 mt-10 md:mt-12">
         <aside className="hidden md:block w-60 flex-shrink-0">
           <nav className="glass-card p-3 sticky top-28 space-y-1">

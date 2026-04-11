@@ -246,8 +246,8 @@ export function ListingDetail({ id }: { id: string }) {
   }
 
   return (
-    <div className="container-main pt-6 pb-10 md:pt-8 md:pb-12">
-      <div className="listing-detail-shell relative overflow-hidden rounded-[28px] p-4 md:p-6">
+    <div className="container-main pt-16 pb-10 md:pt-20 md:pb-12">
+      <div className="listing-detail-shell relative mt-3 overflow-hidden rounded-[28px] p-4 md:mt-4 md:p-6">
         <div className="pointer-events-none absolute -left-24 -top-24 h-60 w-60 rounded-full bg-blue-500/15 blur-3xl" />
         <div className="pointer-events-none absolute -right-24 top-1/3 h-72 w-72 rounded-full bg-orange-500/10 blur-3xl" />
 

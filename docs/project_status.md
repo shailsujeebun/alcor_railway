@@ -1,5 +1,48 @@
 # Project Status Update - 2026-02-13
 
+## 13. Update - 2026-04-11 (Ukrainian Admin Cleanup, Seller Persistence, Car Brands, Layout Polish)
+
+- Ukrainian-first admin cleanup was extended across taxonomy and templates:
+  - default locale now resets to `uk` on reload
+  - `Categories`, `Subcategories`, `Brands`, and `Form templates` render localized category / marketplace names
+  - template builder category selection now uses Ukrainian display labels.
+- Admin taxonomy pages were normalized:
+  - root categories remain isolated on the categories page
+  - subcategories page now mirrors the categories-page structure and actions
+  - card layout issues with wrapped names, icons, and action buttons were corrected.
+- Registration persistence was hardened for sellers:
+  - first name and last name are now required on registration
+  - email and names are normalized before save
+  - seller names now persist into the `User` table for admin visibility and later re-login.
+- Car brand seed coverage was expanded:
+  - imported 66 passenger-car brands from the workbook-driven source
+  - linked those brands to the Autoline car branch
+  - made brand/category linking idempotent with `upsert`.
+- Shared layout polish addressed recurring spacing defects:
+  - stronger footer spacing added at the app-shell level
+  - homepage footer seam removed
+  - listing detail pages received additional top spacing for moderation/public previews.
+
+## 12. Update - 2026-04-10 (Subcategory Moderation + Admin Taxonomy Split)
+
+- Subcategory submission flow changed from direct public creation to moderated approval:
+  - user-created subcategories now save as `PENDING`
+  - public category trees only return `APPROVED` entries
+  - approved subcategories become visible to all users after admin approval.
+- Category moderation fields were added to Prisma and migrated locally:
+  - submission status
+  - suggested-by / approved-by tracking
+  - approval / rejection timestamps and rejection reason.
+- Admin taxonomy management was split into separate pages:
+  - root `Categories`
+  - `Subcategories`
+  - `Brands`.
+- Admin capabilities were expanded:
+  - approve / reject pending subcategories
+  - delete approved or unwanted subcategories
+  - separate brand CRUD page with delete guard when listings already use a brand.
+- Admin taxonomy UI copy was moved into translation dictionaries and Ukrainian coverage was added for the new pages.
+
 ## 11. Update - 2026-04-09 (Agro Form Templates, Brands, and Local Runtime)
 
 - Local preview/runtime maintenance:

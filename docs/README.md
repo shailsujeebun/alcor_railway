@@ -38,6 +38,8 @@ The backend runs on `http://localhost:3000` and the frontend on `http://localhos
 ## 📚 Documentation
 
 - **[CLAUDE.md](./CLAUDE.md)** - Comprehensive project documentation including tech stack, architecture, API endpoints, and development patterns
+- **[../changes 11.04.md](../changes%2011.04.md)** - Session changelog for 2026-04-11 covering Ukrainian-default admin fixes, seller registration persistence, car brand seed expansion, and layout polish
+- **[../changes 10.04.md](../changes%2010.04.md)** - Session changelog for 2026-04-10 covering subcategory moderation, admin taxonomy split, and admin translation updates
 - **[../changes 06.04.md](../changes%2006.04.md)** - Session changelog for 2026-04-06 covering moderation workflow, homepage translation fixes, catalog UX fixes, and admin cleanup
 - **[AD.MD](./AD.MD)** - Ad placement & listing wizard documentation
 - **[ADMIN.MD](./ADMIN.MD)** - Admin features documentation (marketplaces, categories, form templates)

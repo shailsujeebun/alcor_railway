@@ -15,6 +15,7 @@ import {
     updateAdminTemplate,
 } from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/components/providers/translation-provider';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -38,6 +39,7 @@ interface CategoryNode {
 const DEFAULT_SECTION = 'General Information';
 
 export default function AdminTemplatesPage() {
+    const { locale } = useTranslation();
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [templateName, setTemplateName] = useState('');
     const [existingTemplateId, setExistingTemplateId] = useState<number | null>(null);
@@ -527,7 +529,7 @@ export default function AdminTemplatesPage() {
                                                 <SelectContent>
                                                     {options.map((category) => (
                                                         <SelectItem key={category.id} value={category.id.toString()}>
-                                                            {getCategoryDisplayName(category.name)}
+                                                            {getCategoryDisplayName(category.name, locale)}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
