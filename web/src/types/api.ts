@@ -465,7 +465,10 @@ export interface AdminTemplate {
     id: string;
     name: string;
     slug: string;
-    marketplace?: { name: string };
+    marketplace?: {
+      name: string;
+      key?: string;
+    };
   };
   fields?: { id: string }[];
 }

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Inter, Manrope } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { QueryProvider } from '@/components/providers/query-provider';
@@ -10,16 +9,6 @@ import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { DomErrorBoundary } from '@/components/providers/dom-error-boundary';
 import { TranslationProvider } from '@/components/providers/translation-provider';
-
-const inter = Inter({
-  subsets: ['latin', 'cyrillic'],
-  variable: '--font-inter',
-});
-
-const manrope = Manrope({
-  subsets: ['latin', 'cyrillic'],
-  variable: '--font-manrope',
-});
 
 export const metadata: Metadata = {
   title: 'B2B Маркетплейс - Промислове обладнання',
@@ -33,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="uk" suppressHydrationWarning>
-      <body className={`${inter.variable} ${manrope.variable} antialiased`} suppressHydrationWarning>
+      <body className="antialiased" suppressHydrationWarning>
         <ThemeProvider>
           <QueryProvider>
             <AuthProvider>
