@@ -152,6 +152,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Apply migrations
         run: npx prisma migrate deploy
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
       - name: Seed all data
         run: pnpm run seed:all
       - name: Verify seed integrity
