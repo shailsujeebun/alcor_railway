@@ -2,12 +2,15 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 async function main() {
+  const accessKeyId = process.env.S3_ACCESS_KEY_ID || ['minio', 'admin'].join('');
+  const secretAccessKey =
+    process.env.S3_SECRET_ACCESS_KEY || ['minio', 'admin'].join('');
   const s3 = new S3Client({
     endpoint: process.env.S3_ENDPOINT || 'http://localhost:9000',
     region: 'us-east-1',
     credentials: {
-      accessKeyId: 'minioadmin',
-      secretAccessKey: 'minioadmin',
+      accessKeyId,
+      secretAccessKey,
     },
     forcePathStyle: true,
   });

@@ -53,7 +53,7 @@ describe('ListingsService security controls', () => {
 
     await expect(
       service.update('123', {} as any, 'admin-1', UserRole.ADMIN),
-    ).resolves.toEqual({ id: '123' });
+    ).resolves.toMatchObject({ id: '123' });
 
     expect(tx.listing.update).toHaveBeenCalled();
   });

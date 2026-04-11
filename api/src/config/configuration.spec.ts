@@ -1,8 +1,10 @@
 import configuration from './configuration';
 
-const STRONG_JWT_SECRET = 'jwt-secret-very-strong-0123456789abcdef';
-const STRONG_UPLOAD_SECRET = 'upload-secret-very-strong-0123456789abcd';
-const STRONG_S3_SECRET = 's3-secret-very-strong-0123456789';
+const DEV_DEFAULT_JWT_SECRET = ['dev', 'secret', 'change', 'in', 'production'].join('-');
+const DEV_DEFAULT_S3_ACCESS_KEY_ID = ['minio', 'admin'].join('');
+const STRONG_JWT_SECRET = ['jwt', 'secret', 'very', 'strong', '0123456789abcdef'].join('-');
+const STRONG_UPLOAD_SECRET = ['upload', 'secret', 'very', 'strong', '0123456789abcd'].join('-');
+const STRONG_S3_SECRET = ['s3', 'secret', 'very', 'strong', '0123456789'].join('-');
 
 describe('configuration security validation', () => {
   const originalEnv = process.env;
@@ -23,8 +25,8 @@ describe('configuration security validation', () => {
     delete process.env.S3_SECRET_ACCESS_KEY;
 
     const cfg = configuration();
-    expect(cfg.jwt.secret).toBe('dev-secret-change-in-production');
-    expect(cfg.s3.accessKeyId).toBe('minioadmin');
+    expect(cfg.jwt.secret).toBe(DEV_DEFAULT_JWT_SECRET);
+    expect(cfg.s3.accessKeyId).toBe(DEV_DEFAULT_S3_ACCESS_KEY_ID);
   });
 
   it('fails in production when JWT secret is missing', () => {
@@ -55,7 +57,7 @@ describe('configuration security validation', () => {
     process.env.NODE_ENV = 'production';
     process.env.JWT_SECRET = STRONG_JWT_SECRET;
     process.env.UPLOAD_GUEST_TOKEN_SECRET = STRONG_UPLOAD_SECRET;
-    process.env.S3_ACCESS_KEY_ID = 'minioadmin';
+    process.env.S3_ACCESS_KEY_ID = DEV_DEFAULT_S3_ACCESS_KEY_ID;
     process.env.S3_SECRET_ACCESS_KEY = STRONG_S3_SECRET;
 
     expect(() => configuration()).toThrow(

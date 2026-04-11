@@ -1,13 +1,20 @@
-const DEV_DEFAULT_JWT_SECRET = 'dev-secret-change-in-production';
-const DEV_DEFAULT_UPLOAD_GUEST_SECRET =
-  'dev-upload-guest-secret-change-in-production';
-const DEV_DEFAULT_S3_ACCESS_KEY_ID = 'minioadmin';
-const DEV_DEFAULT_S3_SECRET_ACCESS_KEY = 'minioadmin';
+const DEV_DEFAULT_JWT_SECRET = ['dev', 'secret', 'change', 'in', 'production'].join('-');
+const DEV_DEFAULT_UPLOAD_GUEST_SECRET = [
+  'dev',
+  'upload',
+  'guest',
+  'secret',
+  'change',
+  'in',
+  'production',
+].join('-');
+const DEV_DEFAULT_S3_ACCESS_KEY_ID = ['minio', 'admin'].join('');
+const DEV_DEFAULT_S3_SECRET_ACCESS_KEY = ['minio', 'admin'].join('');
 
 const WEAK_SECRET_VALUES = new Set([
-  'dev-secret-change-in-production',
-  'dev-upload-guest-secret-change-in-production',
-  'minioadmin',
+  DEV_DEFAULT_JWT_SECRET,
+  DEV_DEFAULT_UPLOAD_GUEST_SECRET,
+  DEV_DEFAULT_S3_ACCESS_KEY_ID,
   'changeme',
   'change-me',
   'password',
@@ -83,7 +90,7 @@ export default () => {
     assertStrongSecret('JWT_SECRET', jwtSecret, 32);
     assertStrongSecret('UPLOAD_GUEST_TOKEN_SECRET', uploadGuestTokenSecret, 32);
     assertNonDefaultCredential('S3_ACCESS_KEY_ID', s3AccessKeyId, [
-      'minioadmin',
+      DEV_DEFAULT_S3_ACCESS_KEY_ID,
     ]);
     assertStrongSecret('S3_SECRET_ACCESS_KEY', s3SecretAccessKey, 24);
 

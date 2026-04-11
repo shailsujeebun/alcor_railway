@@ -15,21 +15,24 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: web/package.json
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
       - name: Install dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
       - name: i18n hardcoded text guard
-        run: npm run i18n:guard
+        run: pnpm run i18n:guard
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
       - name: Build
         env:
           NEXT_TELEMETRY_DISABLED: '1'
-        run: npm run build
+        run: pnpm run build
 
   api-quality:
     runs-on: ubuntu-latest
@@ -38,21 +41,24 @@ jobs:
         working-directory: api
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: api/package.json
+          cache: pnpm
+          cache-dependency-path: api/pnpm-lock.yaml
       - name: Install dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
       - name: Build
-        run: npm run build
+        run: pnpm run build
       - name: Unit tests
-        run: npm test -- --runInBand
+        run: pnpm exec jest --runInBand
       - name: Security test suite
-        run: npm run test:security
+        run: pnpm run test:security
       - name: e2e smoke tests
-        run: npm run test:e2e -- --runInBand
+        run: pnpm exec jest --config ./test/jest-e2e.json --runInBand
 
   api-security-audit:
     runs-on: ubuntu-latest
@@ -134,16 +140,19 @@ jobs:
         working-directory: api
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: api/package.json
+          cache: pnpm
+          cache-dependency-path: api/pnpm-lock.yaml
       - name: Install dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
       - name: Apply migrations
         run: npx prisma migrate deploy
       - name: Seed all data
-        run: npm run seed:all
+        run: pnpm run seed:all
       - name: Verify seed integrity
-        run: npm run seed:verify
+        run: pnpm run seed:verify
