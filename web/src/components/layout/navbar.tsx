@@ -70,7 +70,7 @@ export function Navbar() {
     <>
       <header className="site-navbar sticky top-0 z-50 border-b border-[var(--border-color)] bg-[color:var(--bg-secondary)]/90 backdrop-blur-xl">
         <div className="container-main flex items-center justify-between h-18 min-h-[72px]">
-          <Link href={homeLogoHref} className="logo-link flex items-center">
+          <a href={homeLogoHref} className="logo-link flex items-center">
             <Image
               src="/alcor-logo.png"
               alt={t('brand.logoAlt')}
@@ -79,7 +79,7 @@ export function Navbar() {
               className="logo-image h-[48px] w-auto"
               priority
             />
-          </Link>
+          </a>
 
           <nav className="hidden md:flex items-center gap-8 ml-12 mr-16">
             {navLinks.map((link) => (

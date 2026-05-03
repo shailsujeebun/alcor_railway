@@ -33,7 +33,7 @@ export function Footer() {
         <div className="h-px w-full bg-[var(--border-color)] mb-14 sm:mb-16 lg:mb-20" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12">
           <div className="md:col-span-2 lg:col-span-5">
-            <Link href={homeLogoHref} className="logo-link flex items-center gap-3 mb-4">
+            <a href={homeLogoHref} className="logo-link flex items-center gap-3 mb-4">
               <Image
                 src="/alcor-logo.png"
                 alt={t('brand.logoAlt')}
@@ -42,7 +42,7 @@ export function Footer() {
                 className="logo-image h-10 w-auto"
               />
               <span className="logo-text font-heading font-bold text-xl">АЛЬКОР</span>
-            </Link>
+            </a>
             <p className="text-[var(--text-secondary)] text-sm leading-relaxed max-w-xl">
               {t('footer.description')}
             </p>
