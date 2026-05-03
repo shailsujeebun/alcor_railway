@@ -1,7 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { Phone, Mail, MapPin } from 'lucide-react';
 import Image from 'next/image';
 import { useTranslation } from '../providers/translation-provider';
 import { MAIN_LANDING_URL } from '@/lib/landing';
@@ -17,130 +15,95 @@ export function Footer() {
   const address = t('footer.address');
   const phone = '+38 (068) 319-98-00';
   const email = 'alkorfk@gmail.com';
-  const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
   const serviceLinks = [
     { href: `${landingBaseUrl}/pages/leasing-details.html`, label: t('footer.autoLeasing') },
     { href: `${landingBaseUrl}/pages/credit.html`, label: t('footer.businessLoans') },
     { href: `${landingBaseUrl}/pages/factoring.html`, label: t('footer.factoring') },
   ];
+  const companyHref = `${landingBaseUrl}/pages/about.html`;
 
   return (
-    <footer
-      style={{ background: 'var(--bg-secondary)' }}
-      className="shadow-[0_-1px_0_rgba(59,130,246,0.12)]"
-    >
-      <div className="container-main pt-6 sm:pt-8 lg:pt-10 pb-8 sm:pb-10 lg:pb-12">
-        <div className="h-px w-full bg-[var(--border-color)] mb-14 sm:mb-16 lg:mb-20" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12">
-          <div className="md:col-span-2 lg:col-span-5">
-            <a href={homeLogoHref} className="logo-link flex items-center gap-3 mb-4">
+    <footer className="mt-auto w-full border-t border-[var(--border-color)] bg-[var(--bg-secondary)] px-0 py-20 pb-10">
+      <div className="container-main w-full">
+        <div className="grid grid-cols-1 gap-[60px] md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
+          <div>
+            <a href={homeLogoHref} className="mb-5 inline-flex items-center gap-3.5 no-underline">
               <Image
                 src="/alcor-logo.png"
                 alt={t('brand.logoAlt')}
-                width={50}
-                height={50}
-                className="logo-image h-10 w-auto"
+                width={54}
+                height={54}
+                className="h-auto w-[54px] shrink-0 transition-transform duration-300 ease-out hover:-translate-y-0.5"
               />
-              <span className="logo-text font-heading font-bold text-xl">АЛЬКОР</span>
+              <span className="font-heading text-[32px] font-black tracking-[-1px] text-transparent [background:linear-gradient(135deg,var(--blue-light)_0%,var(--orange)_100%)] [-webkit-background-clip:text] [background-clip:text]">
+                АЛЬКОР
+              </span>
             </a>
-            <p className="text-[var(--text-secondary)] text-sm leading-relaxed max-w-xl">
+            <p className="mb-[30px] max-w-[34rem] text-base leading-[1.7] text-[var(--text-secondary)]">
               {t('footer.description')}
             </p>
           </div>
 
-          <div className="lg:col-span-2">
-            <h4 className="font-heading font-bold text-sm uppercase tracking-wider mb-4 text-[var(--text-primary)]">
+          <div>
+            <h4 className="mb-[25px] font-heading text-lg font-bold text-[var(--text-primary)]">
               {t('footer.servicesTitle')}
             </h4>
-            <ul className="space-y-3">
+            <ul className="list-none p-0">
               {serviceLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
+                <li key={link.href} className="mb-[15px] last:mb-0">
+                  <a
                     href={link.href}
-                    className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors"
+                    className="inline-flex items-center gap-1.5 text-[15px] leading-[1.35] text-[var(--text-secondary)] no-underline transition-colors hover:text-[var(--blue-light)]"
                   >
                     {link.label}
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="lg:col-span-2">
-            <h4 className="font-heading font-bold text-sm uppercase tracking-wider mb-4 text-[var(--text-primary)]">
+          <div>
+            <h4 className="mb-[25px] font-heading text-lg font-bold text-[var(--text-primary)]">
               {t('footer.companyTitle')}
             </h4>
-            <ul className="space-y-3">
-              <li>
-                <Link href="/about" className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors">
+            <ul className="list-none p-0">
+              <li className="mb-[15px] last:mb-0">
+                <a
+                  href={companyHref}
+                  className="inline-flex items-center gap-1.5 text-[15px] leading-[1.35] text-[var(--text-secondary)] no-underline transition-colors hover:text-[var(--blue-light)]"
+                >
                   {t('footer.about')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/companies" className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors">
-                  {t('footer.partners')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/help" className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors">
-                  {t('footer.help')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms" className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors">
-                  {t('footer.terms')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors">
-                  {t('footer.privacy')}
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
 
-          <div className="lg:col-span-3">
-            <h4 className="font-heading font-bold text-sm uppercase tracking-wider mb-4 text-[var(--text-primary)]">
+          <div>
+            <h4 className="mb-[25px] font-heading text-lg font-bold text-[var(--text-primary)]">
               {t('footer.contactsTitle')}
             </h4>
-            <ul className="space-y-3">
-              <li>
-                <a
-                  href={mapsHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-start gap-2 text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors"
-                >
-                  <MapPin size={14} className="text-blue-bright flex-shrink-0 mt-0.5" />
-                  <span>{address}</span>
-                </a>
-              </li>
-              <li>
+            <ul className="list-none p-0">
+              <li className="mb-[15px] last:mb-0">
                 <a
                   href="tel:+380683199800"
-                  className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors"
+                  className="inline-flex items-center gap-1.5 text-[15px] leading-[1.35] text-[var(--text-secondary)] no-underline transition-colors hover:text-[var(--blue-light)]"
                 >
-                  <Phone size={14} className="text-blue-bright flex-shrink-0" />
-                  <span>{phone}</span>
+                  {phone}
                 </a>
               </li>
-              <li>
+              <li className="mb-[15px] last:mb-0">
                 <a
                   href={`mailto:${email}`}
-                  className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-blue-bright transition-colors"
+                  className="inline-flex items-center gap-1.5 text-[15px] leading-[1.35] text-[var(--text-secondary)] no-underline transition-colors hover:text-[var(--blue-light)]"
                 >
-                  <Mail size={14} className="text-blue-bright flex-shrink-0" />
-                  <span>{email}</span>
+                  {email}
                 </a>
+              </li>
+              <li className="mb-[15px] text-[15px] leading-[1.35] text-[var(--text-secondary)] last:mb-0">
+                {address}
               </li>
             </ul>
           </div>
-        </div>
-
-        <div className="border-t border-[var(--border-color)] mt-12 lg:mt-14 pt-9 lg:pt-10 pb-2 lg:pb-3">
-          <p className="text-sm text-[var(--text-secondary)]">
-            &copy; {new Date().getFullYear()} АЛЬКОР. {t('footer.rights')}
-          </p>
         </div>
       </div>
     </footer>

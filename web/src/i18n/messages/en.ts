@@ -109,9 +109,9 @@ export const enMessages = {
   },
   footer: {
     description:
-      'We create financial solutions that help businesses grow. Over 10 years of experience and thousands of satisfied clients.',
+      "We create financial solutions that help businesses grow. The company's specialists have more than 10 years of experience.",
     servicesTitle: 'Services',
-    autoLeasing: 'Auto leasing',
+    autoLeasing: 'Financial leasing',
     businessLoans: 'Business lending',
     factoring: 'Factoring',
     companyTitle: 'Company',
