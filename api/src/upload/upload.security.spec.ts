@@ -16,18 +16,18 @@ describe('UploadService security controls', () => {
     const configValues: Record<string, unknown> = {
       's3.endpoint': 'http://localhost:9000',
       's3.region': 'us-east-1',
-      's3.accessKeyId': 'test-access-key',
-      's3.secretAccessKey': 'test-secret-key',
+      's3.accessKeyId': 'test-storage-id',
+      's3.secretAccessKey': 'test-storage-value',
       's3.bucket': 'marketplace',
       's3.publicUrl': 'http://localhost:9000/marketplace',
       's3.publicReadAssets': false,
-      'upload.guestTokenSecret': 'guest-token-secret-very-strong-123',
+      'upload.guestTokenSecret': 'guest-token-value-very-strong-123',
       'upload.guestTokenTtlSeconds': 900,
       'upload.guestTokenRateLimitPerMinute': 2,
       'upload.requestLimitPerMinute': 2,
       'upload.filesLimitPerMinute': 10,
       'upload.bytesLimitPerMinute': 1024 * 1024,
-      'jwt.secret': 'jwt-secret-very-strong-123',
+      'jwt.secret': 'jwt-token-value-very-strong-123',
     };
 
     const configService = {

@@ -26,7 +26,8 @@
     "seed:all": "ts-node prisma/seed-all.ts",
     "seed:verify": "ts-node prisma/seed-verify.ts",
     "seed:templates": "ts-node prisma/seed-demo-templates.ts",
-    "railway:sync": "pnpm run migrate:deploy && prisma db seed && pnpm run seed:verify"
+    "railway:sync": "pnpm run migrate:deploy && prisma db seed && pnpm run seed:verify",
+    "start:railway": "node ./scripts/railway-start.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.984.0",

@@ -67,6 +67,10 @@ const assertNonDefaultCredential = (
 export default () => {
   const nodeEnv = (process.env.NODE_ENV ?? 'development').toLowerCase();
   const isProduction = nodeEnv === 'production';
+  const storageDriver = (
+    process.env.STORAGE_DRIVER ?? (isProduction ? 'local' : 's3')
+  ).toLowerCase();
+  const usesS3Storage = storageDriver === 's3';
 
   const jwtSecret =
     process.env.JWT_SECRET ??
@@ -80,19 +84,23 @@ export default () => {
 
   const s3AccessKeyId =
     process.env.S3_ACCESS_KEY_ID ??
-    (isProduction ? undefined : DEV_DEFAULT_S3_ACCESS_KEY_ID);
+    (usesS3Storage || !isProduction ? DEV_DEFAULT_S3_ACCESS_KEY_ID : undefined);
 
   const s3SecretAccessKey =
     process.env.S3_SECRET_ACCESS_KEY ??
-    (isProduction ? undefined : DEV_DEFAULT_S3_SECRET_ACCESS_KEY);
+    (usesS3Storage || !isProduction
+      ? DEV_DEFAULT_S3_SECRET_ACCESS_KEY
+      : undefined);
 
   if (isProduction) {
     assertStrongSecret('JWT_SECRET', jwtSecret, 32);
     assertStrongSecret('UPLOAD_GUEST_TOKEN_SECRET', uploadGuestTokenSecret, 32);
-    assertNonDefaultCredential('S3_ACCESS_KEY_ID', s3AccessKeyId, [
-      DEV_DEFAULT_S3_ACCESS_KEY_ID,
-    ]);
-    assertStrongSecret('S3_SECRET_ACCESS_KEY', s3SecretAccessKey, 24);
+    if (usesS3Storage) {
+      assertNonDefaultCredential('S3_ACCESS_KEY_ID', s3AccessKeyId, [
+        DEV_DEFAULT_S3_ACCESS_KEY_ID,
+      ]);
+      assertStrongSecret('S3_SECRET_ACCESS_KEY', s3SecretAccessKey, 24);
+    }
 
     if (jwtSecret === uploadGuestTokenSecret) {
       throw new Error(
@@ -109,6 +117,9 @@ export default () => {
     },
     redis: {
       url: process.env.REDIS_URL ?? 'redis://localhost:6379',
+    },
+    storage: {
+      driver: usesS3Storage ? 's3' : 'local',
     },
     jwt: {
       secret: jwtSecret!,
@@ -135,6 +146,7 @@ export default () => {
       ),
     },
     upload: {
+      localDir: process.env.UPLOAD_LOCAL_DIR ?? './storage/uploads',
       guestTokenSecret: uploadGuestTokenSecret!,
       guestTokenTtlSeconds: parseInt(
         process.env.UPLOAD_GUEST_TOKEN_TTL_SECONDS ?? '900',

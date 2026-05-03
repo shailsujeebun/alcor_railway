@@ -21,6 +21,9 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { randomUUID } from 'crypto';
+import { createReadStream } from 'fs';
+import { mkdir, readFile, rm, stat, writeFile } from 'fs/promises';
+import { dirname, join, resolve } from 'path';
 import { Readable } from 'stream';
 
 const RATE_WINDOW_MS = 60_000;
@@ -60,7 +63,9 @@ const MIME_TO_EXTENSION: Record<AllowedImageMimeType, string> = {
 @Injectable()
 export class UploadService implements OnModuleInit {
   private readonly logger = new Logger(UploadService.name);
-  private s3: S3Client;
+  private readonly storageDriver: 's3' | 'local';
+  private readonly localDir: string;
+  private s3: S3Client | null = null;
   private bucket: string;
   private publicUrl: string;
   private guestTokenSecret: string;
@@ -75,11 +80,14 @@ export class UploadService implements OnModuleInit {
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
   ) {
-    const endpoint = this.configService.get<string>('s3.endpoint')!;
-    const region = this.configService.get<string>('s3.region')!;
-    const accessKeyId = this.configService.get<string>('s3.accessKeyId')!;
-    const secretAccessKey =
-      this.configService.get<string>('s3.secretAccessKey')!;
+    this.storageDriver =
+      (this.configService.get<'s3' | 'local'>('storage.driver') ?? 's3') ===
+      'local'
+        ? 'local'
+        : 's3';
+    this.localDir = resolve(
+      this.configService.get<string>('upload.localDir') ?? './storage/uploads',
+    );
 
     this.bucket = this.configService.get<string>('s3.bucket')!;
     this.publicUrl = this.configService.get<string>('s3.publicUrl')!;
@@ -101,22 +109,36 @@ export class UploadService implements OnModuleInit {
       this.configService.get<number>('upload.bytesLimitPerMinute') ??
       80 * 1024 * 1024;
 
-    this.s3 = new S3Client({
-      endpoint,
-      region,
-      credentials: { accessKeyId, secretAccessKey },
-      forcePathStyle: true,
-    });
+    if (this.storageDriver === 's3') {
+      const endpoint = this.configService.get<string>('s3.endpoint')!;
+      const region = this.configService.get<string>('s3.region')!;
+      const accessKeyId = this.configService.get<string>('s3.accessKeyId')!;
+      const secretAccessKey =
+        this.configService.get<string>('s3.secretAccessKey')!;
+
+      this.s3 = new S3Client({
+        endpoint,
+        region,
+        credentials: { accessKeyId, secretAccessKey },
+        forcePathStyle: true,
+      });
+    }
   }
 
   async onModuleInit() {
+    if (this.storageDriver === 'local') {
+      await mkdir(this.localDir, { recursive: true });
+      this.logger.log(`Using local upload storage at ${this.localDir}`);
+      return;
+    }
+
     try {
-      await this.s3.send(new HeadBucketCommand({ Bucket: this.bucket }));
+      await this.requireS3().send(new HeadBucketCommand({ Bucket: this.bucket }));
       this.logger.log(`Bucket "${this.bucket}" exists`);
     } catch {
       this.logger.log(`Creating bucket "${this.bucket}"...`);
       try {
-        await this.s3.send(new CreateBucketCommand({ Bucket: this.bucket }));
+        await this.requireS3().send(new CreateBucketCommand({ Bucket: this.bucket }));
         this.logger.log(`Bucket "${this.bucket}" created`);
       } catch (err) {
         this.logger.warn(
@@ -146,7 +168,7 @@ export class UploadService implements OnModuleInit {
           },
         ],
       };
-      await this.s3.send(
+      await this.requireS3().send(
         new PutBucketPolicyCommand({
           Bucket: this.bucket,
           Policy: JSON.stringify(policy),
@@ -383,24 +405,38 @@ export class UploadService implements OnModuleInit {
 
     const key = `${safeFolder}/${randomUUID()}.${this.getExtensionForMime(mimeType)}`;
 
-    await this.s3.send(
-      new PutObjectCommand({
-        Bucket: this.bucket,
-        Key: key,
-        Body: file.buffer,
-        ContentType: mimeType,
-      }),
-    );
+    if (this.storageDriver === 'local') {
+      const absolutePath = this.resolveLocalPath(key);
+      await mkdir(dirname(absolutePath), { recursive: true });
+      await writeFile(absolutePath, file.buffer);
+    } else {
+      await this.requireS3().send(
+        new PutObjectCommand({
+          Bucket: this.bucket,
+          Key: key,
+          Body: file.buffer,
+          ContentType: mimeType,
+        }),
+      );
+    }
 
     return {
       key,
-      url: `${this.publicUrl}/${key}`,
+      url:
+        this.storageDriver === 'local'
+          ? `/upload/files/${key}`
+          : `${this.publicUrl}/${key}`,
     };
   }
 
   async deleteFile(url: string): Promise<void> {
-    const key = url.replace(`${this.publicUrl}/`, '');
-    await this.s3.send(
+    const key = this.extractStorageKey(url);
+    if (this.storageDriver === 'local') {
+      await rm(this.resolveLocalPath(key), { force: true });
+      return;
+    }
+
+    await this.requireS3().send(
       new DeleteObjectCommand({
         Bucket: this.bucket,
         Key: key,
@@ -412,6 +448,12 @@ export class UploadService implements OnModuleInit {
     folder: string = 'images',
     contentType: string = 'image/jpeg',
   ) {
+    if (this.storageDriver === 'local') {
+      throw new BadRequestException(
+        'Presigned uploads are unavailable when STORAGE_DRIVER=local',
+      );
+    }
+
     const safeFolder = this.sanitizeFolder(folder);
     const safeContentType = this.normalizeImageMime(contentType);
     const key = `${safeFolder}/${randomUUID()}.${this.getExtensionForMime(safeContentType)}`;
@@ -422,7 +464,7 @@ export class UploadService implements OnModuleInit {
       ContentType: safeContentType,
     });
 
-    const url = await getSignedUrl(this.s3, command, { expiresIn: 3600 });
+    const url = await getSignedUrl(this.requireS3(), command, { expiresIn: 3600 });
 
     return {
       uploadUrl: url,
@@ -440,9 +482,23 @@ export class UploadService implements OnModuleInit {
     }
 
     const key = `${safeFolder}/${safeFilename}`;
+    if (this.storageDriver === 'local') {
+      const absolutePath = this.resolveLocalPath(key);
+      try {
+        const metadata = await stat(absolutePath);
+        return {
+          body: createReadStream(absolutePath),
+          contentType: this.contentTypeFromFilename(safeFilename),
+          contentLength: metadata.size,
+        };
+      } catch {
+        throw new NotFoundException('File not found');
+      }
+    }
+
     let response;
     try {
-      response = await this.s3.send(
+      response = await this.requireS3().send(
         new GetObjectCommand({
           Bucket: this.bucket,
           Key: key,
@@ -515,6 +571,49 @@ export class UploadService implements OnModuleInit {
 
   private normalizeClientKey(clientKey: string) {
     return clientKey.trim().toLowerCase() || 'anonymous';
+  }
+
+  private extractStorageKey(url: string) {
+    if (url.startsWith('/upload/files/')) {
+      return url.replace(/^\/upload\/files\//, '');
+    }
+    if (this.publicUrl && url.startsWith(`${this.publicUrl}/`)) {
+      return url.replace(`${this.publicUrl}/`, '');
+    }
+    return url.replace(/^\/+/, '');
+  }
+
+  private resolveLocalPath(key: string) {
+    const normalizedKey = key.replace(/\\/g, '/').replace(/^\/+/, '');
+    const absolutePath = resolve(this.localDir, normalizedKey);
+    if (!absolutePath.startsWith(this.localDir)) {
+      throw new BadRequestException('Invalid file path');
+    }
+    return absolutePath;
+  }
+
+  private contentTypeFromFilename(filename: string): string {
+    const lowered = filename.toLowerCase();
+    if (lowered.endsWith('.jpg') || lowered.endsWith('.jpeg')) {
+      return 'image/jpeg';
+    }
+    if (lowered.endsWith('.png')) {
+      return 'image/png';
+    }
+    if (lowered.endsWith('.webp')) {
+      return 'image/webp';
+    }
+    if (lowered.endsWith('.gif')) {
+      return 'image/gif';
+    }
+    return 'application/octet-stream';
+  }
+
+  private requireS3() {
+    if (!this.s3) {
+      throw new BadRequestException('S3 storage is not configured');
+    }
+    return this.s3;
   }
 
   private getUploadQuotaStore() {
