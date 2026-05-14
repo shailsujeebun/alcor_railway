@@ -122,7 +122,6 @@ export const enMessages = {
     privacy: 'Privacy',
     contactsTitle: 'Contacts',
     address: '49044, Dnipro, 2 Ivana Shulyka (Yakova Samarskoho) St., Office 302',
-    rights: 'All rights reserved.',
   },
   admin: {
     sidebar: {

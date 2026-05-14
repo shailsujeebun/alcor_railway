@@ -122,7 +122,6 @@ export const ukMessages = {
     privacy: 'Конфіденційність',
     contactsTitle: 'Контакти',
     address: '49044, м. Дніпро, вул. Івана Шулика (Якова Самарського), 2, офіс 302',
-    rights: 'Усі права захищено.',
   },
   admin: {
     sidebar: {
